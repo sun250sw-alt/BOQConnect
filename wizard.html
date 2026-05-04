@@ -1,0 +1,1949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BOQ Connect — Setup Wizard</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --revit-dark:    #1a1a1e;
+  --revit-panel:   #242428;
+  --revit-card:    #2c2c32;
+  --revit-border:  rgba(255,255,255,0.08);
+  --revit-border2: rgba(255,255,255,0.14);
+  --revit-blue:    #0696d7;
+  --revit-blue2:   #0577ae;
+  --revit-blue-dim:rgba(6,150,215,0.12);
+  --revit-blue-bdr:rgba(6,150,215,0.35);
+  --revit-green:   #45b26b;
+  --revit-green-dim:rgba(69,178,107,0.1);
+  --revit-amber:   #f5a623;
+  --revit-amber-dim:rgba(245,166,35,0.1);
+  --revit-red:     #e85555;
+  --text:          #e8e8e8;
+  --text-sec:      #9a9a9a;
+  --text-ter:      #5a5a5a;
+  --radius:        10px;
+  --radius-sm:     6px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Source Sans 3', sans-serif;
+  background: var(--revit-dark);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── GRID BACKGROUND ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(6,150,215,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(6,150,215,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 52px;
+  background: rgba(26,26,30,0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--revit-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  z-index: 100;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text);
+}
+
+.logo-mark {
+  width: 30px; height: 30px;
+  background: var(--revit-blue);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; color: #fff;
+  font-family: 'Rajdhani', sans-serif;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--text-sec);
+  font-family: 'Source Code Pro', monospace;
+}
+
+.version-tag {
+  padding: 3px 8px;
+  background: var(--revit-blue-dim);
+  border: 1px solid var(--revit-blue-bdr);
+  border-radius: 4px;
+  color: var(--revit-blue);
+  font-size: 11px;
+}
+
+/* ── MAIN CONTAINER ── */
+.container {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 72px 24px 60px;
+}
+
+/* ── SCREENS ── */
+.screen {
+  display: none;
+  width: 100%;
+  max-width: 680px;
+  animation: fadeUp .4s ease forwards;
+}
+.screen.active { display: block; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── WELCOME SCREEN ── */
+.welcome-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 40px 0 20px;
+}
+
+.welcome-icon-wrap {
+  position: relative;
+  margin-bottom: 32px;
+}
+
+.welcome-rings {
+  position: absolute;
+  inset: -20px;
+  border-radius: 50%;
+  border: 1px solid var(--revit-blue-bdr);
+  animation: pulse-ring 2.5s ease-in-out infinite;
+}
+.welcome-rings:nth-child(2) {
+  inset: -35px;
+  animation-delay: .4s;
+  border-color: rgba(6,150,215,0.2);
+}
+.welcome-rings:nth-child(3) {
+  inset: -50px;
+  animation-delay: .8s;
+  border-color: rgba(6,150,215,0.1);
+}
+
+@keyframes pulse-ring {
+  0%,100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: .6; }
+}
+
+.welcome-icon {
+  width: 80px; height: 80px;
+  background: linear-gradient(135deg, var(--revit-blue), var(--revit-blue2));
+  border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 32px; font-weight: 700; color: #fff;
+  position: relative;
+  box-shadow: 0 8px 32px rgba(6,150,215,0.4);
+}
+
+.welcome-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-family: 'Source Code Pro', monospace;
+  letter-spacing: 2px;
+  color: var(--revit-blue);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  padding: 5px 14px;
+  background: var(--revit-blue-dim);
+  border: 1px solid var(--revit-blue-bdr);
+  border-radius: 999px;
+}
+
+.welcome-badge::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--revit-blue);
+  animation: blink 1.5s ease infinite;
+}
+
+@keyframes blink {
+  0%,100% { opacity: 1; }
+  50% { opacity: .3; }
+}
+
+.welcome-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 42px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+  margin-bottom: 14px;
+  color: var(--text);
+}
+
+.welcome-title span {
+  color: var(--revit-blue);
+}
+
+.welcome-sub {
+  font-size: 15px;
+  color: var(--text-sec);
+  line-height: 1.7;
+  max-width: 480px;
+  margin-bottom: 36px;
+}
+
+.welcome-features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 36px;
+}
+
+.wf-item {
+  background: var(--revit-card);
+  border: 1px solid var(--revit-border);
+  border-radius: var(--radius);
+  padding: 16px 14px;
+  text-align: left;
+  transition: border-color .2s;
+}
+.wf-item:hover { border-color: var(--revit-border2); }
+
+.wf-icon {
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+
+.wf-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  font-family: 'Rajdhani', sans-serif;
+  letter-spacing: .3px;
+}
+
+.wf-desc {
+  font-size: 11px;
+  color: var(--text-sec);
+  line-height: 1.5;
+}
+
+.dev-credit {
+  font-size: 11px;
+  color: var(--text-ter);
+  font-family: 'Source Code Pro', monospace;
+  margin-bottom: 28px;
+}
+
+.dev-credit span { color: var(--text-sec); }
+
+/* ── BUTTONS ── */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--revit-blue);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: .5px;
+  padding: 13px 32px;
+  cursor: pointer;
+  transition: all .2s;
+  box-shadow: 0 4px 16px rgba(6,150,215,0.3);
+}
+.btn-primary:hover {
+  background: #0aa8f0;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(6,150,215,0.4);
+}
+.btn-primary:active { transform: translateY(0); }
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px solid var(--revit-border2);
+  border-radius: var(--radius-sm);
+  color: var(--text-sec);
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 14px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.btn-secondary:hover {
+  border-color: var(--revit-blue-bdr);
+  color: var(--text);
+}
+
+.btn-success {
+  background: var(--revit-green);
+  box-shadow: 0 4px 16px rgba(69,178,107,0.3);
+}
+.btn-success:hover {
+  background: #52cf7d;
+  box-shadow: 0 6px 24px rgba(69,178,107,0.4);
+}
+
+/* ── STEP INDICATOR ── */
+.step-indicator {
+  display: flex;
+  align-items: center;
+  margin-bottom: 36px;
+  width: 100%;
+}
+
+.si-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+.si-item:last-child { flex: 0; }
+
+.si-dot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--revit-border2);
+  background: var(--revit-panel);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  font-family: 'Source Code Pro', monospace;
+  color: var(--text-sec);
+  transition: all .25s;
+  flex-shrink: 0;
+}
+.si-dot.active {
+  background: var(--revit-blue);
+  border-color: var(--revit-blue);
+  color: #fff;
+  box-shadow: 0 0 0 4px var(--revit-blue-dim);
+}
+.si-dot.done {
+  background: var(--revit-green-dim);
+  border-color: var(--revit-green);
+  color: var(--revit-green);
+}
+
+.si-label {
+  font-size: 11px;
+  color: var(--text-ter);
+  white-space: nowrap;
+  font-family: 'Rajdhani', sans-serif;
+  letter-spacing: .3px;
+}
+.si-label.active { color: var(--text); font-weight: 600; }
+
+.si-line {
+  flex: 1;
+  height: 1px;
+  background: var(--revit-border);
+  margin: 0 8px;
+  transition: background .3s;
+}
+.si-line.done { background: rgba(69,178,107,.4); }
+
+/* ── CARDS ── */
+.card {
+  background: var(--revit-card);
+  border: 1px solid var(--revit-border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.card-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-sec);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-title::before {
+  content: '';
+  width: 3px; height: 14px;
+  background: var(--revit-blue);
+  border-radius: 2px;
+}
+
+/* ── FIELDS ── */
+.field { margin-bottom: 14px; }
+.field:last-child { margin-bottom: 0; }
+
+.field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-sec);
+  margin-bottom: 6px;
+  font-family: 'Rajdhani', sans-serif;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+
+.field input, .field select, .field textarea {
+  width: 100%;
+  background: var(--revit-panel);
+  border: 1px solid var(--revit-border2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 14px;
+  padding: 10px 14px;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-color: var(--revit-blue);
+  box-shadow: 0 0 0 3px var(--revit-blue-dim);
+}
+.field select option { background: var(--revit-panel); }
+.field .hint {
+  font-size: 11px;
+  color: var(--text-ter);
+  margin-top: 5px;
+  font-family: 'Source Code Pro', monospace;
+}
+
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.field-row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+/* ── STEP HEADER ── */
+.step-header { margin-bottom: 24px; }
+.step-tag {
+  font-size: 11px;
+  font-family: 'Source Code Pro', monospace;
+  letter-spacing: 1.5px;
+  color: var(--revit-blue);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.step-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -.3px;
+  margin-bottom: 6px;
+}
+.step-desc { font-size: 14px; color: var(--text-sec); line-height: 1.6; }
+
+/* ── NAV ROW ── */
+.nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+}
+.step-count {
+  font-size: 11px;
+  color: var(--text-ter);
+  font-family: 'Source Code Pro', monospace;
+}
+
+/* ── GOOGLE BUTTON ── */
+.google-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  color: #1a1a1a;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 13px 28px;
+  font-size: 15px;
+  font-family: 'Source Sans 3', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .2s;
+  box-shadow: 0 2px 12px rgba(0,0,0,.3);
+  margin: 0 auto;
+  display: flex;
+}
+.google-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0,0,0,.4);
+}
+
+.google-logo { width: 20px; height: 20px; flex-shrink: 0; }
+
+/* ── TERMS ── */
+.terms-box {
+  background: var(--revit-panel);
+  border: 1px solid var(--revit-border);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  height: 220px;
+  overflow-y: auto;
+  font-size: 12px;
+  color: var(--text-sec);
+  line-height: 1.7;
+  margin-bottom: 16px;
+  font-family: 'Source Sans 3', sans-serif;
+}
+.terms-box::-webkit-scrollbar { width: 4px; }
+.terms-box::-webkit-scrollbar-track { background: transparent; }
+.terms-box::-webkit-scrollbar-thumb { background: var(--revit-border2); border-radius: 2px; }
+
+.terms-box h4 {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 14px 0 6px;
+  letter-spacing: .3px;
+}
+.terms-box h4:first-child { margin-top: 0; }
+
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--revit-panel);
+  border: 1px solid var(--revit-border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: border-color .15s;
+}
+.check-row:hover { border-color: var(--revit-border2); }
+.check-row input[type=checkbox] {
+  width: 16px; height: 16px;
+  accent-color: var(--revit-blue);
+  flex-shrink: 0;
+  margin-top: 1px;
+  cursor: pointer;
+}
+.check-row label {
+  font-size: 13px;
+  color: var(--text-sec);
+  cursor: pointer;
+  line-height: 1.5;
+}
+.check-row label strong { color: var(--text); }
+
+/* ── PARAM TABLE ── */
+.param-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 100px;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.param-label {
+  font-size: 12px;
+  color: var(--text-sec);
+  font-family: 'Source Code Pro', monospace;
+}
+.param-row input {
+  background: var(--revit-panel);
+  border: 1px solid var(--revit-border2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: 'Source Code Pro', monospace;
+  font-size: 12px;
+  padding: 8px 10px;
+  outline: none;
+  transition: border-color .15s;
+  width: 100%;
+}
+.param-row input:focus { border-color: var(--revit-blue); }
+.param-tag {
+  font-size: 10px;
+  font-family: 'Source Code Pro', monospace;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-align: center;
+}
+.tag-text   { background: var(--revit-blue-dim); color: var(--revit-blue); border: 1px solid var(--revit-blue-bdr); }
+.tag-number { background: var(--revit-amber-dim); color: var(--revit-amber); border: 1px solid rgba(245,166,35,.3); }
+
+/* ── CATEGORY GRID ── */
+.cat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.cat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--revit-panel);
+  border: 1px solid var(--revit-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all .15s;
+  font-size: 13px;
+}
+.cat-item:hover { border-color: var(--revit-border2); }
+.cat-item.selected {
+  background: var(--revit-blue-dim);
+  border-color: var(--revit-blue-bdr);
+  color: var(--revit-blue);
+}
+.cat-item input[type=checkbox] {
+  accent-color: var(--revit-blue);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+.cat-icon { font-size: 15px; }
+
+/* ── MEASURE TABLE ── */
+.measure-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.measure-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--revit-panel);
+  border: 1px solid var(--revit-border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+.measure-item span { color: var(--text-sec); font-size: 12px; }
+.measure-item select {
+  background: var(--revit-card);
+  border: 1px solid var(--revit-border2);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 12px;
+  padding: 4px 8px;
+  outline: none;
+  font-family: 'Source Code Pro', monospace;
+}
+
+/* ── DRIVE PREVIEW ── */
+.drive-preview {
+  background: var(--revit-panel);
+  border: 1px solid var(--revit-border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  margin-top: 10px;
+}
+.dp-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  padding: 3px 0;
+}
+.dp-child {
+  padding-left: 24px;
+}
+.dp-icon { font-size: 16px; flex-shrink: 0; }
+.dp-new {
+  font-size: 10px;
+  font-family: 'Source Code Pro', monospace;
+  padding: 2px 6px;
+  background: var(--revit-green-dim);
+  border: 1px solid rgba(69,178,107,.3);
+  color: var(--revit-green);
+  border-radius: 3px;
+  margin-left: auto;
+}
+
+/* ── TOGGLE ── */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--revit-border);
+}
+.toggle-row:last-child { border-bottom: none; padding-bottom: 0; }
+.toggle-row:first-child { padding-top: 0; }
+.tog-label { font-size: 14px; font-weight: 500; }
+.tog-desc { font-size: 12px; color: var(--text-sec); margin-top: 2px; }
+.tog {
+  width: 38px; height: 21px;
+  border-radius: 999px;
+  background: var(--revit-border2);
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: background .2s;
+  flex-shrink: 0;
+}
+.tog.on { background: var(--revit-blue); }
+.tog::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 15px; height: 15px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform .2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,.3);
+}
+.tog.on::after { transform: translateX(17px); }
+
+/* ── REVIEW ── */
+.review-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.review-item {
+  background: var(--revit-panel);
+  border: 1px solid var(--revit-border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+}
+.review-key {
+  font-size: 10px;
+  font-family: 'Source Code Pro', monospace;
+  color: var(--text-ter);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.review-val {
+  font-size: 14px;
+  font-weight: 500;
+}
+.review-val.blue { color: var(--revit-blue); }
+.review-val.green { color: var(--revit-green); }
+
+/* ── CREATING ── */
+.creating-wrap { text-align: center; padding: 40px 0; }
+.creating-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 360px;
+  margin: 28px auto;
+  text-align: left;
+}
+.cs-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+}
+.cs-dot {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+  transition: all .3s;
+}
+.cs-dot.pending {
+  background: var(--revit-panel);
+  border: 1px solid var(--revit-border2);
+  color: var(--text-ter);
+}
+.cs-dot.running {
+  background: var(--revit-blue-dim);
+  border: 1px solid var(--revit-blue-bdr);
+  animation: spin .8s linear infinite;
+}
+.cs-dot.done {
+  background: var(--revit-green-dim);
+  border: 1px solid rgba(69,178,107,.3);
+  color: var(--revit-green);
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.cs-text { color: var(--text-sec); }
+.cs-text.active { color: var(--text); font-weight: 500; }
+.cs-text.done { color: var(--revit-green); }
+
+/* ── SUCCESS ── */
+.success-wrap { text-align: center; padding: 32px 0; }
+.success-icon {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  background: var(--revit-green-dim);
+  border: 2px solid rgba(69,178,107,.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px;
+  margin: 0 auto 24px;
+  animation: pop .4s cubic-bezier(.175,.885,.32,1.275);
+}
+@keyframes pop {
+  from { transform: scale(0); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+.success-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.success-sub { font-size: 14px; color: var(--text-sec); margin-bottom: 28px; }
+
+.link-card {
+  background: var(--revit-card);
+  border: 1px solid var(--revit-border);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  text-align: left;
+  text-decoration: none;
+}
+.link-card-label {
+  font-size: 10px;
+  font-family: 'Source Code Pro', monospace;
+  color: var(--text-ter);
+  margin-bottom: 3px;
+  text-transform: uppercase;
+}
+.link-card-val {
+  font-size: 14px;
+  color: var(--revit-blue);
+  font-weight: 500;
+}
+.link-open-btn {
+  font-size: 12px;
+  color: var(--text-sec);
+  background: var(--revit-panel);
+  border: 1px solid var(--revit-border2);
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-family: 'Source Sans 3', sans-serif;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.link-open-btn:hover { border-color: var(--revit-blue-bdr); color: var(--revit-blue); }
+
+/* ── ABOUT SECTION ── */
+.about-card {
+  background: var(--revit-panel);
+  border: 1px solid var(--revit-border);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--text-sec);
+  line-height: 1.7;
+}
+.about-card a { color: var(--revit-blue); text-decoration: none; }
+.about-card a:hover { text-decoration: underline; }
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--revit-border);
+  font-size: 13px;
+}
+.info-row:last-child { border-bottom: none; padding-bottom: 0; }
+.info-key {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 11px;
+  color: var(--text-ter);
+  width: 100px;
+  flex-shrink: 0;
+}
+.info-val { color: var(--text-sec); }
+.info-val.highlight { color: var(--revit-blue); }
+
+/* ── FOOTER ── */
+.wizard-footer {
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid var(--revit-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-ter);
+  font-family: 'Source Code Pro', monospace;
+  width: 100%;
+  max-width: 680px;
+}
+.footer-dev { display: flex; align-items: center; gap: 6px; }
+.footer-links { display: flex; gap: 16px; }
+.footer-links a {
+  color: var(--text-ter);
+  text-decoration: none;
+  transition: color .15s;
+}
+.footer-links a:hover { color: var(--revit-blue); }
+
+/* ── MODAL ── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.7);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--revit-card);
+  border: 1px solid var(--revit-border2);
+  border-radius: var(--radius);
+  width: 90%;
+  max-width: 560px;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 28px;
+  animation: fadeUp .3s ease;
+}
+.modal h2 {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+.modal p { font-size: 13px; color: var(--text-sec); line-height: 1.7; margin-bottom: 10px; }
+.modal h3 { font-family: 'Rajdhani', sans-serif; font-size: 15px; color: var(--text); margin: 16px 0 6px; }
+.modal-close {
+  display: block;
+  margin-top: 20px;
+  width: 100%;
+  padding: 10px;
+  background: var(--revit-panel);
+  border: 1px solid var(--revit-border2);
+  border-radius: var(--radius-sm);
+  color: var(--text-sec);
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.modal-close:hover { border-color: var(--revit-border2); color: var(--text); }
+
+/* ── INFO BOX ── */
+.info-box {
+  background: var(--revit-blue-dim);
+  border: 1px solid var(--revit-blue-bdr);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--text);
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.info-box-icon { color: var(--revit-blue); flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-mark">B</div>
+    BOQ Connect
+  </div>
+  <div class="topbar-right">
+    <span>FOR AUTODESK REVIT 2026</span>
+    <span class="version-tag">v1.0.0</span>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+
+  <!-- ── SCREEN 0: WELCOME ── -->
+  <div class="screen active" id="screen-welcome">
+    <div class="welcome-wrap">
+      <div class="welcome-icon-wrap">
+        <div class="welcome-rings"></div>
+        <div class="welcome-rings"></div>
+        <div class="welcome-rings"></div>
+        <div class="welcome-icon">B</div>
+      </div>
+
+      <div class="welcome-badge">Setup Wizard</div>
+
+      <h1 class="welcome-title">Welcome to<br><span>BOQ Connect</span></h1>
+
+      <p class="welcome-sub">
+        Automatically generate and sync your Bill of Quantities from Revit 2026
+        directly to Google Sheets — live, accurate, and always up to date.
+      </p>
+
+      <div class="welcome-features">
+        <div class="wf-item">
+          <div class="wf-icon">⚡</div>
+          <div class="wf-title">Live Sync</div>
+          <div class="wf-desc">BOQ updates automatically every time you save your Revit model</div>
+        </div>
+        <div class="wf-item">
+          <div class="wf-icon">📊</div>
+          <div class="wf-title">Smart BOQ</div>
+          <div class="wf-desc">Quantities extracted directly from Revit geometry — no manual counting</div>
+        </div>
+        <div class="wf-item">
+          <div class="wf-icon">☁️</div>
+          <div class="wf-title">Google Sheets</div>
+          <div class="wf-desc">Your BOQ lives in Google Drive — shareable with your whole team</div>
+        </div>
+      </div>
+
+      <div class="dev-credit">
+        Developed by <span>Sanjaya Abeysinghe</span> · MSc PM, BSc(Hons) QS, BIM · <span>SUN_SLDev</span>
+      </div>
+
+      <button class="btn-primary" onclick="goTo('screen-terms')">
+        Get Started
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      <div style="margin-top:16px;font-size:12px;color:var(--text-ter)">
+        This wizard takes approximately 3 minutes to complete
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCREEN 1: TERMS & PRIVACY ── -->
+  <div class="screen" id="screen-terms">
+    <div class="step-indicator" id="si-terms"></div>
+
+    <div class="step-header">
+      <div class="step-tag">Step 1 of 6 — Legal</div>
+      <div class="step-title">Terms & Privacy Policy</div>
+      <div class="step-desc">Please read and accept the terms before continuing.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Terms of Use</div>
+      <div class="terms-box" id="terms-scroll">
+        <h4>1. Acceptance of Terms</h4>
+        <p>By installing and using BOQ Connect ("the Software"), you agree to be bound by these Terms of Use. If you do not agree, do not use the Software. These terms apply to all users of BOQ Connect, including individuals and organisations.</p>
+
+        <h4>2. License Grant</h4>
+        <p>SUN_SLDev grants you a non-exclusive, non-transferable, revocable licence to use BOQ Connect solely for your internal business purposes in conjunction with Autodesk Revit 2026. You may not redistribute, sell, sublicense, or modify the Software without prior written consent from SUN_SLDev.</p>
+
+        <h4>3. Permitted Use</h4>
+        <p>BOQ Connect is designed to extract building element quantities from Autodesk Revit models and synchronise this data with Google Sheets for the purpose of generating Bills of Quantities. Any use of the Software outside this intended purpose is not supported and is at the user's own risk.</p>
+
+        <h4>4. Disclaimer of Warranties</h4>
+        <p>The Software is provided "as is" without warranty of any kind. SUN_SLDev does not warrant that the Software will be error-free, uninterrupted, or that the quantities and costs generated will be accurate or suitable for any particular purpose. All BOQ outputs must be independently verified by a qualified quantity surveyor or construction professional before use in any tender, contract, or financial decision.</p>
+
+        <h4>5. Limitation of Liability</h4>
+        <p>To the maximum extent permitted by law, SUN_SLDev shall not be liable for any direct, indirect, incidental, special, or consequential damages arising from the use of or inability to use the Software, including but not limited to errors in quantity extraction, financial losses, or project delays.</p>
+
+        <h4>6. User Responsibilities</h4>
+        <p>You are responsible for ensuring that your Revit model parameters are correctly populated before syncing to Google Sheets. You are responsible for verifying all quantities, units, rates, and totals generated by the Software. You are responsible for the security of your Google account credentials.</p>
+
+        <h4>7. Third-Party Services</h4>
+        <p>BOQ Connect integrates with Google Drive and Google Sheets via the Google APIs. Your use of these services is subject to Google's own Terms of Service and Privacy Policy. SUN_SLDev is not responsible for any changes to Google's services, API availability, or data handling practices.</p>
+
+        <h4>8. Intellectual Property</h4>
+        <p>All intellectual property rights in the Software remain with Sanjaya Abeysinghe / SUN_SLDev. You may not reverse engineer, decompile, or disassemble the Software.</p>
+
+        <h4>9. Updates and Support</h4>
+        <p>SUN_SLDev may release updates to BOQ Connect at any time. Support is provided on a best-efforts basis via email at Asanjayawaruna@hotmail.com. There is no guarantee of response time or resolution.</p>
+
+        <h4>10. Termination</h4>
+        <p>SUN_SLDev reserves the right to terminate your licence at any time if you breach these terms. Upon termination you must cease use of the Software and delete all copies.</p>
+
+        <h4>11. Governing Law</h4>
+        <p>These terms are governed by and construed in accordance with the laws of England and Wales. Any disputes shall be subject to the exclusive jurisdiction of the courts of England and Wales.</p>
+      </div>
+
+      <div class="card-title" style="margin-top:16px">Privacy Policy</div>
+      <div class="terms-box">
+        <h4>Data We Collect</h4>
+        <p>BOQ Connect collects the following data solely to operate the Software: your Google account email address (to identify your project configuration), Revit project element data (categories, type names, quantities, and BOQ parameters you have entered), and project configuration settings (project name, client, units, and sync preferences).</p>
+
+        <h4>How We Use Your Data</h4>
+        <p>Your data is used exclusively to generate and update your BOQ Google Sheet. We do not sell, share, or transmit your data to any third party other than Google (for the purpose of writing to your Google Sheet) and Autodesk (via the Revit API). No data is stored on SUN_SLDev servers.</p>
+
+        <h4>Data Storage</h4>
+        <p>All project data is stored locally on your machine in a JSON configuration file alongside your Revit project file. Google authentication tokens are stored locally in C:\ProgramData\BOQConnect\tokens\ on your machine. No data is uploaded to or stored on any SUN_SLDev infrastructure.</p>
+
+        <h4>Google API Access</h4>
+        <p>BOQ Connect requests the following Google permissions: create and edit Google Sheets files it creates, create folders in your Google Drive, and read your Google account email and name. These permissions are used solely within the context of your BOQ project. You can revoke access at any time via your Google Account settings at myaccount.google.com.</p>
+
+        <h4>Data Retention</h4>
+        <p>You can delete the configuration file and token folder at any time to remove all locally stored data. Deleting the Google Sheet from your Drive removes all cloud-stored BOQ data.</p>
+
+        <h4>Contact</h4>
+        <p>For any privacy-related enquiries contact Sanjaya Abeysinghe at Asanjayawaruna@hotmail.com.</p>
+      </div>
+
+      <div class="check-row" onclick="toggleCheck('chk-terms')">
+        <input type="checkbox" id="chk-terms" onclick="event.stopPropagation()">
+        <label for="chk-terms">I have read and agree to the <strong>Terms of Use</strong></label>
+      </div>
+      <div class="check-row" onclick="toggleCheck('chk-privacy')">
+        <input type="checkbox" id="chk-privacy" onclick="event.stopPropagation()">
+        <label for="chk-privacy">I have read and accept the <strong>Privacy Policy</strong></label>
+      </div>
+      <div class="check-row" onclick="toggleCheck('chk-verify')">
+        <input type="checkbox" id="chk-verify" onclick="event.stopPropagation()">
+        <label for="chk-verify">I understand that all BOQ outputs must be <strong>independently verified</strong> by a qualified professional before use in any financial or contractual context</label>
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn-secondary" onclick="goTo('screen-welcome')">← Back</button>
+      <span class="step-count">1 / 6</span>
+      <button class="btn-primary" onclick="acceptTerms()">
+        Accept & Continue →
+      </button>
+    </div>
+  </div>
+
+  <!-- ── SCREEN 2: SIGN IN ── -->
+  <div class="screen" id="screen-signin">
+    <div class="step-indicator" id="si-signin"></div>
+
+    <div class="step-header">
+      <div class="step-tag">Step 2 of 6 — Authentication</div>
+      <div class="step-title">Sign in with Google</div>
+      <div class="step-desc">BOQ Connect needs access to your Google Drive and Sheets to create your project files.</div>
+    </div>
+
+    <div class="card">
+      <div class="info-box">
+        <span class="info-box-icon">🔒</span>
+        <span>Your data stays in your own Google account. BOQ Connect only accesses files it creates — nothing else in your Drive.</span>
+      </div>
+
+      <div style="text-align:center;padding:24px 0">
+        <button class="google-btn" onclick="doSignIn()">
+          <svg class="google-logo" viewBox="0 0 24 24">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+          Continue with Google
+        </button>
+        <div id="signin-status" style="margin-top:16px;font-size:13px;color:var(--text-sec)"></div>
+      </div>
+
+      <div style="margin-top:8px">
+        <div class="card-title">Permissions requested</div>
+        <div class="info-row"><div class="info-key">Drive</div><div class="info-val">Create and manage files BOQ Connect creates</div></div>
+        <div class="info-row"><div class="info-key">Sheets</div><div class="info-val">Read and write your BOQ spreadsheet</div></div>
+        <div class="info-row"><div class="info-key">Profile</div><div class="info-val">Your name and email address only</div></div>
+      </div>
+    </div>
+
+    <div id="signed-in-panel" style="display:none">
+      <div class="card" style="border-color:var(--revit-green);background:var(--revit-green-dim)">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:24px">✅</span>
+          <div>
+            <div style="font-size:14px;font-weight:500;color:var(--revit-green)">Signed in successfully</div>
+            <div style="font-size:13px;color:var(--text-sec);margin-top:2px" id="signed-in-email"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn-secondary" onclick="goTo('screen-terms')">← Back</button>
+      <span class="step-count">2 / 6</span>
+      <button class="btn-primary" id="btn-signin-next" onclick="goTo('screen-project')" style="display:none">
+        Next: Project Info →
+      </button>
+    </div>
+  </div>
+
+  <!-- ── SCREEN 3: PROJECT INFO ── -->
+  <div class="screen" id="screen-project">
+    <div class="step-indicator" id="si-project"></div>
+
+    <div class="step-header">
+      <div class="step-tag">Step 3 of 6 — Project</div>
+      <div class="step-title">Project Information</div>
+      <div class="step-desc">Pre-filled from your Revit project settings. Edit anything that needs changing.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Project details</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Project Name *</label>
+          <input type="text" id="f-pname" placeholder="e.g. Tower A — Phase 1">
+        </div>
+        <div class="field">
+          <label>Client Name</label>
+          <input type="text" id="f-client" placeholder="e.g. Acme Developments">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Project Reference</label>
+          <input type="text" id="f-ref" placeholder="e.g. 2024-PRJ-001">
+        </div>
+        <div class="field">
+          <label>Discipline</label>
+          <select id="f-disc">
+            <option>Structural</option>
+            <option>Architectural</option>
+            <option>MEP</option>
+            <option>Civil</option>
+            <option>Interior</option>
+            <option>Landscape</option>
+            <option>Full Building</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Units & currency</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Unit System</label>
+          <select id="f-units">
+            <option value="metric">Metric (m, m², m³)</option>
+            <option value="imperial">Imperial (ft, ft², ft³)</option>
+          </select>
+          <div class="hint">Auto-detected from your Revit project</div>
+        </div>
+        <div class="field">
+          <label>Currency</label>
+          <select id="f-currency">
+            <option value="GBP">GBP — British Pound (£)</option>
+            <option value="USD">USD — US Dollar ($)</option>
+            <option value="EUR">EUR — Euro (€)</option>
+            <option value="AED">AED — UAE Dirham</option>
+            <option value="SGD">SGD — Singapore Dollar</option>
+            <option value="LKR">LKR — Sri Lankan Rupee</option>
+            <option value="AUD">AUD — Australian Dollar</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Contingency %</label>
+          <input type="number" id="f-contingency" value="10" min="0" max="50">
+          <div class="hint">Applied to grand total in Summary tab</div>
+        </div>
+        <div class="field">
+          <label>Preliminary %</label>
+          <input type="number" id="f-prelim" value="5" min="0" max="30">
+          <div class="hint">Prelims added before contingency</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn-secondary" onclick="goTo('screen-signin')">← Back</button>
+      <span class="step-count">3 / 6</span>
+      <button class="btn-primary" onclick="saveProject();goTo('screen-params')">Next: Parameters →</button>
+    </div>
+  </div>
+
+  <!-- ── SCREEN 4: PARAMETERS ── -->
+  <div class="screen" id="screen-params">
+    <div class="step-indicator" id="si-params"></div>
+
+    <div class="step-header">
+      <div class="step-tag">Step 4 of 6 — Revit Setup</div>
+      <div class="step-title">BOQ Parameters</div>
+      <div class="step-desc">These shared parameters will be created in your Revit model. Rename them to match your office standard if needed.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Shared parameter names</div>
+      <div class="info-box">
+        <span class="info-box-icon">ℹ️</span>
+        <span>These parameters appear in Revit Type Properties. Fill them in on each element type to complete your BOQ.</span>
+      </div>
+
+      <div class="param-row" style="margin-bottom:10px">
+        <span style="font-size:11px;font-family:'Source Code Pro',monospace;color:var(--text-ter)">BOQ FIELD</span>
+        <span style="font-size:11px;font-family:'Source Code Pro',monospace;color:var(--text-ter)">PARAMETER NAME IN REVIT</span>
+        <span style="font-size:11px;font-family:'Source Code Pro',monospace;color:var(--text-ter)">TYPE</span>
+      </div>
+
+      <div class="param-row">
+        <div class="param-label">Item Number</div>
+        <input type="text" id="p-itemno" value="BOQ_ItemNumber">
+        <div class="param-tag tag-text">Text</div>
+      </div>
+      <div class="param-row">
+        <div class="param-label">Description</div>
+        <input type="text" id="p-desc" value="BOQ_Description">
+        <div class="param-tag tag-text">Text</div>
+      </div>
+      <div class="param-row">
+        <div class="param-label">Unit</div>
+        <input type="text" id="p-unit" value="BOQ_Unit">
+        <div class="param-tag tag-text">Text</div>
+      </div>
+      <div class="param-row">
+        <div class="param-label">Rate</div>
+        <input type="text" id="p-rate" value="BOQ_Rate">
+        <div class="param-tag tag-number">Number</div>
+      </div>
+      <div class="param-row">
+        <div class="param-label">Measure By</div>
+        <input type="text" id="p-measureby" value="BOQ_MeasureBy">
+        <div class="param-tag tag-text">Text</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Revit categories to include</div>
+      <div class="cat-grid" id="cat-grid">
+        <!-- filled by JS -->
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn-secondary" onclick="goTo('screen-project')">← Back</button>
+      <span class="step-count">4 / 6</span>
+      <button class="btn-primary" onclick="saveParams();goTo('screen-sheets')">Next: Google Sheets →</button>
+    </div>
+  </div>
+
+  <!-- ── SCREEN 5: SHEETS SETUP ── -->
+  <div class="screen" id="screen-sheets">
+    <div class="step-indicator" id="si-sheets"></div>
+
+    <div class="step-header">
+      <div class="step-tag">Step 5 of 6 — Google Sheets</div>
+      <div class="step-title">Drive & Sheets Setup</div>
+      <div class="step-desc">BOQ Connect will create a folder and spreadsheet in your Google Drive automatically.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">What will be created</div>
+      <div class="drive-preview">
+        <div class="dp-row">
+          <div class="dp-icon">📁</div>
+          <div id="dp-folder-name">Project Folder</div>
+          <div class="dp-new">NEW</div>
+        </div>
+        <div class="dp-row dp-child">
+          <div class="dp-icon">📊</div>
+          <div id="dp-sheet-name">BOQ Spreadsheet</div>
+          <div class="dp-new">NEW</div>
+        </div>
+        <div class="dp-row dp-child" style="padding-left:48px">
+          <div class="dp-icon">📋</div>
+          <div id="dp-boq-tab">BOQ tab</div>
+        </div>
+        <div class="dp-row dp-child" style="padding-left:48px">
+          <div class="dp-icon">📈</div>
+          <div id="dp-summary-tab">Summary tab</div>
+        </div>
+        <div class="dp-row dp-child" style="padding-left:48px">
+          <div class="dp-icon">📝</div>
+          <div>Change Log tab</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Customise names</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Drive Folder Name</label>
+          <input type="text" id="f-folder" oninput="updatePreview()">
+        </div>
+        <div class="field">
+          <label>Spreadsheet Name</label>
+          <input type="text" id="f-spreadsheet" oninput="updatePreview()">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>BOQ Tab Name</label>
+          <input type="text" id="f-boqtab" value="BOQ" oninput="updatePreview()">
+        </div>
+        <div class="field">
+          <label>Summary Tab Name</label>
+          <input type="text" id="f-summarytab" value="Cost Summary" oninput="updatePreview()">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Sync options</div>
+      <div class="toggle-row">
+        <div>
+          <div class="tog-label">Auto-sync on Revit save</div>
+          <div class="tog-desc">Push to Sheets every time the Revit file is saved</div>
+        </div>
+        <button class="tog on" id="tog-autosync" onclick="toggleTog('tog-autosync')"></button>
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div class="tog-label">Enable Change Log</div>
+          <div class="tog-desc">Record a timestamped entry on every sync</div>
+        </div>
+        <button class="tog on" id="tog-changelog" onclick="toggleTog('tog-changelog')"></button>
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn-secondary" onclick="goTo('screen-params')">← Back</button>
+      <span class="step-count">5 / 6</span>
+      <button class="btn-primary" onclick="goTo('screen-review')">Review & Create →</button>
+    </div>
+  </div>
+
+  <!-- ── SCREEN 6: REVIEW ── -->
+  <div class="screen" id="screen-review">
+    <div class="step-indicator" id="si-review"></div>
+
+    <div class="step-header">
+      <div class="step-tag">Step 6 of 6 — Review</div>
+      <div class="step-title">Review Configuration</div>
+      <div class="step-desc">Check everything looks correct before we create your project files.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Project</div>
+      <div class="review-grid" id="review-project"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Google Sheets</div>
+      <div class="review-grid" id="review-sheets"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Parameters & categories</div>
+      <div class="review-grid" id="review-params"></div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn-secondary" onclick="goTo('screen-sheets')">← Back</button>
+      <span class="step-count">6 / 6</span>
+      <button class="btn-primary btn-success" onclick="startCreating()">
+        ✓ Create Project Files
+      </button>
+    </div>
+  </div>
+
+  <!-- ── SCREEN: CREATING ── -->
+  <div class="screen" id="screen-creating">
+    <div class="creating-wrap">
+      <div style="font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;margin-bottom:8px">
+        Setting up your project...
+      </div>
+      <div style="font-size:14px;color:var(--text-sec)">
+        Please wait while BOQ Connect creates your Google Drive files.
+      </div>
+
+      <div class="creating-steps" id="creating-steps">
+        <div class="cs-row" id="cs-0">
+          <div class="cs-dot pending" id="csd-0">1</div>
+          <div class="cs-text" id="cst-0">Authenticating with Google</div>
+        </div>
+        <div class="cs-row" id="cs-1">
+          <div class="cs-dot pending" id="csd-1">2</div>
+          <div class="cs-text" id="cst-1">Creating Drive folder</div>
+        </div>
+        <div class="cs-row" id="cs-2">
+          <div class="cs-dot pending" id="csd-2">3</div>
+          <div class="cs-text" id="cst-2">Creating Google Sheet</div>
+        </div>
+        <div class="cs-row" id="cs-3">
+          <div class="cs-dot pending" id="csd-3">4</div>
+          <div class="cs-text" id="cst-3">Setting up BOQ tab structure</div>
+        </div>
+        <div class="cs-row" id="cs-4">
+          <div class="cs-dot pending" id="csd-4">5</div>
+          <div class="cs-text" id="cst-4">Building Summary tab formulas</div>
+        </div>
+        <div class="cs-row" id="cs-5">
+          <div class="cs-dot pending" id="csd-5">6</div>
+          <div class="cs-text" id="cst-5">Saving project configuration</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCREEN: SUCCESS ── -->
+  <div class="screen" id="screen-success">
+    <div class="success-wrap">
+      <div class="success-icon">✓</div>
+      <div class="success-title">Project Ready!</div>
+      <div class="success-sub" id="success-sub"></div>
+
+      <div id="success-links"></div>
+
+      <div style="margin-top:24px">
+        <button class="btn-primary btn-success" onclick="closeWizard()">
+          Return to Revit
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="about-card" style="margin-top:24px;text-align:left">
+        <div class="info-row"><div class="info-key">DEVELOPER</div><div class="info-val highlight">Sanjaya Abeysinghe</div></div>
+        <div class="info-row"><div class="info-key">CREDENTIALS</div><div class="info-val">MSc PM, BSc(Hons) QS, BIM</div></div>
+        <div class="info-row"><div class="info-key">COMPANY</div><div class="info-val">SUN_SLDev</div></div>
+        <div class="info-row"><div class="info-key">SUPPORT</div><div class="info-val"><a href="mailto:Asanjayawaruna@hotmail.com">Asanjayawaruna@hotmail.com</a></div></div>
+        <div class="info-row"><div class="info-key">VERSION</div><div class="info-val">BOQ Connect v1.0.0 for Revit 2026</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="wizard-footer">
+  <div class="footer-dev">
+    © 2024 Sanjaya Abeysinghe · SUN_SLDev
+  </div>
+  <div class="footer-links">
+    <a href="#" onclick="openModal('modal-about')">About</a>
+    <a href="#" onclick="openModal('modal-help')">Help</a>
+    <a href="mailto:Asanjayawaruna@hotmail.com">Contact</a>
+  </div>
+</div>
+
+<!-- ── MODAL: ABOUT ── -->
+<div class="modal-overlay" id="modal-about">
+  <div class="modal">
+    <h2>About BOQ Connect</h2>
+    <p><strong>BOQ Connect v1.0.0</strong> is a Revit 2026 addin that automatically generates and syncs Bills of Quantities to Google Sheets.</p>
+    <h3>Developer</h3>
+    <p><strong>Sanjaya Abeysinghe</strong><br>MSc Project Management · BSc(Hons) Quantity Surveying · BIM<br>SUN_SLDev</p>
+    <h3>Contact & Support</h3>
+    <p>Email: <a href="mailto:Asanjayawaruna@hotmail.com" style="color:var(--revit-blue)">Asanjayawaruna@hotmail.com</a></p>
+    <h3>Technology</h3>
+    <p>Built with Autodesk Revit API 2026, Google Sheets API v4, Google Drive API v3, and .NET Framework 4.8.</p>
+    <h3>Rights & Licensing</h3>
+    <p>All intellectual property rights reserved. © 2024 Sanjaya Abeysinghe / SUN_SLDev. Unauthorised redistribution or modification is prohibited.</p>
+    <button class="modal-close" onclick="closeModal('modal-about')">Close</button>
+  </div>
+</div>
+
+<!-- ── MODAL: HELP ── -->
+<div class="modal-overlay" id="modal-help">
+  <div class="modal">
+    <h2>Help & Getting Started</h2>
+    <h3>How does BOQ Connect work?</h3>
+    <p>BOQ Connect reads element data directly from your Revit model. You fill in 5 shared parameters on each element type in Revit (Item Number, Description, Unit, Rate, and optionally Measure By). Every time you save the Revit file, quantities are extracted and your Google Sheet updates automatically.</p>
+    <h3>Setting up element types in Revit</h3>
+    <p>After setup, open any element's Type Properties in Revit. You will see the BOQ Connect parameters under the Data group. Fill in the Item Number, Description, Unit, and Rate for each element type you want in the BOQ.</p>
+    <h3>Highlight colours in the Sheet</h3>
+    <p><strong>Amber rows</strong> — one or more BOQ parameters are missing. Go to that element type in Revit and fill them in.<br><strong>Red rows</strong> — this element type was in a previous sync but has been deleted from the model. Review and delete the row manually if confirmed.</p>
+    <h3>Missing rate or description</h3>
+    <p>All data must be set in Revit Type Properties — not in the Google Sheet. The Sheet is a read-only output. Update the parameters in Revit and save to refresh.</p>
+    <h3>Support</h3>
+    <p>For technical support email <a href="mailto:Asanjayawaruna@hotmail.com" style="color:var(--revit-blue)">Asanjayawaruna@hotmail.com</a></p>
+    <button class="modal-close" onclick="closeModal('modal-help')">Close</button>
+  </div>
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────
+const state = {
+  user: null,
+  projectName: '', client: '', ref: '', discipline: 'Structural',
+  units: 'metric', currency: 'GBP', contingency: 10, prelim: 5,
+  params: {
+    itemNumber: 'BOQ_ItemNumber', description: 'BOQ_Description',
+    unit: 'BOQ_Unit', rate: 'BOQ_Rate', measureBy: 'BOQ_MeasureBy'
+  },
+  categories: ['Walls','Floors','Ceilings','Roofs','Columns',
+                'Structural Framing','Doors','Windows','Stairs'],
+  folderName: '', spreadsheetName: '', boqTab: 'BOQ',
+  summaryTab: 'Cost Summary', autoSync: true, changeLog: true,
+  spreadsheetId: '', folderId: ''
+};
+
+const CATEGORIES = [
+  { name: 'Walls',              icon: '🧱', default: true  },
+  { name: 'Floors',             icon: '⬛', default: true  },
+  { name: 'Ceilings',           icon: '🔲', default: true  },
+  { name: 'Roofs',              icon: '🏠', default: true  },
+  { name: 'Columns',            icon: '🏛️', default: true  },
+  { name: 'Structural Framing', icon: '⚙️', default: true  },
+  { name: 'Doors',              icon: '🚪', default: true  },
+  { name: 'Windows',            icon: '🪟', default: true  },
+  { name: 'Stairs',             icon: '🪜', default: true  },
+  { name: 'Ramps',              icon: '📐', default: false },
+  { name: 'Generic Models',     icon: '📦', default: false },
+];
+
+const STEPS = ['Project','Parameters','Drive & Sheets','Review'];
+
+// ── NAVIGATION ────────────────────────────────────────────────────────
+function goTo(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(screenId).classList.add('active');
+  window.scrollTo(0, 0);
+
+  // Render step indicators
+  const stepMap = {
+    'screen-project': 0, 'screen-params': 1,
+    'screen-sheets': 2, 'screen-review': 3
+  };
+  if (stepMap[screenId] !== undefined) {
+    renderStepIndicator(stepMap[screenId], screenId.replace('screen-','si-'));
+  }
+
+  // Pre-fill sheets screen
+  if (screenId === 'screen-sheets') prefillSheets();
+  if (screenId === 'screen-review') renderReview();
+}
+
+// ── STEP INDICATOR ────────────────────────────────────────────────────
+function renderStepIndicator(activeIdx, containerId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = STEPS.map((s, i) => {
+    const cls = i < activeIdx ? 'done' : i === activeIdx ? 'active' : '';
+    const lcls = i === activeIdx ? 'active' : '';
+    const lineCls = i < activeIdx ? 'done' : '';
+    const num = i < activeIdx ? '✓' : i + 1;
+    return `<div class="si-item">
+      <div class="si-dot ${cls}">${num}</div>
+      <span class="si-label ${lcls}">${s}</span>
+    </div>${i < STEPS.length - 1 ? `<div class="si-line ${lineCls}"></div>` : ''}`;
+  }).join('');
+}
+
+// ── TERMS ─────────────────────────────────────────────────────────────
+function toggleCheck(id) {
+  const cb = document.getElementById(id);
+  cb.checked = !cb.checked;
+}
+
+function acceptTerms() {
+  const t = document.getElementById('chk-terms').checked;
+  const p = document.getElementById('chk-privacy').checked;
+  const v = document.getElementById('chk-verify').checked;
+  if (!t || !p || !v) {
+    alert('Please read and accept all three items before continuing.');
+    return;
+  }
+  goTo('screen-signin');
+}
+
+// ── SIGN IN ───────────────────────────────────────────────────────────
+function doSignIn() {
+  const btn = document.querySelector('.google-btn');
+  const status = document.getElementById('signin-status');
+  btn.disabled = true;
+  btn.innerHTML = '<span style="opacity:.6">Signing in...</span>';
+  status.textContent = 'Opening Google sign-in...';
+
+  // In production this calls the Revit addin local server:
+  // fetch('http://localhost:5000/auth/google')
+  // For now simulate the OAuth flow
+  setTimeout(() => {
+    // Read email from URL params if passed by addin
+    const params = new URLSearchParams(window.location.search);
+    const email = params.get('email') || 'user@gmail.com';
+    state.user = { email };
+
+    document.getElementById('signed-in-panel').style.display = 'block';
+    document.getElementById('signed-in-email').textContent = email;
+    document.getElementById('btn-signin-next').style.display = 'flex';
+    btn.style.display = 'none';
+    status.textContent = '';
+
+    // Pre-fill project from URL params
+    const pname = params.get('projectName');
+    const client = params.get('client');
+    const ref = params.get('reference');
+    const units = params.get('units');
+    if (pname) document.getElementById('f-pname').value = decodeURIComponent(pname);
+    if (client) document.getElementById('f-client').value = decodeURIComponent(client);
+    if (ref) document.getElementById('f-ref').value = decodeURIComponent(ref);
+    if (units) document.getElementById('f-units').value = units;
+  }, 1500);
+}
+
+// ── PROJECT ───────────────────────────────────────────────────────────
+function saveProject() {
+  state.projectName = document.getElementById('f-pname').value || 'New Project';
+  state.client      = document.getElementById('f-client').value;
+  state.ref         = document.getElementById('f-ref').value;
+  state.discipline  = document.getElementById('f-disc').value;
+  state.units       = document.getElementById('f-units').value;
+  state.currency    = document.getElementById('f-currency').value;
+  state.contingency = parseFloat(document.getElementById('f-contingency').value) || 10;
+  state.prelim      = parseFloat(document.getElementById('f-prelim').value) || 5;
+}
+
+// ── PARAMETERS ───────────────────────────────────────────────────────
+function initCatGrid() {
+  const grid = document.getElementById('cat-grid');
+  grid.innerHTML = CATEGORIES.map(c => `
+    <div class="cat-item${c.default ? ' selected' : ''}" onclick="toggleCat(this,'${c.name}')">
+      <input type="checkbox"${c.default ? ' checked' : ''}>
+      <span class="cat-icon">${c.icon}</span>
+      <span>${c.name}</span>
+    </div>`).join('');
+}
+
+function toggleCat(el, name) {
+  el.classList.toggle('selected');
+  const cb = el.querySelector('input');
+  cb.checked = !cb.checked;
+  if (cb.checked) {
+    if (!state.categories.includes(name)) state.categories.push(name);
+  } else {
+    state.categories = state.categories.filter(c => c !== name);
+  }
+}
+
+function saveParams() {
+  state.params.itemNumber  = document.getElementById('p-itemno').value;
+  state.params.description = document.getElementById('p-desc').value;
+  state.params.unit        = document.getElementById('p-unit').value;
+  state.params.rate        = document.getElementById('p-rate').value;
+  state.params.measureBy   = document.getElementById('p-measureby').value;
+}
+
+// ── SHEETS ────────────────────────────────────────────────────────────
+function prefillSheets() {
+  const pname = document.getElementById('f-pname')?.value || state.projectName || 'New Project';
+  state.projectName = pname;
+
+  document.getElementById('f-folder').value = pname;
+  document.getElementById('f-spreadsheet').value = `${pname} — BOQ`;
+  updatePreview();
+}
+
+function updatePreview() {
+  const folder = document.getElementById('f-folder').value || 'Project Folder';
+  const sheet  = document.getElementById('f-spreadsheet').value || 'BOQ Spreadsheet';
+  const boqTab = document.getElementById('f-boqtab').value || 'BOQ';
+  const sumTab = document.getElementById('f-summarytab').value || 'Cost Summary';
+
+  document.getElementById('dp-folder-name').textContent = folder;
+  document.getElementById('dp-sheet-name').textContent  = sheet;
+  document.getElementById('dp-boq-tab').textContent     = boqTab;
+  document.getElementById('dp-summary-tab').textContent = sumTab;
+}
+
+function toggleTog(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('on');
+  if (id === 'tog-autosync') state.autoSync = el.classList.contains('on');
+  if (id === 'tog-changelog') state.changeLog = el.classList.contains('on');
+}
+
+// ── REVIEW ────────────────────────────────────────────────────────────
+function renderReview() {
+  saveProject();
+  saveParams();
+
+  state.folderName     = document.getElementById('f-folder')?.value || state.projectName;
+  state.spreadsheetName = document.getElementById('f-spreadsheet')?.value || state.projectName + ' — BOQ';
+  state.boqTab         = document.getElementById('f-boqtab')?.value || 'BOQ';
+  state.summaryTab     = document.getElementById('f-summarytab')?.value || 'Cost Summary';
+
+  const currencySymbols = { GBP:'£', USD:'$', EUR:'€', AED:'AED', SGD:'S$', LKR:'LKR', AUD:'A$' };
+
+  document.getElementById('review-project').innerHTML = `
+    <div class="review-item"><div class="review-key">Project Name</div><div class="review-val blue">${state.projectName}</div></div>
+    <div class="review-item"><div class="review-key">Client</div><div class="review-val">${state.client || '—'}</div></div>
+    <div class="review-item"><div class="review-key">Reference</div><div class="review-val">${state.ref || '—'}</div></div>
+    <div class="review-item"><div class="review-key">Discipline</div><div class="review-val">${state.discipline}</div></div>
+    <div class="review-item"><div class="review-key">Units</div><div class="review-val">${state.units === 'metric' ? 'Metric' : 'Imperial'}</div></div>
+    <div class="review-item"><div class="review-key">Currency</div><div class="review-val">${state.currency} (${currencySymbols[state.currency] || state.currency})</div></div>
+    <div class="review-item"><div class="review-key">Contingency</div><div class="review-val">${state.contingency}%</div></div>
+    <div class="review-item"><div class="review-key">Prelims</div><div class="review-val">${state.prelim}%</div></div>`;
+
+  document.getElementById('review-sheets').innerHTML = `
+    <div class="review-item"><div class="review-key">Drive Folder</div><div class="review-val blue">${state.folderName}</div></div>
+    <div class="review-item"><div class="review-key">Spreadsheet</div><div class="review-val">${state.spreadsheetName}</div></div>
+    <div class="review-item"><div class="review-key">BOQ Tab</div><div class="review-val">${state.boqTab}</div></div>
+    <div class="review-item"><div class="review-key">Summary Tab</div><div class="review-val">${state.summaryTab}</div></div>
+    <div class="review-item"><div class="review-key">Google Account</div><div class="review-val green">${state.user?.email || '—'}</div></div>
+    <div class="review-item"><div class="review-key">Auto Sync</div><div class="review-val">${state.autoSync ? 'On' : 'Off'}</div></div>`;
+
+  document.getElementById('review-params').innerHTML = `
+    <div class="review-item"><div class="review-key">Item Number</div><div class="review-val blue">${state.params.itemNumber}</div></div>
+    <div class="review-item"><div class="review-key">Description</div><div class="review-val blue">${state.params.description}</div></div>
+    <div class="review-item"><div class="review-key">Unit</div><div class="review-val blue">${state.params.unit}</div></div>
+    <div class="review-item"><div class="review-key">Rate</div><div class="review-val blue">${state.params.rate}</div></div>
+    <div class="review-item"><div class="review-key">Measure By</div><div class="review-val blue">${state.params.measureBy}</div></div>
+    <div class="review-item"><div class="review-key">Categories</div><div class="review-val">${state.categories.length} selected</div></div>`;
+}
+
+// ── CREATING ──────────────────────────────────────────────────────────
+function startCreating() {
+  goTo('screen-creating');
+  runCreationSteps();
+}
+
+async function runCreationSteps() {
+  const steps = 6;
+  const delays = [800, 1200, 1400, 1000, 1000, 600];
+
+  for (let i = 0; i < steps; i++) {
+    setStep(i, 'running');
+    await wait(delays[i]);
+    setStep(i, 'done');
+  }
+
+  // Simulate getting spreadsheet ID back
+  state.spreadsheetId = 'SPREADSHEET_ID_FROM_API';
+  state.folderId      = 'FOLDER_ID_FROM_API';
+
+  // Save config to file (in production: POST to localhost:5000/save-config)
+  saveConfigToFile();
+
+  setTimeout(() => showSuccess(), 400);
+}
+
+function setStep(i, status) {
+  const dot  = document.getElementById(`csd-${i}`);
+  const text = document.getElementById(`cst-${i}`);
+  dot.className  = `cs-dot ${status}`;
+  text.className = `cs-text ${status === 'running' ? 'active' : status}`;
+  if (status === 'done') dot.innerHTML = '✓';
+  if (status === 'running') dot.innerHTML = '◌';
+}
+
+function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function saveConfigToFile() {
+  const config = {
+    projectName: state.projectName,
+    clientName:  state.client,
+    projectReference: state.ref,
+    discipline:  state.discipline,
+    googleUserEmail: state.user?.email || '',
+    driveFolderId:   state.folderId,
+    spreadsheetId:   state.spreadsheetId,
+    boqSheetName:    state.boqTab,
+    summarySheetName: state.summaryTab,
+    unitSystem:      state.units === 'metric' ? 0 : 1,
+    currency:        state.currency,
+    contingency:     state.contingency,
+    prelim:          state.prelim,
+    paramItemNumber:  state.params.itemNumber,
+    paramDescription: state.params.description,
+    paramUnit:        state.params.unit,
+    paramRate:        state.params.rate,
+    paramMeasureBy:   state.params.measureBy,
+    includedCategories: state.categories,
+    syncOnSave:      state.autoSync,
+    enableChangeLog: state.changeLog,
+    appVersion:      '1.0.0'
+  };
+
+  // In production: POST config to localhost:5000/save-config
+  // fetch('http://localhost:5000/save-config', {
+  //   method: 'POST',
+  //   headers: { 'Content-Type': 'application/json' },
+  //   body: JSON.stringify(config)
+  // });
+  console.log('Config to save:', JSON.stringify(config, null, 2));
+}
+
+function showSuccess() {
+  goTo('screen-success');
+  document.getElementById('success-sub').textContent =
+    `${state.projectName} has been configured. Your Google Sheet is ready and BOQ Connect will sync automatically every time you save the Revit file.`;
+
+  document.getElementById('success-links').innerHTML = `
+    <a class="link-card" href="https://docs.google.com/spreadsheets/d/${state.spreadsheetId}" target="_blank">
+      <div>
+        <div class="link-card-label">Google Sheet</div>
+        <div class="link-card-val">${state.spreadsheetName}</div>
+      </div>
+      <button class="link-open-btn">Open →</button>
+    </a>
+    <a class="link-card" href="https://drive.google.com/drive/folders/${state.folderId}" target="_blank">
+      <div>
+        <div class="link-card-label">Google Drive Folder</div>
+        <div class="link-card-val">${state.folderName}</div>
+      </div>
+      <button class="link-open-btn">Open →</button>
+    </a>`;
+}
+
+function closeWizard() {
+  // In production: tell the addin the wizard is complete
+  // fetch('http://localhost:5000/wizard-complete', { method: 'POST' });
+  window.close();
+}
+
+// ── MODALS ────────────────────────────────────────────────────────────
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ── INIT ──────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  initCatGrid();
+
+  // Read URL params from Revit addin
+  const params = new URLSearchParams(window.location.search);
+  const pname = params.get('projectName');
+  const client = params.get('client');
+  const ref = params.get('reference');
+  const units = params.get('units');
+
+  if (pname) document.getElementById('f-pname').value = decodeURIComponent(pname);
+  if (client) document.getElementById('f-client').value = decodeURIComponent(client);
+  if (ref) document.getElementById('f-ref').value = decodeURIComponent(ref);
+  if (units) document.getElementById('f-units').value = units;
+});
+</script>
+</body>
+</html>
