@@ -1678,37 +1678,39 @@ function acceptTerms() {
 
 // ── SIGN IN ───────────────────────────────────────────────────────────
 function doSignIn() {
-  const btn = document.querySelector('.google-btn');
-  const status = document.getElementById('signin-status');
-  btn.disabled = true;
-  btn.innerHTML = '<span style="opacity:.6">Signing in...</span>';
-  status.textContent = 'Opening Google sign-in...';
+  const params = new URLSearchParams(window.location.search);
+  const emailRaw = params.get('email');
+  const email = emailRaw ? decodeURIComponent(emailRaw) : null;
 
-  // In production this calls the Revit addin local server:
-  // fetch('http://localhost:5000/auth/google')
-  // For now simulate the OAuth flow
-  setTimeout(() => {
-    // Read email from URL params if passed by addin
-    const params = new URLSearchParams(window.location.search);
-    const email = params.get('email') || 'user@gmail.com';
+  // Pre-fill project fields from URL params passed by Revit addin
+  const pname  = params.get('projectName');
+  const client = params.get('client');
+  const ref    = params.get('reference');
+  const units  = params.get('units');
+  if (pname)  document.getElementById('f-pname').value  = decodeURIComponent(pname);
+  if (client) document.getElementById('f-client').value = decodeURIComponent(client);
+  if (ref)    document.getElementById('f-ref').value    = decodeURIComponent(ref);
+  if (units)  document.getElementById('f-units').value  = units;
+
+  if (email && email.length > 0) {
+    // Real email passed from Revit addin after OAuth completed
     state.user = { email };
-
     document.getElementById('signed-in-panel').style.display = 'block';
-    document.getElementById('signed-in-email').textContent = email;
+    document.getElementById('signed-in-email').textContent   = email;
     document.getElementById('btn-signin-next').style.display = 'flex';
-    btn.style.display = 'none';
-    status.textContent = '';
-
-    // Pre-fill project from URL params
-    const pname = params.get('projectName');
-    const client = params.get('client');
-    const ref = params.get('reference');
-    const units = params.get('units');
-    if (pname) document.getElementById('f-pname').value = decodeURIComponent(pname);
-    if (client) document.getElementById('f-client').value = decodeURIComponent(client);
-    if (ref) document.getElementById('f-ref').value = decodeURIComponent(ref);
-    if (units) document.getElementById('f-units').value = units;
-  }, 1500);
+    document.querySelector('.google-btn').style.display      = 'none';
+    document.getElementById('signin-status').textContent     = '';
+  } else {
+    // No email — wizard was not opened from Revit addin correctly
+    document.getElementById('signin-status').innerHTML =
+      '<div style="color:var(--revit-amber);padding:12px 14px;background:var(--revit-amber-dim);' +
+      'border:1px solid rgba(245,166,35,.3);border-radius:6px;margin-top:12px;font-size:13px;line-height:1.6">' +
+      '⚠️ <strong>Please close this window.</strong><br>' +
+      'Google sign-in happens inside Revit. Go back to Revit and click ' +
+      '<strong>New Project</strong> to start the wizard correctly.' +
+      '</div>';
+    document.querySelector('.google-btn').style.display = 'none';
+  }
 }
 
 // ── PROJECT ───────────────────────────────────────────────────────────
@@ -1931,18 +1933,9 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
 // ── INIT ──────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   initCatGrid();
-
-  // Read URL params from Revit addin
-  const params = new URLSearchParams(window.location.search);
-  const pname = params.get('projectName');
-  const client = params.get('client');
-  const ref = params.get('reference');
-  const units = params.get('units');
-
-  if (pname) document.getElementById('f-pname').value = decodeURIComponent(pname);
-  if (client) document.getElementById('f-client').value = decodeURIComponent(client);
-  if (ref) document.getElementById('f-ref').value = decodeURIComponent(ref);
-  if (units) document.getElementById('f-units').value = units;
+  // Auto-run sign-in check — reads email and project params from URL
+  // These are passed by the Revit addin when it opens this wizard
+  doSignIn();
 });
 </script>
 </body>
