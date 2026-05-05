@@ -1830,23 +1830,126 @@ function startCreating() {
 }
 
 async function runCreationSteps() {
-  const steps = 6;
-  const delays = [800, 1200, 1400, 1000, 1000, 600];
+  const LOCAL_SERVER = 'http://localhost:5000';
 
-  for (let i = 0; i < steps; i++) {
-    setStep(i, 'running');
-    await wait(delays[i]);
-    setStep(i, 'done');
+  try {
+    // Step 0 — Check connection to Revit addin
+    setStep(0, 'running');
+
+    // Detect if running inside Revit WPF browser (window.external available)
+    // or in external browser (use localhost fetch)
+    const inRevit = window.external &&
+                    typeof window.external.IsRevitAddin === 'function' &&
+                    window.external.IsRevitAddin();
+
+    if (!inRevit) {
+      // External browser — try localhost
+      try {
+        const ping = await fetch(LOCAL_SERVER + '/ping', { mode: 'cors' });
+        if (!ping.ok) throw new Error('Server not responding');
+      } catch(e) {
+        throw new Error(
+          'Cannot connect to Revit addin.\n\n' +
+          'Please make sure:\n' +
+          '• Revit 2026 is open\n' +
+          '• A Revit project file is open\n' +
+          '• You started the wizard from the BOQ Connect ribbon button');
+      }
+    }
+    setStep(0, 'done');
+
+    // Step 1 — Creating Drive folder
+    setStep(1, 'running');
+    await wait(400);
+
+    // Step 2 — Creating Google Sheet
+    setStep(2, 'running');
+
+    // Build config payload to send to addin
+    const payload = {
+      projectName:    state.projectName,
+      clientName:     state.client,
+      reference:      state.ref,
+      discipline:     state.discipline,
+      unitSystem:     state.units,
+      currency:       state.currency,
+      contingency:    state.contingency,
+      prelim:         state.prelim,
+      folderName:     state.folderName,
+      spreadsheetName: state.spreadsheetName,
+      boqTab:         state.boqTab,
+      summaryTab:     state.summaryTab,
+      autoSync:       state.autoSync,
+      changeLog:      state.changeLog,
+      paramNames: {
+        itemNumber:  state.params.itemNumber,
+        description: state.params.description,
+        unit:        state.params.unit,
+        rate:        state.params.rate,
+        measureBy:   state.params.measureBy
+      },
+      categories: state.categories
+    };
+
+    // Call addin to create Drive folder and Sheet
+    const createResp = await fetch(LOCAL_SERVER + '/create-project', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!createResp.ok) {
+      const err = await createResp.json();
+      throw new Error(err.error || 'Failed to create project files');
+    }
+
+    const createResult = await createResp.json();
+    state.spreadsheetId = createResult.spreadsheetId;
+    state.folderId      = createResult.folderId;
+    state.sheetUrl      = createResult.sheetUrl;
+    state.folderUrl     = createResult.folderUrl;
+
+    setStep(1, 'done');
+    setStep(2, 'done');
+
+    // Step 3 — BOQ tab structure
+    setStep(3, 'running');
+    await wait(500);
+    setStep(3, 'done');
+
+    // Step 4 — Summary tab formulas
+    setStep(4, 'running');
+    await wait(500);
+    setStep(4, 'done');
+
+    // Step 5 — Save config
+    setStep(5, 'running');
+    payload.spreadsheetId = state.spreadsheetId;
+    payload.folderId      = state.folderId;
+
+    const saveResp = await fetch(LOCAL_SERVER + '/save-config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!saveResp.ok) {
+      throw new Error('Failed to save project configuration');
+    }
+
+    setStep(5, 'done');
+    setTimeout(() => showSuccess(), 400);
+
+  } catch(err) {
+    // Show error to user
+    document.getElementById('creating-steps').innerHTML +=
+      '<div style="margin-top:20px;padding:14px;background:rgba(232,85,85,0.1);' +
+      'border:1px solid rgba(232,85,85,0.3);border-radius:8px;color:#e85555;font-size:13px">' +
+      '<strong>Error:</strong> ' + err.message + '<br><br>' +
+      '<button onclick="goTo('screen-review')" style="background:transparent;border:1px solid #e85555;' +
+      'color:#e85555;padding:6px 14px;border-radius:4px;cursor:pointer;font-size:12px">← Go Back</button>' +
+      '</div>';
   }
-
-  // Simulate getting spreadsheet ID back
-  state.spreadsheetId = 'SPREADSHEET_ID_FROM_API';
-  state.folderId      = 'FOLDER_ID_FROM_API';
-
-  // Save config to file (in production: POST to localhost:5000/save-config)
-  saveConfigToFile();
-
-  setTimeout(() => showSuccess(), 400);
 }
 
 function setStep(i, status) {
@@ -1900,27 +2003,35 @@ function showSuccess() {
   document.getElementById('success-sub').textContent =
     `${state.projectName} has been configured. Your Google Sheet is ready and BOQ Connect will sync automatically every time you save the Revit file.`;
 
-  document.getElementById('success-links').innerHTML = `
-    <a class="link-card" href="https://docs.google.com/spreadsheets/d/${state.spreadsheetId}" target="_blank">
-      <div>
-        <div class="link-card-label">Google Sheet</div>
-        <div class="link-card-val">${state.spreadsheetName}</div>
-      </div>
-      <button class="link-open-btn">Open →</button>
-    </a>
-    <a class="link-card" href="https://drive.google.com/drive/folders/${state.folderId}" target="_blank">
-      <div>
-        <div class="link-card-label">Google Drive Folder</div>
-        <div class="link-card-val">${state.folderName}</div>
-      </div>
-      <button class="link-open-btn">Open →</button>
-    </a>`;
+  const sheetUrl  = state.sheetUrl  || ('https://docs.google.com/spreadsheets/d/' + state.spreadsheetId);
+  const folderUrl = state.folderUrl || ('https://drive.google.com/drive/folders/' + state.folderId);
+
+  document.getElementById('success-links').innerHTML =
+    '<a class="link-card" href="' + sheetUrl + '" target="_blank">' +
+    '<div><div class="link-card-label">Google Sheet</div>' +
+    '<div class="link-card-val">' + state.spreadsheetName + '</div></div>' +
+    '<button class="link-open-btn">Open →</button></a>' +
+    '<a class="link-card" href="' + folderUrl + '" target="_blank">' +
+    '<div><div class="link-card-label">Google Drive Folder</div>' +
+    '<div class="link-card-val">' + state.folderName + '</div></div>' +
+    '<button class="link-open-btn">Open →</button></a>';
 }
 
 function closeWizard() {
-  // In production: tell the addin the wizard is complete
-  // fetch('http://localhost:5000/wizard-complete', { method: 'POST' });
-  window.close();
+  try {
+    // Tell the Revit addin the wizard is complete
+    // window.external is the ScriptBridge C# object
+    if (window.external && window.external.IsRevitAddin &&
+        window.external.IsRevitAddin()) {
+      window.external.WizardComplete(
+        state.spreadsheetId || '',
+        state.folderId      || '');
+    } else {
+      window.close();
+    }
+  } catch(e) {
+    window.close();
+  }
 }
 
 // ── MODALS ────────────────────────────────────────────────────────────
