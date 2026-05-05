@@ -1591,8 +1591,10 @@ body::before {
 </div>
 
 <script>
+// IE11-compatible JavaScript — no async/await, no fetch, no template literals
+
 // ── STATE ──────────────────────────────────────────────────────────────
-const state = {
+var state = {
   user: null,
   projectName: '', client: '', ref: '', discipline: 'Structural',
   units: 'metric', currency: 'GBP', contingency: 10, prelim: 5,
@@ -1604,71 +1606,77 @@ const state = {
                 'Structural Framing','Doors','Windows','Stairs'],
   folderName: '', spreadsheetName: '', boqTab: 'BOQ',
   summaryTab: 'Cost Summary', autoSync: true, changeLog: true,
-  spreadsheetId: '', folderId: ''
+  spreadsheetId: '', folderId: '', sheetUrl: '', folderUrl: ''
 };
 
-const CATEGORIES = [
-  { name: 'Walls',              icon: '🧱', default: true  },
-  { name: 'Floors',             icon: '⬛', default: true  },
-  { name: 'Ceilings',           icon: '🔲', default: true  },
-  { name: 'Roofs',              icon: '🏠', default: true  },
-  { name: 'Columns',            icon: '🏛️', default: true  },
-  { name: 'Structural Framing', icon: '⚙️', default: true  },
-  { name: 'Doors',              icon: '🚪', default: true  },
-  { name: 'Windows',            icon: '🪟', default: true  },
-  { name: 'Stairs',             icon: '🪜', default: true  },
-  { name: 'Ramps',              icon: '📐', default: false },
-  { name: 'Generic Models',     icon: '📦', default: false },
+var CATEGORIES = [
+  { name: 'Walls',              icon: '&#x1F9F1;', def: true  },
+  { name: 'Floors',             icon: '&#x2B1B;',  def: true  },
+  { name: 'Ceilings',           icon: '&#x1F532;', def: true  },
+  { name: 'Roofs',              icon: '&#x1F3E0;', def: true  },
+  { name: 'Columns',            icon: '&#x1F3DB;', def: true  },
+  { name: 'Structural Framing', icon: '&#x2699;',  def: true  },
+  { name: 'Doors',              icon: '&#x1F6AA;', def: true  },
+  { name: 'Windows',            icon: '&#x1FA9F;', def: true  },
+  { name: 'Stairs',             icon: '&#x1FA9C;', def: true  },
+  { name: 'Ramps',              icon: '&#x1F4D0;', def: false },
+  { name: 'Generic Models',     icon: '&#x1F4E6;', def: false }
 ];
 
-const STEPS = ['Project','Parameters','Drive & Sheets','Review'];
+var STEPS = ['Project','Parameters','Drive & Sheets','Review'];
+var LOCAL_SERVER = 'http://localhost:5000';
 
 // ── NAVIGATION ────────────────────────────────────────────────────────
 function goTo(screenId) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  var screens = document.querySelectorAll('.screen');
+  for (var i = 0; i < screens.length; i++) {
+    screens[i].classList.remove('active');
+  }
   document.getElementById(screenId).classList.add('active');
   window.scrollTo(0, 0);
 
-  // Render step indicators
-  const stepMap = {
+  var stepMap = {
     'screen-project': 0, 'screen-params': 1,
     'screen-sheets': 2, 'screen-review': 3
   };
   if (stepMap[screenId] !== undefined) {
     renderStepIndicator(stepMap[screenId], screenId.replace('screen-','si-'));
   }
-
-  // Pre-fill sheets screen
   if (screenId === 'screen-sheets') prefillSheets();
   if (screenId === 'screen-review') renderReview();
 }
 
 // ── STEP INDICATOR ────────────────────────────────────────────────────
 function renderStepIndicator(activeIdx, containerId) {
-  const el = document.getElementById(containerId);
+  var el = document.getElementById(containerId);
   if (!el) return;
-  el.innerHTML = STEPS.map((s, i) => {
-    const cls = i < activeIdx ? 'done' : i === activeIdx ? 'active' : '';
-    const lcls = i === activeIdx ? 'active' : '';
-    const lineCls = i < activeIdx ? 'done' : '';
-    const num = i < activeIdx ? '✓' : i + 1;
-    return `<div class="si-item">
-      <div class="si-dot ${cls}">${num}</div>
-      <span class="si-label ${lcls}">${s}</span>
-    </div>${i < STEPS.length - 1 ? `<div class="si-line ${lineCls}"></div>` : ''}`;
-  }).join('');
+  var html = '';
+  for (var i = 0; i < STEPS.length; i++) {
+    var cls  = i < activeIdx ? 'done' : i === activeIdx ? 'active' : '';
+    var lcls = i === activeIdx ? 'active' : '';
+    var lCls = i < activeIdx ? 'done' : '';
+    var num  = i < activeIdx ? '&#10003;' : (i + 1);
+    html += '<div class="si-item">' +
+            '<div class="si-dot ' + cls + '">' + num + '</div>' +
+            '<span class="si-label ' + lcls + '">' + STEPS[i] + '</span>' +
+            '</div>';
+    if (i < STEPS.length - 1) {
+      html += '<div class="si-line ' + lCls + '"></div>';
+    }
+  }
+  el.innerHTML = html;
 }
 
 // ── TERMS ─────────────────────────────────────────────────────────────
 function toggleCheck(id) {
-  const cb = document.getElementById(id);
+  var cb = document.getElementById(id);
   cb.checked = !cb.checked;
 }
 
 function acceptTerms() {
-  const t = document.getElementById('chk-terms').checked;
-  const p = document.getElementById('chk-privacy').checked;
-  const v = document.getElementById('chk-verify').checked;
+  var t = document.getElementById('chk-terms').checked;
+  var p = document.getElementById('chk-privacy').checked;
+  var v = document.getElementById('chk-verify').checked;
   if (!t || !p || !v) {
     alert('Please read and accept all three items before continuing.');
     return;
@@ -1678,39 +1686,53 @@ function acceptTerms() {
 
 // ── SIGN IN ───────────────────────────────────────────────────────────
 function doSignIn() {
-  const params = new URLSearchParams(window.location.search);
-  const emailRaw = params.get('email');
-  const email = emailRaw ? decodeURIComponent(emailRaw) : null;
+  var params   = getUrlParams();
+  var emailRaw = params['email'];
+  var email    = emailRaw ? decodeURIComponent(emailRaw) : null;
 
-  // Pre-fill project fields from URL params passed by Revit addin
-  const pname  = params.get('projectName');
-  const client = params.get('client');
-  const ref    = params.get('reference');
-  const units  = params.get('units');
+  // Pre-fill project fields from URL params
+  var pname  = params['projectName'];
+  var client = params['client'];
+  var ref    = params['reference'];
+  var units  = params['units'];
   if (pname)  document.getElementById('f-pname').value  = decodeURIComponent(pname);
   if (client) document.getElementById('f-client').value = decodeURIComponent(client);
   if (ref)    document.getElementById('f-ref').value    = decodeURIComponent(ref);
   if (units)  document.getElementById('f-units').value  = units;
 
   if (email && email.length > 0) {
-    // Real email passed from Revit addin after OAuth completed
-    state.user = { email };
+    state.user = { email: email };
     document.getElementById('signed-in-panel').style.display = 'block';
     document.getElementById('signed-in-email').textContent   = email;
     document.getElementById('btn-signin-next').style.display = 'flex';
-    document.querySelector('.google-btn').style.display      = 'none';
-    document.getElementById('signin-status').textContent     = '';
+    var btn = document.querySelector('.google-btn');
+    if (btn) btn.style.display = 'none';
+    document.getElementById('signin-status').textContent = '';
   } else {
-    // No email — wizard was not opened from Revit addin correctly
     document.getElementById('signin-status').innerHTML =
       '<div style="color:var(--revit-amber);padding:12px 14px;background:var(--revit-amber-dim);' +
       'border:1px solid rgba(245,166,35,.3);border-radius:6px;margin-top:12px;font-size:13px;line-height:1.6">' +
-      '⚠️ <strong>Please close this window.</strong><br>' +
+      '&#9888; <strong>Please close this window.</strong><br>' +
       'Google sign-in happens inside Revit. Go back to Revit and click ' +
       '<strong>New Project</strong> to start the wizard correctly.' +
       '</div>';
-    document.querySelector('.google-btn').style.display = 'none';
+    var btn2 = document.querySelector('.google-btn');
+    if (btn2) btn2.style.display = 'none';
   }
+}
+
+// ── URL PARAMS ────────────────────────────────────────────────────────
+function getUrlParams() {
+  var result = {};
+  var search = window.location.search.substring(1);
+  var pairs  = search.split('&');
+  for (var i = 0; i < pairs.length; i++) {
+    var pair = pairs[i].split('=');
+    if (pair[0]) {
+      result[pair[0]] = pair[1] || '';
+    }
+  }
+  return result;
 }
 
 // ── PROJECT ───────────────────────────────────────────────────────────
@@ -1727,23 +1749,32 @@ function saveProject() {
 
 // ── PARAMETERS ───────────────────────────────────────────────────────
 function initCatGrid() {
-  const grid = document.getElementById('cat-grid');
-  grid.innerHTML = CATEGORIES.map(c => `
-    <div class="cat-item${c.default ? ' selected' : ''}" onclick="toggleCat(this,'${c.name}')">
-      <input type="checkbox"${c.default ? ' checked' : ''}>
-      <span class="cat-icon">${c.icon}</span>
-      <span>${c.name}</span>
-    </div>`).join('');
+  var grid = document.getElementById('cat-grid');
+  var html = '';
+  for (var i = 0; i < CATEGORIES.length; i++) {
+    var c   = CATEGORIES[i];
+    var sel = c.def ? ' selected' : '';
+    var chk = c.def ? ' checked' : '';
+    html += '<div class="cat-item' + sel + '" onclick="toggleCat(this,'' +
+            c.name + '')">' +
+            '<input type="checkbox"' + chk + '>' +
+            '<span class="cat-icon">' + c.icon + '</span>' +
+            '<span>' + c.name + '</span></div>';
+  }
+  grid.innerHTML = html;
 }
 
 function toggleCat(el, name) {
   el.classList.toggle('selected');
-  const cb = el.querySelector('input');
+  var cb = el.querySelector('input');
   cb.checked = !cb.checked;
   if (cb.checked) {
-    if (!state.categories.includes(name)) state.categories.push(name);
+    if (state.categories.indexOf(name) === -1)
+      state.categories.push(name);
   } else {
-    state.categories = state.categories.filter(c => c !== name);
+    state.categories = state.categories.filter(function(c) {
+      return c !== name;
+    });
   }
 }
 
@@ -1757,19 +1788,20 @@ function saveParams() {
 
 // ── SHEETS ────────────────────────────────────────────────────────────
 function prefillSheets() {
-  const pname = document.getElementById('f-pname')?.value || state.projectName || 'New Project';
-  state.projectName = pname;
+  var pname = document.getElementById('f-pname') ?
+    document.getElementById('f-pname').value : state.projectName;
+  state.projectName = pname || 'New Project';
 
-  document.getElementById('f-folder').value = pname;
-  document.getElementById('f-spreadsheet').value = `${pname} — BOQ`;
+  document.getElementById('f-folder').value      = state.projectName;
+  document.getElementById('f-spreadsheet').value = state.projectName + ' — BOQ';
   updatePreview();
 }
 
 function updatePreview() {
-  const folder = document.getElementById('f-folder').value || 'Project Folder';
-  const sheet  = document.getElementById('f-spreadsheet').value || 'BOQ Spreadsheet';
-  const boqTab = document.getElementById('f-boqtab').value || 'BOQ';
-  const sumTab = document.getElementById('f-summarytab').value || 'Cost Summary';
+  var folder  = document.getElementById('f-folder').value || 'Project Folder';
+  var sheet   = document.getElementById('f-spreadsheet').value || 'BOQ Spreadsheet';
+  var boqTab  = document.getElementById('f-boqtab').value || 'BOQ';
+  var sumTab  = document.getElementById('f-summarytab').value || 'Cost Summary';
 
   document.getElementById('dp-folder-name').textContent = folder;
   document.getElementById('dp-sheet-name').textContent  = sheet;
@@ -1778,9 +1810,9 @@ function updatePreview() {
 }
 
 function toggleTog(id) {
-  const el = document.getElementById(id);
+  var el = document.getElementById(id);
   el.classList.toggle('on');
-  if (id === 'tog-autosync') state.autoSync = el.classList.contains('on');
+  if (id === 'tog-autosync') state.autoSync  = el.classList.contains('on');
   if (id === 'tog-changelog') state.changeLog = el.classList.contains('on');
 }
 
@@ -1789,38 +1821,49 @@ function renderReview() {
   saveProject();
   saveParams();
 
-  state.folderName     = document.getElementById('f-folder')?.value || state.projectName;
-  state.spreadsheetName = document.getElementById('f-spreadsheet')?.value || state.projectName + ' — BOQ';
-  state.boqTab         = document.getElementById('f-boqtab')?.value || 'BOQ';
-  state.summaryTab     = document.getElementById('f-summarytab')?.value || 'Cost Summary';
+  state.folderName      = document.getElementById('f-folder') ?
+    document.getElementById('f-folder').value : state.projectName;
+  state.spreadsheetName = document.getElementById('f-spreadsheet') ?
+    document.getElementById('f-spreadsheet').value : state.projectName + ' — BOQ';
+  state.boqTab    = document.getElementById('f-boqtab') ?
+    document.getElementById('f-boqtab').value : 'BOQ';
+  state.summaryTab = document.getElementById('f-summarytab') ?
+    document.getElementById('f-summarytab').value : 'Cost Summary';
 
-  const currencySymbols = { GBP:'£', USD:'$', EUR:'€', AED:'AED', SGD:'S$', LKR:'LKR', AUD:'A$' };
+  var syms = { GBP:'£', USD:'$', EUR:'€', AED:'AED', SGD:'S$', LKR:'LKR', AUD:'A$' };
+  var sym  = syms[state.currency] || state.currency;
 
-  document.getElementById('review-project').innerHTML = `
-    <div class="review-item"><div class="review-key">Project Name</div><div class="review-val blue">${state.projectName}</div></div>
-    <div class="review-item"><div class="review-key">Client</div><div class="review-val">${state.client || '—'}</div></div>
-    <div class="review-item"><div class="review-key">Reference</div><div class="review-val">${state.ref || '—'}</div></div>
-    <div class="review-item"><div class="review-key">Discipline</div><div class="review-val">${state.discipline}</div></div>
-    <div class="review-item"><div class="review-key">Units</div><div class="review-val">${state.units === 'metric' ? 'Metric' : 'Imperial'}</div></div>
-    <div class="review-item"><div class="review-key">Currency</div><div class="review-val">${state.currency} (${currencySymbols[state.currency] || state.currency})</div></div>
-    <div class="review-item"><div class="review-key">Contingency</div><div class="review-val">${state.contingency}%</div></div>
-    <div class="review-item"><div class="review-key">Prelims</div><div class="review-val">${state.prelim}%</div></div>`;
+  document.getElementById('review-project').innerHTML =
+    ri('Project Name', state.projectName, 'blue') +
+    ri('Client',       state.client || '—') +
+    ri('Reference',    state.ref || '—') +
+    ri('Discipline',   state.discipline) +
+    ri('Units',        state.units === 'metric' ? 'Metric' : 'Imperial') +
+    ri('Currency',     state.currency + ' (' + sym + ')') +
+    ri('Contingency',  state.contingency + '%') +
+    ri('Prelims',      state.prelim + '%');
 
-  document.getElementById('review-sheets').innerHTML = `
-    <div class="review-item"><div class="review-key">Drive Folder</div><div class="review-val blue">${state.folderName}</div></div>
-    <div class="review-item"><div class="review-key">Spreadsheet</div><div class="review-val">${state.spreadsheetName}</div></div>
-    <div class="review-item"><div class="review-key">BOQ Tab</div><div class="review-val">${state.boqTab}</div></div>
-    <div class="review-item"><div class="review-key">Summary Tab</div><div class="review-val">${state.summaryTab}</div></div>
-    <div class="review-item"><div class="review-key">Google Account</div><div class="review-val green">${state.user?.email || '—'}</div></div>
-    <div class="review-item"><div class="review-key">Auto Sync</div><div class="review-val">${state.autoSync ? 'On' : 'Off'}</div></div>`;
+  document.getElementById('review-sheets').innerHTML =
+    ri('Drive Folder',   state.folderName,      'blue') +
+    ri('Spreadsheet',    state.spreadsheetName) +
+    ri('BOQ Tab',        state.boqTab) +
+    ri('Summary Tab',    state.summaryTab) +
+    ri('Google Account', state.user ? state.user.email : '—', 'green') +
+    ri('Auto Sync',      state.autoSync ? 'On' : 'Off');
 
-  document.getElementById('review-params').innerHTML = `
-    <div class="review-item"><div class="review-key">Item Number</div><div class="review-val blue">${state.params.itemNumber}</div></div>
-    <div class="review-item"><div class="review-key">Description</div><div class="review-val blue">${state.params.description}</div></div>
-    <div class="review-item"><div class="review-key">Unit</div><div class="review-val blue">${state.params.unit}</div></div>
-    <div class="review-item"><div class="review-key">Rate</div><div class="review-val blue">${state.params.rate}</div></div>
-    <div class="review-item"><div class="review-key">Measure By</div><div class="review-val blue">${state.params.measureBy}</div></div>
-    <div class="review-item"><div class="review-key">Categories</div><div class="review-val">${state.categories.length} selected</div></div>`;
+  document.getElementById('review-params').innerHTML =
+    ri('Item Number',  state.params.itemNumber,  'blue') +
+    ri('Description',  state.params.description, 'blue') +
+    ri('Unit',         state.params.unit,        'blue') +
+    ri('Rate',         state.params.rate,        'blue') +
+    ri('Measure By',   state.params.measureBy,   'blue') +
+    ri('Categories',   state.categories.length + ' selected');
+}
+
+function ri(key, val, cls) {
+  return '<div class="review-item"><div class="review-key">' + key +
+         '</div><div class="review-val' + (cls ? ' ' + cls : '') +
+         '">' + val + '</div></div>';
 }
 
 // ── CREATING ──────────────────────────────────────────────────────────
@@ -1829,44 +1872,84 @@ function startCreating() {
   runCreationSteps();
 }
 
-async function runCreationSteps() {
-  const LOCAL_SERVER = 'http://localhost:5000';
+function setStep(i, status) {
+  var dot  = document.getElementById('csd-' + i);
+  var text = document.getElementById('cst-' + i);
+  if (!dot || !text) return;
+  dot.className  = 'cs-dot ' + status;
+  text.className = 'cs-text' + (status === 'running' ? ' active' : status === 'done' ? ' done' : '');
+  if (status === 'done')    dot.innerHTML = '&#10003;';
+  if (status === 'running') dot.innerHTML = '&#9675;';
+}
 
-  try {
-    // Step 0 — Check connection to Revit addin
-    setStep(0, 'running');
-
-    // Detect if running inside Revit WPF browser (window.external available)
-    // or in external browser (use localhost fetch)
-    const inRevit = window.external &&
-                    typeof window.external.IsRevitAddin === 'function' &&
-                    window.external.IsRevitAddin();
-
-    if (!inRevit) {
-      // External browser — try localhost
-      try {
-        const ping = await fetch(LOCAL_SERVER + '/ping', { mode: 'cors' });
-        if (!ping.ok) throw new Error('Server not responding');
-      } catch(e) {
-        throw new Error(
-          'Cannot connect to Revit addin.\n\n' +
-          'Please make sure:\n' +
-          '• Revit 2026 is open\n' +
-          '• A Revit project file is open\n' +
-          '• You started the wizard from the BOQ Connect ribbon button');
+function xhrPost(url, data, callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', url, true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4) {
+      if (xhr.status === 200) {
+        try {
+          callback(null, JSON.parse(xhr.responseText));
+        } catch(e) {
+          callback(new Error('Invalid response from server'));
+        }
+      } else {
+        try {
+          var err = JSON.parse(xhr.responseText);
+          callback(new Error(err.error || 'Server error ' + xhr.status));
+        } catch(e) {
+          callback(new Error('Server error ' + xhr.status));
+        }
       }
+    }
+  };
+  xhr.onerror = function() {
+    callback(new Error(
+      'Cannot connect to Revit addin.\n\n' +
+      'Make sure:\n' +
+      '- Revit 2026 is open\n' +
+      '- A project file is open\n' +
+      '- You started wizard from BOQ Connect ribbon'));
+  };
+  xhr.send(JSON.stringify(data));
+}
+
+function xhrGet(url, callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', url, true);
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4) {
+      callback(xhr.status === 200 ? null : new Error('Server error'), xhr.status);
+    }
+  };
+  xhr.onerror = function() { callback(new Error('Connection failed')); };
+  xhr.send();
+}
+
+function runCreationSteps() {
+  // Step 0 — ping server
+  setStep(0, 'running');
+
+  // Check if running inside Revit addin window
+  var inRevit = false;
+  try {
+    inRevit = window.external && window.external.IsRevitAddin &&
+              window.external.IsRevitAddin();
+  } catch(e) { inRevit = false; }
+
+  xhrGet(LOCAL_SERVER + '/ping', function(err) {
+    if (err) {
+      showCreatingError('Cannot connect to Revit addin. Make sure Revit is open with a project file, then click New Project again.');
+      return;
     }
     setStep(0, 'done');
 
-    // Step 1 — Creating Drive folder
+    // Step 1 & 2 — create Drive folder and Sheet
     setStep(1, 'running');
-    await wait(400);
-
-    // Step 2 — Creating Google Sheet
     setStep(2, 'running');
 
-    // Build config payload to send to addin
-    const payload = {
+    var payload = {
       projectName:    state.projectName,
       clientName:     state.client,
       reference:      state.ref,
@@ -1891,137 +1974,90 @@ async function runCreationSteps() {
       categories: state.categories
     };
 
-    // Call addin to create Drive folder and Sheet
-    const createResp = await fetch(LOCAL_SERVER + '/create-project', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+    xhrPost(LOCAL_SERVER + '/create-project', payload, function(err, result) {
+      if (err) {
+        showCreatingError(err.message);
+        return;
+      }
+
+      state.spreadsheetId = result.spreadsheetId || '';
+      state.folderId      = result.folderId      || '';
+      state.sheetUrl      = result.sheetUrl      || '';
+      state.folderUrl     = result.folderUrl     || '';
+
+      setStep(1, 'done');
+      setStep(2, 'done');
+
+      // Step 3 — BOQ tab
+      setStep(3, 'running');
+      setTimeout(function() {
+        setStep(3, 'done');
+
+        // Step 4 — Summary tab
+        setStep(4, 'running');
+        setTimeout(function() {
+          setStep(4, 'done');
+
+          // Step 5 — Save config
+          setStep(5, 'running');
+          payload.spreadsheetId = state.spreadsheetId;
+          payload.folderId      = state.folderId;
+
+          xhrPost(LOCAL_SERVER + '/save-config', payload, function(err2) {
+            if (err2) {
+              showCreatingError(err2.message);
+              return;
+            }
+            setStep(5, 'done');
+            setTimeout(function() { showSuccess(); }, 400);
+          });
+        }, 500);
+      }, 500);
     });
+  });
+}
 
-    if (!createResp.ok) {
-      const err = await createResp.json();
-      throw new Error(err.error || 'Failed to create project files');
-    }
-
-    const createResult = await createResp.json();
-    state.spreadsheetId = createResult.spreadsheetId;
-    state.folderId      = createResult.folderId;
-    state.sheetUrl      = createResult.sheetUrl;
-    state.folderUrl     = createResult.folderUrl;
-
-    setStep(1, 'done');
-    setStep(2, 'done');
-
-    // Step 3 — BOQ tab structure
-    setStep(3, 'running');
-    await wait(500);
-    setStep(3, 'done');
-
-    // Step 4 — Summary tab formulas
-    setStep(4, 'running');
-    await wait(500);
-    setStep(4, 'done');
-
-    // Step 5 — Save config
-    setStep(5, 'running');
-    payload.spreadsheetId = state.spreadsheetId;
-    payload.folderId      = state.folderId;
-
-    const saveResp = await fetch(LOCAL_SERVER + '/save-config', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (!saveResp.ok) {
-      throw new Error('Failed to save project configuration');
-    }
-
-    setStep(5, 'done');
-    setTimeout(() => showSuccess(), 400);
-
-  } catch(err) {
-    // Show error to user
-    document.getElementById('creating-steps').innerHTML +=
-      '<div style="margin-top:20px;padding:14px;background:rgba(232,85,85,0.1);' +
-      'border:1px solid rgba(232,85,85,0.3);border-radius:8px;color:#e85555;font-size:13px">' +
-      '<strong>Error:</strong> ' + err.message + '<br><br>' +
-      '<button onclick="goTo('screen-review')" style="background:transparent;border:1px solid #e85555;' +
-      'color:#e85555;padding:6px 14px;border-radius:4px;cursor:pointer;font-size:12px">← Go Back</button>' +
+function showCreatingError(msg) {
+  var steps = document.getElementById('creating-steps');
+  if (steps) {
+    steps.innerHTML += '<div style="margin-top:20px;padding:14px;' +
+      'background:rgba(232,85,85,0.1);border:1px solid rgba(232,85,85,0.3);' +
+      'border-radius:8px;color:#e85555;font-size:13px">' +
+      '<strong>Error:</strong> ' + msg + '<br><br>' +
+      '<button onclick="goTo('screen-review')" style="background:transparent;' +
+      'border:1px solid #e85555;color:#e85555;padding:6px 14px;' +
+      'border-radius:4px;cursor:pointer;font-size:12px">&#8592; Go Back</button>' +
       '</div>';
   }
 }
 
-function setStep(i, status) {
-  const dot  = document.getElementById(`csd-${i}`);
-  const text = document.getElementById(`cst-${i}`);
-  dot.className  = `cs-dot ${status}`;
-  text.className = `cs-text ${status === 'running' ? 'active' : status}`;
-  if (status === 'done') dot.innerHTML = '✓';
-  if (status === 'running') dot.innerHTML = '◌';
-}
-
-function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-function saveConfigToFile() {
-  const config = {
-    projectName: state.projectName,
-    clientName:  state.client,
-    projectReference: state.ref,
-    discipline:  state.discipline,
-    googleUserEmail: state.user?.email || '',
-    driveFolderId:   state.folderId,
-    spreadsheetId:   state.spreadsheetId,
-    boqSheetName:    state.boqTab,
-    summarySheetName: state.summaryTab,
-    unitSystem:      state.units === 'metric' ? 0 : 1,
-    currency:        state.currency,
-    contingency:     state.contingency,
-    prelim:          state.prelim,
-    paramItemNumber:  state.params.itemNumber,
-    paramDescription: state.params.description,
-    paramUnit:        state.params.unit,
-    paramRate:        state.params.rate,
-    paramMeasureBy:   state.params.measureBy,
-    includedCategories: state.categories,
-    syncOnSave:      state.autoSync,
-    enableChangeLog: state.changeLog,
-    appVersion:      '1.0.0'
-  };
-
-  // In production: POST config to localhost:5000/save-config
-  // fetch('http://localhost:5000/save-config', {
-  //   method: 'POST',
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: JSON.stringify(config)
-  // });
-  console.log('Config to save:', JSON.stringify(config, null, 2));
-}
-
+// ── SUCCESS ───────────────────────────────────────────────────────────
 function showSuccess() {
   goTo('screen-success');
   document.getElementById('success-sub').textContent =
-    `${state.projectName} has been configured. Your Google Sheet is ready and BOQ Connect will sync automatically every time you save the Revit file.`;
+    state.projectName + ' has been configured. Your Google Sheet is ready ' +
+    'and BOQ Connect will sync automatically every time you save the Revit file.';
 
-  const sheetUrl  = state.sheetUrl  || ('https://docs.google.com/spreadsheets/d/' + state.spreadsheetId);
-  const folderUrl = state.folderUrl || ('https://drive.google.com/drive/folders/' + state.folderId);
+  var sheetUrl  = state.sheetUrl  ||
+    ('https://docs.google.com/spreadsheets/d/' + state.spreadsheetId);
+  var folderUrl = state.folderUrl ||
+    ('https://drive.google.com/drive/folders/' + state.folderId);
 
   document.getElementById('success-links').innerHTML =
     '<a class="link-card" href="' + sheetUrl + '" target="_blank">' +
     '<div><div class="link-card-label">Google Sheet</div>' +
     '<div class="link-card-val">' + state.spreadsheetName + '</div></div>' +
-    '<button class="link-open-btn">Open →</button></a>' +
+    '<button class="link-open-btn">Open &#8594;</button></a>' +
     '<a class="link-card" href="' + folderUrl + '" target="_blank">' +
     '<div><div class="link-card-label">Google Drive Folder</div>' +
     '<div class="link-card-val">' + state.folderName + '</div></div>' +
-    '<button class="link-open-btn">Open →</button></a>';
+    '<button class="link-open-btn">Open &#8594;</button></a>';
 }
 
+// ── CLOSE WIZARD ─────────────────────────────────────────────────────
 function closeWizard() {
   try {
-    // Tell the Revit addin the wizard is complete
-    // window.external is the ScriptBridge C# object
-    if (window.external && window.external.IsRevitAddin &&
+    if (window.external && typeof window.external.IsRevitAddin === 'function' &&
         window.external.IsRevitAddin()) {
       window.external.WizardComplete(
         state.spreadsheetId || '',
@@ -2035,19 +2071,27 @@ function closeWizard() {
 }
 
 // ── MODALS ────────────────────────────────────────────────────────────
-function openModal(id)  { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.modal-overlay').forEach(m => {
-  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
-});
+function openModal(id)  {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
 
 // ── INIT ──────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+window.onload = function() {
   initCatGrid();
-  // Auto-run sign-in check — reads email and project params from URL
-  // These are passed by the Revit addin when it opens this wizard
   doSignIn();
-});
+
+  var overlays = document.querySelectorAll('.modal-overlay');
+  for (var i = 0; i < overlays.length; i++) {
+    (function(overlay) {
+      overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) overlay.classList.remove('open');
+      });
+    })(overlays[i]);
+  }
+};
 </script>
 </body>
 </html>
