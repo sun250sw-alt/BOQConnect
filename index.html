@@ -1642,6 +1642,9 @@ function goTo(screenId) {
   if (stepMap[screenId] !== undefined) {
     renderStepIndicator(stepMap[screenId], screenId.replace('screen-','si-'));
   }
+
+  // When sign-in screen becomes active read email from URL
+  if (screenId === 'screen-signin') doSignIn();
   if (screenId === 'screen-sheets') prefillSheets();
   if (screenId === 'screen-review') renderReview();
 }
@@ -2105,17 +2108,9 @@ function closeModal(id) {
 window.onload = function() {
   initCatGrid();
 
-  // Check if email is in URL (passed by Revit addin after OAuth)
-  var params = getUrlParams();
-  var email  = params['email'] ? decodeURIComponent(params['email']) : null;
-
-  if (email && email.length > 0) {
-    // Email present — skip welcome, go straight to sign-in screen
-    // which will auto-detect the email and show it
-    doSignIn();
-    goTo('screen-signin');
-  }
-  // else stay on welcome screen — user navigates manually
+  // Always start on welcome screen
+  // doSignIn() is called when user clicks Get Started -> accepts terms -> reaches sign-in screen
+  // URL params are read at that point
 
   var overlays = document.querySelectorAll('.modal-overlay');
   for (var i = 0; i < overlays.length; i++) {
