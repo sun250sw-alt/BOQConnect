@@ -120,9 +120,11 @@ body::before {
   display: none;
   width: 100%;
   max-width: 680px;
+}
+.screen.active {
+  display: block;
   animation: fadeUp .4s ease forwards;
 }
-.screen.active { display: block; }
 
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(18px); }
@@ -1628,12 +1630,23 @@ var LOCAL_SERVER = 'http://localhost:5000';
 
 // ── NAVIGATION ────────────────────────────────────────────────────────
 function goTo(screenId) {
-  var screens = document.querySelectorAll('.screen');
-  for (var i = 0; i < screens.length; i++) {
-    screens[i].classList.remove('active');
+  try {
+    var screens = document.querySelectorAll('.screen');
+    for (var i = 0; i < screens.length; i++) {
+      screens[i].style.display = 'none';
+      screens[i].classList.remove('active');
+    }
+    var target = document.getElementById(screenId);
+    if (!target) {
+      alert('Screen not found: ' + screenId);
+      return;
+    }
+    target.style.display = 'block';
+    target.classList.add('active');
+    window.scrollTo(0, 0);
+  } catch(e) {
+    alert('Navigation error: ' + e.message);
   }
-  document.getElementById(screenId).classList.add('active');
-  window.scrollTo(0, 0);
 
   var stepMap = {
     'screen-project': 0, 'screen-params': 1,
