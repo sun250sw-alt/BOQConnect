@@ -1593,9 +1593,9 @@ body::before {
 </div>
 
 <script>
-// IE11-compatible JavaScript — no async/await, no fetch, no template literals
+// IE11-compatible JavaScript - no async/await, no fetch, no template literals
 
-// ── STATE ──────────────────────────────────────────────────────────────
+// -- STATE --------------------------------------------------------------
 var state = {
   user: null,
   projectName: '', client: '', ref: '', discipline: 'Structural',
@@ -1628,7 +1628,7 @@ var CATEGORIES = [
 var STEPS = ['Project','Parameters','Drive & Sheets','Review'];
 var LOCAL_SERVER = 'http://localhost:5000';
 
-// ── NAVIGATION ────────────────────────────────────────────────────────
+// -- NAVIGATION --------------------------------------------------------
 function goTo(screenId) {
   try {
     var screens = document.querySelectorAll('.screen');
@@ -1662,7 +1662,7 @@ function goTo(screenId) {
   if (screenId === 'screen-review') renderReview();
 }
 
-// ── STEP INDICATOR ────────────────────────────────────────────────────
+// -- STEP INDICATOR ----------------------------------------------------
 function renderStepIndicator(activeIdx, containerId) {
   var el = document.getElementById(containerId);
   if (!el) return;
@@ -1683,7 +1683,7 @@ function renderStepIndicator(activeIdx, containerId) {
   el.innerHTML = html;
 }
 
-// ── TERMS ─────────────────────────────────────────────────────────────
+// -- TERMS -------------------------------------------------------------
 function toggleCheck(id) {
   var cb = document.getElementById(id);
   cb.checked = !cb.checked;
@@ -1700,7 +1700,7 @@ function acceptTerms() {
   goTo('screen-signin');
 }
 
-// ── SIGN IN ───────────────────────────────────────────────────────────
+// -- SIGN IN -----------------------------------------------------------
 function doSignIn() {
   var params   = getUrlParams();
   var emailRaw = params['email'];
@@ -1726,7 +1726,7 @@ function doSignIn() {
   }
 
   if (email && email.length > 0) {
-    // Real email from Revit addin OAuth — show it
+    // Real email from Revit addin OAuth - show it
     state.user = { email: email };
 
     var panel = document.getElementById('signed-in-panel');
@@ -1741,7 +1741,7 @@ function doSignIn() {
     if (googleBtn) googleBtn.style.display = 'none';
     if (statusEl) statusEl.textContent   = '';
   } else {
-    // No email — show message
+    // No email - show message
     var statusEl2 = document.getElementById('signin-status');
     var googleBtn2 = document.querySelector('.google-btn');
     if (statusEl2) {
@@ -1760,7 +1760,7 @@ function doSignIn() {
   }
 }
 
-// ── URL PARAMS ────────────────────────────────────────────────────────
+// -- URL PARAMS --------------------------------------------------------
 function getUrlParams() {
   var result = {};
   var search = window.location.search.substring(1);
@@ -1774,7 +1774,7 @@ function getUrlParams() {
   return result;
 }
 
-// ── PROJECT ───────────────────────────────────────────────────────────
+// -- PROJECT -----------------------------------------------------------
 function saveProject() {
   state.projectName = document.getElementById('f-pname').value || 'New Project';
   state.client      = document.getElementById('f-client').value;
@@ -1786,7 +1786,7 @@ function saveProject() {
   state.prelim      = parseFloat(document.getElementById('f-prelim').value) || 5;
 }
 
-// ── PARAMETERS ───────────────────────────────────────────────────────
+// -- PARAMETERS -------------------------------------------------------
 function initCatGrid() {
   var grid = document.getElementById('cat-grid');
   var html = '';
@@ -1794,8 +1794,8 @@ function initCatGrid() {
     var c   = CATEGORIES[i];
     var sel = c.def ? ' selected' : '';
     var chk = c.def ? ' checked' : '';
-    html += '<div class="cat-item' + sel + '" onclick="toggleCat(this,'' +
-            c.name + '')">' +
+    html += '<div class="cat-item' + sel + '" onclick="toggleCat(this,&quot;' +
+            c.name + '&quot;)">' +
             '<input type="checkbox"' + chk + '>' +
             '<span class="cat-icon">' + c.icon + '</span>' +
             '<span>' + c.name + '</span></div>';
@@ -1825,14 +1825,14 @@ function saveParams() {
   state.params.measureBy   = document.getElementById('p-measureby').value;
 }
 
-// ── SHEETS ────────────────────────────────────────────────────────────
+// -- SHEETS ------------------------------------------------------------
 function prefillSheets() {
   var pname = document.getElementById('f-pname') ?
     document.getElementById('f-pname').value : state.projectName;
   state.projectName = pname || 'New Project';
 
   document.getElementById('f-folder').value      = state.projectName;
-  document.getElementById('f-spreadsheet').value = state.projectName + ' — BOQ';
+  document.getElementById('f-spreadsheet').value = state.projectName + ' - BOQ';
   updatePreview();
 }
 
@@ -1855,7 +1855,7 @@ function toggleTog(id) {
   if (id === 'tog-changelog') state.changeLog = el.classList.contains('on');
 }
 
-// ── REVIEW ────────────────────────────────────────────────────────────
+// -- REVIEW ------------------------------------------------------------
 function renderReview() {
   saveProject();
   saveParams();
@@ -1863,19 +1863,19 @@ function renderReview() {
   state.folderName      = document.getElementById('f-folder') ?
     document.getElementById('f-folder').value : state.projectName;
   state.spreadsheetName = document.getElementById('f-spreadsheet') ?
-    document.getElementById('f-spreadsheet').value : state.projectName + ' — BOQ';
+    document.getElementById('f-spreadsheet').value : state.projectName + ' - BOQ';
   state.boqTab    = document.getElementById('f-boqtab') ?
     document.getElementById('f-boqtab').value : 'BOQ';
   state.summaryTab = document.getElementById('f-summarytab') ?
     document.getElementById('f-summarytab').value : 'Cost Summary';
 
-  var syms = { GBP:'£', USD:'$', EUR:'€', AED:'AED', SGD:'S$', LKR:'LKR', AUD:'A$' };
+  var syms = { GBP:'', USD:'$', EUR:'', AED:'AED', SGD:'S$', LKR:'LKR', AUD:'A$' };
   var sym  = syms[state.currency] || state.currency;
 
   document.getElementById('review-project').innerHTML =
     ri('Project Name', state.projectName, 'blue') +
-    ri('Client',       state.client || '—') +
-    ri('Reference',    state.ref || '—') +
+    ri('Client',       state.client || '-') +
+    ri('Reference',    state.ref || '-') +
     ri('Discipline',   state.discipline) +
     ri('Units',        state.units === 'metric' ? 'Metric' : 'Imperial') +
     ri('Currency',     state.currency + ' (' + sym + ')') +
@@ -1887,7 +1887,7 @@ function renderReview() {
     ri('Spreadsheet',    state.spreadsheetName) +
     ri('BOQ Tab',        state.boqTab) +
     ri('Summary Tab',    state.summaryTab) +
-    ri('Google Account', state.user ? state.user.email : '—', 'green') +
+    ri('Google Account', state.user ? state.user.email : '-', 'green') +
     ri('Auto Sync',      state.autoSync ? 'On' : 'Off');
 
   document.getElementById('review-params').innerHTML =
@@ -1905,7 +1905,7 @@ function ri(key, val, cls) {
          '">' + val + '</div></div>';
 }
 
-// ── CREATING ──────────────────────────────────────────────────────────
+// -- CREATING ----------------------------------------------------------
 function startCreating() {
   goTo('screen-creating');
   runCreationSteps();
@@ -1967,7 +1967,7 @@ function xhrGet(url, callback) {
 }
 
 function runCreationSteps() {
-  // Step 0 — ping server
+  // Step 0 - ping server
   setStep(0, 'running');
 
   // Check if running inside Revit addin window
@@ -1984,7 +1984,7 @@ function runCreationSteps() {
     }
     setStep(0, 'done');
 
-    // Step 1 & 2 — create Drive folder and Sheet
+    // Step 1 & 2 - create Drive folder and Sheet
     setStep(1, 'running');
     setStep(2, 'running');
 
@@ -2027,17 +2027,17 @@ function runCreationSteps() {
       setStep(1, 'done');
       setStep(2, 'done');
 
-      // Step 3 — BOQ tab
+      // Step 3 - BOQ tab
       setStep(3, 'running');
       setTimeout(function() {
         setStep(3, 'done');
 
-        // Step 4 — Summary tab
+        // Step 4 - Summary tab
         setStep(4, 'running');
         setTimeout(function() {
           setStep(4, 'done');
 
-          // Step 5 — Save config
+          // Step 5 - Save config
           setStep(5, 'running');
           payload.spreadsheetId = state.spreadsheetId;
           payload.folderId      = state.folderId;
@@ -2063,14 +2063,14 @@ function showCreatingError(msg) {
       'background:rgba(232,85,85,0.1);border:1px solid rgba(232,85,85,0.3);' +
       'border-radius:8px;color:#e85555;font-size:13px">' +
       '<strong>Error:</strong> ' + msg + '<br><br>' +
-      '<button onclick="goTo('screen-review')" style="background:transparent;' +
+      '<button id="go-back-err" style="background:transparent;' +
       'border:1px solid #e85555;color:#e85555;padding:6px 14px;' +
       'border-radius:4px;cursor:pointer;font-size:12px">&#8592; Go Back</button>' +
       '</div>';
   }
 }
 
-// ── SUCCESS ───────────────────────────────────────────────────────────
+// -- SUCCESS -----------------------------------------------------------
 function showSuccess() {
   goTo('screen-success');
   document.getElementById('success-sub').textContent =
@@ -2093,7 +2093,7 @@ function showSuccess() {
     '<button class="link-open-btn">Open &#8594;</button></a>';
 }
 
-// ── CLOSE WIZARD ─────────────────────────────────────────────────────
+// -- CLOSE WIZARD -----------------------------------------------------
 function closeWizard() {
   try {
     if (window.external && typeof window.external.IsRevitAddin === 'function' &&
@@ -2109,7 +2109,7 @@ function closeWizard() {
   }
 }
 
-// ── MODALS ────────────────────────────────────────────────────────────
+// -- MODALS ------------------------------------------------------------
 function openModal(id)  {
   document.getElementById(id).classList.add('open');
 }
@@ -2117,7 +2117,7 @@ function closeModal(id) {
   document.getElementById(id).classList.remove('open');
 }
 
-// ── INIT ──────────────────────────────────────────────────────────────
+// -- INIT --------------------------------------------------------------
 window.onload = function() {
   initCatGrid();
 
