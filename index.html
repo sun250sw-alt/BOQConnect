@@ -1690,34 +1690,57 @@ function doSignIn() {
   var emailRaw = params['email'];
   var email    = emailRaw ? decodeURIComponent(emailRaw) : null;
 
-  // Pre-fill project fields from URL params
+  // Pre-fill project fields from URL params passed by Revit addin
   var pname  = params['projectName'];
   var client = params['client'];
   var ref    = params['reference'];
   var units  = params['units'];
-  if (pname)  document.getElementById('f-pname').value  = decodeURIComponent(pname);
-  if (client) document.getElementById('f-client').value = decodeURIComponent(client);
-  if (ref)    document.getElementById('f-ref').value    = decodeURIComponent(ref);
-  if (units)  document.getElementById('f-units').value  = units;
+
+  // Safe field setting - fields may not exist if called before DOM ready
+  function setField(id, val) {
+    var el = document.getElementById(id);
+    if (el && val) el.value = decodeURIComponent(val);
+  }
+  setField('f-pname', pname);
+  setField('f-client', client);
+  setField('f-ref', ref);
+  if (units) {
+    var el = document.getElementById('f-units');
+    if (el) el.value = units;
+  }
 
   if (email && email.length > 0) {
+    // Real email from Revit addin OAuth — show it
     state.user = { email: email };
-    document.getElementById('signed-in-panel').style.display = 'block';
-    document.getElementById('signed-in-email').textContent   = email;
-    document.getElementById('btn-signin-next').style.display = 'flex';
-    var btn = document.querySelector('.google-btn');
-    if (btn) btn.style.display = 'none';
-    document.getElementById('signin-status').textContent = '';
+
+    var panel = document.getElementById('signed-in-panel');
+    var emailEl = document.getElementById('signed-in-email');
+    var nextBtn = document.getElementById('btn-signin-next');
+    var googleBtn = document.querySelector('.google-btn');
+    var statusEl = document.getElementById('signin-status');
+
+    if (panel)    panel.style.display    = 'block';
+    if (emailEl)  emailEl.textContent    = email;
+    if (nextBtn)  nextBtn.style.display  = 'flex';
+    if (googleBtn) googleBtn.style.display = 'none';
+    if (statusEl) statusEl.textContent   = '';
   } else {
-    document.getElementById('signin-status').innerHTML =
-      '<div style="color:var(--revit-amber);padding:12px 14px;background:var(--revit-amber-dim);' +
-      'border:1px solid rgba(245,166,35,.3);border-radius:6px;margin-top:12px;font-size:13px;line-height:1.6">' +
-      '&#9888; <strong>Please close this window.</strong><br>' +
-      'Google sign-in happens inside Revit. Go back to Revit and click ' +
-      '<strong>New Project</strong> to start the wizard correctly.' +
-      '</div>';
-    var btn2 = document.querySelector('.google-btn');
-    if (btn2) btn2.style.display = 'none';
+    // No email — show message
+    var statusEl2 = document.getElementById('signin-status');
+    var googleBtn2 = document.querySelector('.google-btn');
+    if (statusEl2) {
+      statusEl2.innerHTML =
+        '<div style="color:var(--revit-amber);padding:12px 14px;' +
+        'background:var(--revit-amber-dim);border:1px solid rgba(245,166,35,.3);' +
+        'border-radius:6px;margin-top:12px;font-size:13px;line-height:1.6">' +
+        '&#9888; <strong>Opened without Revit connection.</strong><br>' +
+        'For full functionality, open this wizard from the ' +
+        '<strong>BOQ Connect</strong> ribbon in Revit 2026. ' +
+        'You can still browse the wizard but project creation ' +
+        'requires Revit to be running.' +
+        '</div>';
+    }
+    if (googleBtn2) googleBtn2.style.display = 'none';
   }
 }
 
@@ -2081,7 +2104,18 @@ function closeModal(id) {
 // ── INIT ──────────────────────────────────────────────────────────────
 window.onload = function() {
   initCatGrid();
-  doSignIn();
+
+  // Check if email is in URL (passed by Revit addin after OAuth)
+  var params = getUrlParams();
+  var email  = params['email'] ? decodeURIComponent(params['email']) : null;
+
+  if (email && email.length > 0) {
+    // Email present — skip welcome, go straight to sign-in screen
+    // which will auto-detect the email and show it
+    doSignIn();
+    goTo('screen-signin');
+  }
+  // else stay on welcome screen — user navigates manually
 
   var overlays = document.querySelectorAll('.modal-overlay');
   for (var i = 0; i < overlays.length; i++) {
