@@ -755,23 +755,49 @@ var summaryData   = {};
 var changeLog     = [];
 var refreshTimer  = null;
 
+function getUrlParams() {
+  var result = {};
+  var search = window.location.search.substring(1);
+  var pairs  = search.split('&');
+  for (var i = 0; i < pairs.length; i++) {
+    var pair = pairs[i].split('=');
+    if (pair[0]) result[decodeURIComponent(pair[0])] = pair[1] || '';
+  }
+  return result;
+}
+
 // ── INIT ──────────────────────────────────────────────────────────────
 window.onload = function() {
   loadConfig();
 };
 
 function loadConfig() {
-  // Try to get config from LocalServer
+  // Read config from URL parameters (passed by Revit DashboardCommand)
+  var params = getUrlParams();
+
+  if (params['spreadsheetId']) {
+    config = {
+      spreadsheetId: decodeURIComponent(params['spreadsheetId'] || ''),
+      folderId:      decodeURIComponent(params['folderId']      || ''),
+      projectName:   decodeURIComponent(params['projectName']   || 'Project'),
+      clientName:    decodeURIComponent(params['clientName']    || ''),
+      discipline:    decodeURIComponent(params['discipline']    || ''),
+      currency:      decodeURIComponent(params['currency']      || 'GBP'),
+      contingency:   parseFloat(params['contingency']           || '10'),
+      prelim:        parseFloat(params['prelim']                || '5'),
+      lastSync:      decodeURIComponent(params['lastSync']      || '')
+    };
+    initDashboard();
+    return;
+  }
+
+  // Fallback — try localhost (works when browser and Revit on same machine)
   xhrGet(LOCAL_SERVER + '/project-info', function(err, data) {
-    if (err || !data) {
+    if (err || !data || !data.spreadsheetId) {
       showSetupBanner();
       return;
     }
     config = data;
-    if (!config.spreadsheetId) {
-      showSetupBanner();
-      return;
-    }
     initDashboard();
   });
 }
@@ -789,6 +815,12 @@ function initDashboard() {
   var sheetLink = document.getElementById('sheet-link');
   sheetLink.href = 'https://docs.google.com/spreadsheets/d/' +
     config.spreadsheetId;
+
+  // Show last sync time from config if available
+  if (config.lastSync) {
+    document.getElementById('last-sync-label').textContent =
+      'Last sync: ' + config.lastSync;
+  }
 
   setStatus('loading', 'Loading BOQ data...');
   loadBOQData();
@@ -808,43 +840,47 @@ function showSetupBanner() {
 
 // ── DATA LOADING ──────────────────────────────────────────────────────
 function loadBOQData() {
-  setStatus('loading', 'Syncing...');
+  setStatus('loading', 'Loading...');
 
+  // Dashboard is on HTTPS — cannot call HTTP localhost directly
+  // Instead try localhost (works if user opens dashboard from same machine)
+  // If blocked, show the Sheet link and inform user
   xhrGet(LOCAL_SERVER + '/boq-data', function(err, data) {
-    if (err || !data) {
-      // Try direct Sheets API read
-      readFromSheets();
-      return;
+    if (!err && data && data.items) {
+      boqData     = data.items     || [];
+      summaryData = data.summary   || {};
+      changeLog   = data.changeLog || [];
+      renderDashboard();
+      setStatus('online', 'Live');
+      updateLastSync();
+    } else {
+      // Cannot reach localhost — show Sheet link instead
+      setStatus('offline', 'Open Sheet for live data');
+      showSheetPrompt();
     }
-
-    boqData    = data.items    || [];
-    summaryData = data.summary || {};
-    changeLog  = data.changeLog || [];
-
-    renderDashboard();
-    setStatus('online', 'Live');
-    updateLastSync();
   });
 }
 
 function readFromSheets() {
-  // Fallback — read directly from Sheets API via LocalServer proxy
-  xhrGet(LOCAL_SERVER + '/sheets-data', function(err, data) {
-    if (err || !data) {
-      setStatus('offline', 'Cannot reach Revit');
-      setMetrics('—', '—', '—', '—');
-      showToast('Cannot connect to Revit addin. Make sure Revit is open.', 'error');
-      return;
-    }
+  loadBOQData();
+}
 
-    boqData     = data.items     || [];
-    summaryData  = data.summary  || {};
-    changeLog   = data.changeLog || [];
+function showSheetPrompt() {
+  var sheetUrl = 'https://docs.google.com/spreadsheets/d/' +
+    (config.spreadsheetId || '');
 
-    renderDashboard();
-    setStatus('online', 'Live');
-    updateLastSync();
-  });
+  document.getElementById('boq-empty').innerHTML =
+    '<div class="empty-icon">&#128203;</div>' +
+    '<div class="empty-title">View your BOQ in Google Sheets</div>' +
+    '<div class="empty-sub" style="margin-bottom:16px">' +
+    'Live data loads when dashboard is opened from the Revit ribbon button.</div>' +
+    '<a href="' + sheetUrl + '" target="_blank" class="sync-btn" ' +
+    'style="display:inline-flex;text-decoration:none;margin:0 auto">' +
+    'Open Google Sheet &#8594;</a>';
+
+  document.getElementById('boq-empty').style.display = 'block';
+  document.getElementById('boq-table').style.display = 'none';
+  setMetrics('—', '—', '—', '—');
 }
 
 // ── RENDER ────────────────────────────────────────────────────────────
