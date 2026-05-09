@@ -3,1246 +3,630 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BOQ Connect — Dashboard</title>
+<title>BOQ Connect Dashboard</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg:           #0d0e11;
-  --surface:      #13151a;
-  --surface2:     #1a1d24;
-  --surface3:     #22252e;
-  --border:       rgba(255,255,255,0.06);
-  --border2:      rgba(255,255,255,0.10);
-  --border3:      rgba(255,255,255,0.16);
-  --text:         #e8e9ec;
-  --text-sec:     #8b8d96;
-  --text-ter:     #4a4c55;
-  --blue:         #0696d7;
-  --blue-dim:     rgba(6,150,215,0.10);
-  --blue-bdr:     rgba(6,150,215,0.28);
-  --green:        #34c77b;
-  --green-dim:    rgba(52,199,123,0.08);
-  --green-bdr:    rgba(52,199,123,0.25);
-  --amber:        #f5a623;
-  --amber-dim:    rgba(245,166,35,0.08);
-  --amber-bdr:    rgba(245,166,35,0.25);
-  --red:          #e85555;
-  --red-dim:      rgba(232,85,85,0.08);
-  --red-bdr:      rgba(232,85,85,0.25);
-  --radius:       10px;
-  --radius-sm:    6px;
-  --radius-xs:    4px;
-}
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-  font-family: 'Source Sans 3', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  overflow-x: hidden;
-}
-
-/* Grid background */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(6,150,215,0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(6,150,215,0.025) 1px, transparent 1px);
-  background-size: 48px 48px;
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* ── TOPBAR ── */
-.topbar {
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  height: 52px;
-  background: rgba(13,14,17,0.92);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 28px;
-  z-index: 100;
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: 1px;
-}
-
-.logo-mark {
-  width: 28px; height: 28px;
-  background: var(--blue);
-  border-radius: 6px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 700; color: #fff;
-}
-
-.topbar-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.sync-btn {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  background: var(--blue);
-  border: none;
-  border-radius: var(--radius-sm);
-  color: #fff;
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: .5px;
-  padding: 7px 16px;
-  cursor: pointer;
-  transition: all .2s;
-}
-.sync-btn:hover { background: #0aa8f0; }
-.sync-btn:disabled { opacity: .5; cursor: not-allowed; }
-
-.sheet-btn {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  background: transparent;
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
-  color: var(--text-sec);
-  font-family: 'Source Sans 3', sans-serif;
-  font-size: 13px;
-  padding: 7px 14px;
-  cursor: pointer;
-  transition: all .2s;
-  text-decoration: none;
-}
-.sheet-btn:hover { border-color: var(--blue-bdr); color: var(--text); }
-
-.status-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: var(--green);
-  box-shadow: 0 0 6px var(--green);
-  animation: pulse-dot 2s ease infinite;
-}
-.status-dot.offline { background: var(--red); box-shadow: 0 0 6px var(--red); animation: none; }
-.status-dot.loading { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
-
-@keyframes pulse-dot {
-  0%,100% { opacity: 1; }
-  50% { opacity: .4; }
-}
-
-/* ── MAIN ── */
-.main {
-  position: relative;
-  z-index: 1;
-  padding: 72px 28px 60px;
-  max-width: 1280px;
-  margin: 0 auto;
-}
-
-/* ── PAGE HEADER ── */
-.page-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 28px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid var(--border);
-}
-
-.page-title {
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: -.3px;
-  margin-bottom: 4px;
-}
-
-.page-sub {
-  font-size: 13px;
-  color: var(--text-sec);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.last-sync {
-  font-family: 'Source Code Pro', monospace;
-  font-size: 11px;
-  color: var(--text-ter);
-  padding: 3px 8px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xs);
-}
-
-/* ── METRIC CARDS ── */
-.metrics {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-  margin-bottom: 24px;
-}
-
-.metric-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 18px 20px;
-  position: relative;
-  overflow: hidden;
-  transition: border-color .2s;
-}
-.metric-card:hover { border-color: var(--border2); }
-
-.metric-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-}
-.metric-card.blue::before   { background: var(--blue); }
-.metric-card.green::before  { background: var(--green); }
-.metric-card.amber::before  { background: var(--amber); }
-.metric-card.red::before    { background: var(--red); }
-
-.metric-label {
-  font-size: 11px;
-  font-family: 'Source Code Pro', monospace;
-  color: var(--text-ter);
-  letter-spacing: .8px;
-  text-transform: uppercase;
-  margin-bottom: 10px;
-}
-
-.metric-value {
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 32px;
-  font-weight: 700;
-  letter-spacing: -1px;
-  line-height: 1;
-  margin-bottom: 6px;
-}
-.metric-value.blue  { color: var(--blue); }
-.metric-value.green { color: var(--green); }
-.metric-value.amber { color: var(--amber); }
-.metric-value.red   { color: var(--red); }
-
-.metric-sub {
-  font-size: 12px;
-  color: var(--text-sec);
-}
-
-/* ── TWO COLUMN LAYOUT ── */
-.two-col {
-  display: grid;
-  grid-template-columns: 1fr 360px;
-  gap: 18px;
-  margin-bottom: 18px;
-}
-
-/* ── CARDS ── */
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-}
-
-.card-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--border);
-}
-
-.card-title {
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: .8px;
-  text-transform: uppercase;
-  color: var(--text-sec);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.card-title::before {
-  content: '';
-  width: 3px; height: 12px;
-  background: var(--blue);
-  border-radius: 2px;
-}
-
-.card-badge {
-  font-size: 10px;
-  font-family: 'Source Code Pro', monospace;
-  padding: 3px 8px;
-  border-radius: var(--radius-xs);
-}
-.badge-blue   { background: var(--blue-dim);  color: var(--blue);  border: 1px solid var(--blue-bdr); }
-.badge-green  { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-bdr); }
-.badge-amber  { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber-bdr); }
-.badge-red    { background: var(--red-dim);   color: var(--red);   border: 1px solid var(--red-bdr); }
-
-/* ── BOQ TABLE ── */
-.boq-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-.boq-table th {
-  background: var(--surface2);
-  color: var(--text-ter);
-  font-family: 'Source Code Pro', monospace;
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: .8px;
-  text-transform: uppercase;
-  padding: 9px 14px;
-  text-align: left;
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap;
-}
-.boq-table th:last-child { text-align: right; }
-
-.boq-table td {
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--border);
-  color: var(--text-sec);
-  vertical-align: middle;
-}
-.boq-table td:last-child { text-align: right; }
-.boq-table tr:last-child td { border-bottom: none; }
-.boq-table tr:hover td { background: var(--surface2); }
-
-.boq-table .item-no {
-  font-family: 'Source Code Pro', monospace;
-  font-size: 11px;
-  color: var(--text-ter);
-}
-
-.boq-table .description {
-  color: var(--text);
-  font-weight: 500;
-}
-
-.boq-table .quantity {
-  font-family: 'Source Code Pro', monospace;
-  color: var(--blue);
-}
-
-.boq-table .rate {
-  font-family: 'Source Code Pro', monospace;
-}
-
-.boq-table .total {
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
-}
-
-.row-amber td { background: rgba(245,166,35,0.04) !important; }
-.row-red   td { background: rgba(232,85,85,0.04)  !important; }
-
-.status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 10px;
-  font-family: 'Source Code Pro', monospace;
-  padding: 2px 7px;
-  border-radius: 3px;
-  white-space: nowrap;
-}
-
-/* ── CHANGE LOG ── */
-.log-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px 18px;
-  border-bottom: 1px solid var(--border);
-  font-size: 13px;
-}
-.log-row:last-child { border-bottom: none; }
-
-.log-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  margin-top: 4px;
-  flex-shrink: 0;
-}
-
-.log-time {
-  font-family: 'Source Code Pro', monospace;
-  font-size: 11px;
-  color: var(--text-ter);
-  white-space: nowrap;
-  margin-top: 2px;
-}
-
-.log-desc { color: var(--text-sec); line-height: 1.5; }
-.log-desc strong { color: var(--text); }
-
-/* ── SUMMARY PANEL ── */
-.summary-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 11px 18px;
-  border-bottom: 1px solid var(--border);
-  font-size: 13px;
-}
-.summary-row:last-child { border-bottom: none; }
-.summary-label { color: var(--text-sec); }
-.summary-value {
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 15px;
-  font-weight: 600;
-}
-.summary-row.total {
-  background: var(--blue-dim);
-  border-top: 1px solid var(--blue-bdr);
-}
-.summary-row.total .summary-label { color: var(--blue); font-weight: 600; }
-.summary-row.total .summary-value { color: var(--blue); font-size: 18px; }
-
-/* ── CATEGORY BARS ── */
-.cat-row {
-  padding: 10px 18px;
-  border-bottom: 1px solid var(--border);
-}
-.cat-row:last-child { border-bottom: none; }
-.cat-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 6px;
-  font-size: 12px;
-}
-.cat-name { color: var(--text-sec); }
-.cat-val  { font-family: 'Source Code Pro', monospace; color: var(--text-ter); font-size: 11px; }
-.cat-bar-bg {
-  height: 3px;
-  background: var(--surface3);
-  border-radius: 2px;
-  overflow: hidden;
-}
-.cat-bar-fill {
-  height: 100%;
-  border-radius: 2px;
-  background: var(--blue);
-  transition: width .6s ease;
-}
-
-/* ── MISSING RATES ── */
-.missing-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 18px;
-  border-bottom: 1px solid var(--border);
-  font-size: 13px;
-}
-.missing-row:last-child { border-bottom: none; }
-.missing-name { color: var(--text); font-weight: 500; }
-.missing-cat  { font-size: 11px; color: var(--text-ter); margin-top: 1px; }
-.fix-btn {
-  font-size: 11px;
-  color: var(--amber);
-  background: var(--amber-dim);
-  border: 1px solid var(--amber-bdr);
-  border-radius: var(--radius-xs);
-  padding: 3px 10px;
-  cursor: pointer;
-  font-family: 'Source Sans 3', sans-serif;
-  transition: all .15s;
-  text-decoration: none;
-}
-.fix-btn:hover { background: rgba(245,166,35,0.15); }
-
-/* ── EMPTY STATE ── */
-.empty-state {
-  padding: 48px 24px;
-  text-align: center;
-  color: var(--text-ter);
-}
-.empty-icon { font-size: 32px; margin-bottom: 12px; }
-.empty-title { font-family: 'Rajdhani', sans-serif; font-size: 16px; color: var(--text-sec); margin-bottom: 6px; }
-.empty-sub   { font-size: 13px; }
-
-/* ── LOADING ── */
-.skeleton {
-  background: linear-gradient(90deg, var(--surface2) 25%, var(--surface3) 50%, var(--surface2) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: var(--radius-xs);
-  height: 14px;
-}
-@keyframes shimmer {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-/* ── TOAST ── */
-.toast {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius);
-  padding: 12px 16px;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  z-index: 200;
-  transform: translateY(80px);
-  opacity: 0;
-  transition: all .3s cubic-bezier(.175,.885,.32,1.275);
-  min-width: 280px;
-}
-.toast.show { transform: translateY(0); opacity: 1; }
-.toast.success { border-color: var(--green-bdr); }
-.toast.error   { border-color: var(--red-bdr); }
-
-/* ── SETUP BANNER ── */
-.setup-banner {
-  background: var(--amber-dim);
-  border: 1px solid var(--amber-bdr);
-  border-radius: var(--radius);
-  padding: 16px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
-  font-size: 14px;
-}
-.setup-banner-text { color: var(--amber); }
-.setup-link {
-  color: var(--amber);
-  font-weight: 600;
-  text-decoration: none;
-  border: 1px solid var(--amber-bdr);
-  padding: 6px 14px;
-  border-radius: var(--radius-sm);
-  font-size: 13px;
-  transition: all .15s;
-}
-.setup-link:hover { background: rgba(245,166,35,.15); }
-
-/* ── RESPONSIVE ── */
-@media (max-width: 1024px) {
-  .metrics { grid-template-columns: repeat(2, 1fr); }
-  .two-col { grid-template-columns: 1fr; }
-}
-@media (max-width: 600px) {
-  .metrics { grid-template-columns: 1fr 1fr; }
-  .topbar  { padding: 0 16px; }
-  .main    { padding: 64px 16px 40px; }
-}
+:root{--bg:#0d0e11;--surface:#13151a;--surface2:#1a1d24;--surface3:#22252e;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);--border3:rgba(255,255,255,0.16);--text:#e8e9ec;--text-sec:#8b8d96;--text-ter:#4a4c55;--blue:#0696d7;--blue-dim:rgba(6,150,215,0.10);--blue-bdr:rgba(6,150,215,0.28);--green:#34c77b;--green-dim:rgba(52,199,123,0.08);--green-bdr:rgba(52,199,123,0.25);--amber:#f5a623;--amber-dim:rgba(245,166,35,0.08);--amber-bdr:rgba(245,166,35,0.25);--red:#e85555;--red-dim:rgba(232,85,85,0.08);--red-bdr:rgba(232,85,85,0.25);--radius:10px;--radius-sm:6px;--radius-xs:4px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Source Sans 3',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(6,150,215,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(6,150,215,0.025) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
+.topbar{position:fixed;top:0;left:0;right:0;height:52px;background:rgba(13,14,17,0.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;z-index:100}
+.logo{display:flex;align-items:center;gap:10px;font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;letter-spacing:1px}
+.logo-mark{width:28px;height:28px;background:var(--blue);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.profile-wrap{position:relative}
+.profile-btn{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border2);border-radius:999px;padding:4px 12px 4px 4px;cursor:pointer;transition:all .2s;font-size:13px;color:var(--text-sec)}
+.profile-btn:hover{border-color:var(--blue-bdr);color:var(--text)}
+.profile-avatar{width:28px;height:28px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;overflow:hidden;flex-shrink:0}
+.profile-avatar img{width:100%;height:100%;object-fit:cover}
+.profile-dropdown{display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);min-width:220px;box-shadow:0 8px 32px rgba(0,0,0,.4);z-index:200;overflow:hidden}
+.profile-dropdown.open{display:block}
+.pd-header{padding:14px 16px;border-bottom:1px solid var(--border)}
+.pd-name{font-size:14px;font-weight:500;margin-bottom:2px}
+.pd-email{font-size:12px;color:var(--text-sec);font-family:'Source Code Pro',monospace}
+.pd-item{display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:13px;color:var(--text-sec);cursor:pointer;transition:all .15s}
+.pd-item:hover{background:var(--surface2);color:var(--text)}
+.pd-item.danger{color:var(--red)}
+.pd-item.danger:hover{background:var(--red-dim)}
+.btn{display:inline-flex;align-items:center;gap:7px;border-radius:var(--radius-sm);font-family:'Source Sans 3',sans-serif;font-size:13px;padding:7px 14px;cursor:pointer;transition:all .2s;border:none;text-decoration:none;font-weight:500}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:hover{background:#0aa8f0}
+.btn-secondary{background:transparent;color:var(--text-sec);border:1px solid var(--border2)}
+.btn-secondary:hover{border-color:var(--blue-bdr);color:var(--text)}
+.btn-success{background:var(--green);color:#fff}
+.btn-success:hover{background:#3dd97a}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.screen{display:none;position:relative;z-index:1;min-height:100vh}
+.screen.active{display:block}
+.signin-center{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;text-align:center}
+.signin-icon{width:72px;height:72px;background:var(--blue);border-radius:18px;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color:#fff;margin:0 auto 24px;box-shadow:0 8px 32px rgba(6,150,215,.4)}
+.signin-title{font-family:'Rajdhani',sans-serif;font-size:36px;font-weight:700;letter-spacing:-.5px;margin-bottom:10px}
+.signin-title span{color:var(--blue)}
+.signin-sub{font-size:15px;color:var(--text-sec);line-height:1.7;max-width:400px;margin:0 auto 32px}
+.google-signin-btn{display:flex;align-items:center;gap:12px;background:#fff;color:#1a1a1a;border:none;border-radius:var(--radius-sm);padding:13px 28px;font-size:15px;font-family:'Source Sans 3',sans-serif;font-weight:500;cursor:pointer;transition:all .2s;box-shadow:0 2px 12px rgba(0,0,0,.3);margin:0 auto}
+.google-signin-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,.4)}
+.google-logo{width:20px;height:20px;flex-shrink:0}
+.selector-wrap{max-width:900px;margin:0 auto;padding:80px 24px 60px}
+.selector-title{font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;margin-bottom:6px}
+.selector-sub{font-size:14px;color:var(--text-sec);margin-bottom:28px}
+.project-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.project-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.project-card:hover{border-color:var(--blue-bdr);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.project-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--blue)}
+.pc-name{font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;margin-bottom:4px}
+.pc-client{font-size:13px;color:var(--text-sec);margin-bottom:12px}
+.pc-meta{display:flex;gap:8px;flex-wrap:wrap}
+.pc-tag{font-size:10px;font-family:'Source Code Pro',monospace;padding:3px 8px;border-radius:3px;background:var(--surface2);border:1px solid var(--border);color:var(--text-sec)}
+.pc-sync{font-size:11px;color:var(--text-ter);font-family:'Source Code Pro',monospace;margin-top:10px}
+.dash-wrap{max-width:1280px;margin:0 auto;padding:72px 28px 60px}
+.dash-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+.dash-title{font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;letter-spacing:-.3px;margin-bottom:4px}
+.dash-sub{font-size:13px;color:var(--text-sec);display:flex;align-items:center;gap:8px}
+.last-sync-badge{font-family:'Source Code Pro',monospace;font-size:11px;color:var(--text-ter);padding:3px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs)}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;position:relative;overflow:hidden}
+.metric-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.metric-card.blue::before{background:var(--blue)}.metric-card.green::before{background:var(--green)}.metric-card.amber::before{background:var(--amber)}.metric-card.grey::before{background:var(--border3)}
+.metric-label{font-size:10px;font-family:'Source Code Pro',monospace;color:var(--text-ter);letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px}
+.metric-value{font-family:'Rajdhani',sans-serif;font-size:30px;font-weight:700;letter-spacing:-1px;line-height:1;margin-bottom:4px}
+.metric-value.blue{color:var(--blue)}.metric-value.green{color:var(--green)}.metric-value.amber{color:var(--amber)}
+.metric-sub{font-size:12px;color:var(--text-sec)}
+.two-col{display:grid;grid-template-columns:1fr 340px;gap:18px;margin-bottom:18px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.card-head{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--border)}
+.card-title{font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--text-sec);display:flex;align-items:center;gap:8px}
+.card-title::before{content:'';width:3px;height:12px;background:var(--blue);border-radius:2px}
+.cbadge{font-size:10px;font-family:'Source Code Pro',monospace;padding:2px 7px;border-radius:3px}
+.cb-blue{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-bdr)}.cb-amber{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-bdr)}.cb-green{background:var(--green-dim);color:var(--green);border:1px solid var(--green-bdr)}.cb-red{background:var(--red-dim);color:var(--red);border:1px solid var(--red-bdr)}
+.boq-table{width:100%;border-collapse:collapse;font-size:13px}
+.boq-table th{background:var(--surface2);color:var(--text-ter);font-family:'Source Code Pro',monospace;font-size:10px;font-weight:500;letter-spacing:.8px;text-transform:uppercase;padding:9px 14px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+.boq-table td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--text-sec);vertical-align:middle}
+.boq-table tr:last-child td{border-bottom:none}
+.boq-table tr:hover td{background:var(--surface2)}
+.item-no{font-family:'Source Code Pro',monospace;font-size:11px;color:var(--text-ter)}
+.desc{color:var(--text);font-weight:500}
+.qty{font-family:'Source Code Pro',monospace;color:var(--blue)}
+.total-col{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;color:var(--text);text-align:right}
+.row-amber td{background:rgba(245,166,35,0.04)!important}
+.row-red td{background:rgba(232,85,85,0.04)!important}
+.status-pill{display:inline-flex;align-items:center;font-size:10px;font-family:'Source Code Pro',monospace;padding:2px 7px;border-radius:3px}
+.sum-row{display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid var(--border);font-size:13px}
+.sum-row:last-child{border-bottom:none}
+.sum-label{color:var(--text-sec)}.sum-value{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:600}
+.sum-row.total{background:var(--blue-dim);border-top:1px solid var(--blue-bdr)}
+.sum-row.total .sum-label{color:var(--blue);font-weight:600}.sum-row.total .sum-value{color:var(--blue);font-size:18px}
+.cat-row{padding:10px 18px;border-bottom:1px solid var(--border)}
+.cat-row:last-child{border-bottom:none}
+.cat-header{display:flex;justify-content:space-between;margin-bottom:5px;font-size:12px}
+.cat-name{color:var(--text-sec)}.cat-val{font-family:'Source Code Pro',monospace;color:var(--text-ter);font-size:11px}
+.cat-bar-bg{height:3px;background:var(--surface3);border-radius:2px;overflow:hidden}
+.cat-bar-fill{height:100%;border-radius:2px;background:var(--blue);transition:width .6s ease}
+.log-row{display:flex;align-items:flex-start;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border);font-size:13px}
+.log-row:last-child{border-bottom:none}
+.log-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0}
+.log-time{font-family:'Source Code Pro',monospace;font-size:11px;color:var(--text-ter);margin-top:2px}
+.log-desc{color:var(--text-sec);line-height:1.5}
+.log-desc strong{color:var(--text)}
+.miss-row{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-bottom:1px solid var(--border);font-size:13px}
+.miss-row:last-child{border-bottom:none}
+.miss-name{color:var(--text);font-weight:500}
+.miss-cat{font-size:11px;color:var(--text-ter);margin-top:1px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:300;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);width:90%;max-width:480px;padding:28px}
+.modal-title{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;margin-bottom:6px}
+.modal-sub{font-size:13px;color:var(--text-sec);margin-bottom:20px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;font-family:'Source Code Pro',monospace;color:var(--text-sec);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.field input,.field textarea{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-family:'Source Sans 3',sans-serif;font-size:14px;padding:10px 14px;outline:none;transition:border-color .15s}
+.field input:focus,.field textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-dim)}
+.field textarea{resize:vertical;min-height:80px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:12px 16px;font-size:13px;display:flex;align-items:center;gap:10px;z-index:400;transform:translateY(80px);opacity:0;transition:all .3s cubic-bezier(.175,.885,.32,1.275);min-width:260px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{border-color:var(--green-bdr)}.toast.error{border-color:var(--red-bdr)}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse-dot 2s ease infinite;flex-shrink:0}
+.status-dot.offline{background:var(--red);box-shadow:0 0 6px var(--red);animation:none}
+.status-dot.loading{background:var(--amber);box-shadow:0 0 6px var(--amber);animation:none}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
+.spinner{width:40px;height:40px;border:3px solid var(--border2);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{padding:40px 24px;text-align:center;color:var(--text-ter)}
+@media(max-width:1024px){.metrics{grid-template-columns:repeat(2,1fr)}.two-col{grid-template-columns:1fr}}
+@media(max-width:600px){.metrics{grid-template-columns:1fr 1fr}.topbar{padding:0 16px}.dash-wrap{padding:64px 16px 40px}}
 </style>
 </head>
 <body>
-
-<!-- TOPBAR -->
 <div class="topbar">
-  <div class="logo">
-    <div class="logo-mark">B</div>
-    BOQ Connect
-  </div>
-  <div class="topbar-right">
-    <div class="status-dot loading" id="status-dot"></div>
-    <span id="status-text" style="font-size:12px;color:var(--text-sec)">Loading...</span>
-    <a class="sheet-btn" id="sheet-link" href="#" target="_blank">
-      <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-        <path d="M3 3h4v10H3zM9 3h4v10H9z" fill="currentColor" opacity=".4"/>
-        <path d="M1 1h14v14H1z" stroke="currentColor" stroke-width="1.2" fill="none" rx="1"/>
-      </svg>
-      Open Sheet
-    </a>
-    <button class="sync-btn" id="sync-btn" onclick="triggerSync()">
-      <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-        <path d="M13.5 8A5.5 5.5 0 1 1 8 2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <path d="M8 1v3l2-1.5L8 1z" fill="currentColor"/>
-      </svg>
-      Sync Now
+  <div class="logo"><div class="logo-mark">B</div>BOQ Connect</div>
+  <div class="topbar-right" id="topbar-right"></div>
+</div>
+
+<!-- SIGN IN -->
+<div class="screen active" id="screen-signin">
+  <div class="signin-center">
+    <div class="signin-icon">B</div>
+    <h1 class="signin-title">BOQ <span>Connect</span></h1>
+    <p class="signin-sub">Sign in with your Google account to access your BOQ projects. Your data stays in your own Google Drive.</p>
+    <button class="google-signin-btn" onclick="startGoogleSignIn()">
+      <svg class="google-logo" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+      Sign in with Google
     </button>
+    <p style="margin-top:16px;font-size:12px;color:var(--text-ter)">Developed by Sanjaya Abeysinghe &middot; SUN_SLDev</p>
   </div>
 </div>
 
-<!-- MAIN -->
-<div class="main">
-
-  <!-- Setup banner — shown if not configured -->
-  <div class="setup-banner" id="setup-banner" style="display:none">
-    <div class="setup-banner-text">
-      &#9888; No project configured. Run the setup wizard from Revit to get started.
+<!-- PROJECT SELECTOR -->
+<div class="screen" id="screen-selector">
+  <div class="selector-wrap">
+    <div class="selector-title">Your Projects</div>
+    <div class="selector-sub">Select a project to open its BOQ dashboard</div>
+    <div id="project-grid" class="project-grid">
+      <div style="text-align:center;padding:60px;grid-column:1/-1"><div class="spinner"></div><div style="margin-top:16px;color:var(--text-sec);font-size:14px">Searching your Drive...</div></div>
     </div>
-    <a class="setup-link" href="index.html">Open Wizard</a>
   </div>
+</div>
 
-  <!-- Page header -->
-  <div class="page-header" id="page-header">
-    <div>
-      <div class="page-title" id="project-title">Loading project...</div>
-      <div class="page-sub">
-        <span id="project-sub">BOQ Connect Dashboard</span>
-        <span class="last-sync" id="last-sync-label">Last sync: —</span>
+<!-- DASHBOARD -->
+<div class="screen" id="screen-dashboard">
+  <div class="dash-wrap">
+    <div class="dash-header">
+      <div>
+        <div class="dash-title" id="d-project-name">Loading...</div>
+        <div class="dash-sub">
+          <span id="d-project-sub"></span>
+          <span class="last-sync-badge" id="d-last-sync">Last sync: --</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <a class="btn btn-secondary" id="d-sheet-link" href="#" target="_blank">&#128203; Open Sheet</a>
+        <button class="btn btn-secondary" onclick="goToSelector()">&#8592; Projects</button>
+        <button class="btn btn-success" id="share-btn" style="display:none" onclick="openShareModal()">&#8679; Share</button>
       </div>
     </div>
-    <div style="text-align:right;font-size:12px;color:var(--text-ter)">
-      <div style="font-family:'Source Code Pro',monospace" id="sheet-id-display"></div>
+    <div class="metrics">
+      <div class="metric-card blue"><div class="metric-label">Total Items</div><div class="metric-value blue" id="m-items">--</div><div class="metric-sub">Element types</div></div>
+      <div class="metric-card green"><div class="metric-label">Subtotal</div><div class="metric-value green" id="m-subtotal">--</div><div class="metric-sub" id="m-subtotal-sub">Excl. contingency</div></div>
+      <div class="metric-card amber"><div class="metric-label">Missing Rates</div><div class="metric-value amber" id="m-missing">--</div><div class="metric-sub">Need attention</div></div>
+      <div class="metric-card grey"><div class="metric-label">Grand Total</div><div class="metric-value" id="m-grand" style="color:var(--text)">--</div><div class="metric-sub" id="m-grand-sub">Incl. contingency</div></div>
     </div>
-  </div>
-
-  <!-- Metrics -->
-  <div class="metrics">
-    <div class="metric-card blue">
-      <div class="metric-label">Total Items</div>
-      <div class="metric-value blue" id="m-items">—</div>
-      <div class="metric-sub">Element types in BOQ</div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Bill of Quantities</div>
+          <div style="display:flex;gap:6px"><span class="cbadge cb-amber" id="missing-badge" style="display:none">0 missing</span><span class="cbadge cb-blue" id="items-badge">-- items</span></div>
+        </div>
+        <div style="overflow-x:auto">
+          <div class="empty" id="boq-empty"><div style="font-size:28px;margin-bottom:10px">&#128203;</div><div style="font-family:'Rajdhani',sans-serif;font-size:15px;color:var(--text-sec);margin-bottom:4px">No BOQ data yet</div><div style="font-size:13px">Push to BOQ from Revit to populate</div></div>
+          <table class="boq-table" id="boq-table" style="display:none"><thead><tr><th>Item</th><th>Description</th><th>Category</th><th>Qty</th><th>Unit</th><th>Rate</th><th>Total</th><th>Diff</th><th>Status</th></tr></thead><tbody id="boq-tbody"></tbody></table>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card"><div class="card-head"><div class="card-title">Cost Summary</div></div><div id="summary-content"><div class="empty" style="padding:20px"><div style="font-size:13px;color:var(--text-ter)">No data</div></div></div></div>
+        <div class="card"><div class="card-head"><div class="card-title">By Category</div></div><div id="category-content"><div class="empty" style="padding:20px"><div style="font-size:13px;color:var(--text-ter)">No data</div></div></div></div>
+        <div class="card" id="missing-card" style="display:none"><div class="card-head"><div class="card-title">Needs Attention</div><span class="cbadge cb-amber" id="missing-count"></span></div><div id="missing-content"></div></div>
+      </div>
     </div>
-    <div class="metric-card green">
-      <div class="metric-label">Estimated Total</div>
-      <div class="metric-value green" id="m-total">—</div>
-      <div class="metric-sub" id="m-total-sub">Excl. contingency</div>
-    </div>
-    <div class="metric-card amber">
-      <div class="metric-label">Missing Rates</div>
-      <div class="metric-value amber" id="m-missing">—</div>
-      <div class="metric-sub">Items need attention</div>
-    </div>
-    <div class="metric-card" style="border-color:var(--border)">
-      <div class="metric-label">Grand Total</div>
-      <div class="metric-value" id="m-grand" style="color:var(--text)">—</div>
-      <div class="metric-sub" id="m-grand-sub">Incl. contingency</div>
-    </div>
-  </div>
-
-  <!-- BOQ table + sidebar -->
-  <div class="two-col">
-
-    <!-- BOQ table -->
     <div class="card">
-      <div class="card-head">
-        <div class="card-title">Bill of Quantities</div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <span class="card-badge badge-amber" id="missing-badge" style="display:none">0 missing</span>
-          <span class="card-badge badge-blue" id="items-badge">— items</span>
-        </div>
-      </div>
-      <div style="overflow-x:auto" id="boq-table-wrap">
-        <div class="empty-state" id="boq-empty">
-          <div class="empty-icon">&#128203;</div>
-          <div class="empty-title">No BOQ data yet</div>
-          <div class="empty-sub">Run a sync from Revit to populate the BOQ</div>
-        </div>
-        <table class="boq-table" id="boq-table" style="display:none">
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>Description</th>
-              <th>Category</th>
-              <th>Qty</th>
-              <th>Unit</th>
-              <th>Rate</th>
-              <th>Total</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="boq-tbody"></tbody>
-        </table>
-      </div>
+      <div class="card-head"><div class="card-title">Change Log</div><span class="cbadge cb-blue" id="log-badge">0 entries</span></div>
+      <div id="log-content"><div class="empty"><div style="font-size:13px;color:var(--text-ter)">No sync history</div></div></div>
     </div>
-
-    <!-- Sidebar -->
-    <div style="display:flex;flex-direction:column;gap:18px">
-
-      <!-- Cost summary -->
-      <div class="card">
-        <div class="card-head">
-          <div class="card-title">Cost Summary</div>
-        </div>
-        <div id="summary-content">
-          <div class="empty-state" style="padding:24px">
-            <div class="empty-sub">No data</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Category breakdown -->
-      <div class="card">
-        <div class="card-head">
-          <div class="card-title">By Category</div>
-        </div>
-        <div id="category-content">
-          <div class="empty-state" style="padding:24px">
-            <div class="empty-sub">No data</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Missing rates -->
-      <div class="card" id="missing-card" style="display:none">
-        <div class="card-head">
-          <div class="card-title">Needs Attention</div>
-          <span class="card-badge badge-amber" id="missing-count-badge">0</span>
-        </div>
-        <div id="missing-content"></div>
-      </div>
-
+    <div style="margin-top:28px;padding-top:16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text-ter);font-family:'Source Code Pro',monospace">
+      <div>BOQ Connect v1.0.0 | Sanjaya Abeysinghe | SUN_SLDev</div>
+      <a href="mailto:Asanjayawaruna@hotmail.com" style="color:var(--text-ter);text-decoration:none">Asanjayawaruna@hotmail.com</a>
     </div>
   </div>
-
-  <!-- Change log -->
-  <div class="card" id="changelog-card">
-    <div class="card-head">
-      <div class="card-title">Change Log</div>
-      <span class="card-badge badge-blue" id="log-count-badge">0 entries</span>
-    </div>
-    <div id="changelog-content">
-      <div class="empty-state">
-        <div class="empty-sub">No sync history yet</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Footer -->
-  <div style="margin-top:32px;padding-top:20px;border-top:1px solid var(--border);
-    display:flex;justify-content:space-between;align-items:center;
-    font-size:11px;color:var(--text-ter);font-family:'Source Code Pro',monospace">
-    <div>BOQ Connect v1.0.0 &nbsp;|&nbsp; Sanjaya Abeysinghe &nbsp;|&nbsp; SUN_SLDev</div>
-    <div>
-      <a href="mailto:Asanjayawaruna@hotmail.com" style="color:var(--text-ter);text-decoration:none">
-        Asanjayawaruna@hotmail.com
-      </a>
-    </div>
-  </div>
-
 </div>
 
-<!-- Toast -->
+<!-- SHARE MODAL -->
+<div class="modal-overlay" id="share-modal">
+  <div class="modal">
+    <div class="modal-title">Share Project</div>
+    <div class="modal-sub">Share this BOQ project with a team member. They will receive an email with dashboard access and the Google Sheet will be shared with them.</div>
+    <div class="field"><label>Team member email *</label><input type="email" id="share-email" placeholder="colleague@company.com"></div>
+    <div class="field"><label>Personal message (optional)</label><textarea id="share-message" placeholder="Add a note..."></textarea></div>
+    <div id="share-preview" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;font-size:12px;color:var(--text-sec);margin-top:4px">
+      <div style="font-family:'Source Code Pro',monospace;color:var(--text-ter);margin-bottom:6px;font-size:10px;letter-spacing:.5px;text-transform:uppercase">Included in email</div>
+      <div id="share-preview-content"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeShareModal()">Cancel</button>
+      <button class="btn btn-success" id="share-send-btn" onclick="sendShare()">Send Invitation</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-// ── CONFIG ────────────────────────────────────────────────────────────
-var LOCAL_SERVER  = 'http://localhost:5000';
-var REFRESH_MS    = 30000; // auto-refresh every 30 seconds
-var config        = null;
-var boqData       = [];
-var summaryData   = {};
-var changeLog     = [];
-var refreshTimer  = null;
+var GOOGLE_CLIENT_ID = '919309576501-gk2vqj10ig1lt6lggqb86m3g5v2qrvag.apps.googleusercontent.com';
+var SHEETS_API = 'https://sheets.googleapis.com/v4/spreadsheets';
+var LOCAL_SERVER = 'http://localhost:5000';
+var DASHBOARD_URL = 'https://sun250sw-alt.github.io/BOQConnect/dashboard.html';
 
-function getUrlParams() {
-  var result = {};
-  var search = window.location.search.substring(1);
-  var pairs  = search.split('&');
-  for (var i = 0; i < pairs.length; i++) {
-    var pair = pairs[i].split('=');
-    if (pair[0]) result[decodeURIComponent(pair[0])] = pair[1] || '';
-  }
-  return result;
-}
+var user = null;
+var accessToken = null;
+var projects = [];
+var currentProject = null;
+var boqItems = [];
+var changeLogData = [];
+var isRevitMode = false;
 
-// ── INIT ──────────────────────────────────────────────────────────────
 window.onload = function() {
-  loadConfig();
+  var params = getUrlParams();
+  if (params['spreadsheetId']) {
+    isRevitMode = true;
+    currentProject = {
+      spreadsheetId: dec(params['spreadsheetId']),
+      folderId:      dec(params['folderId'] || ''),
+      projectName:   dec(params['projectName'] || 'Project'),
+      clientName:    dec(params['clientName'] || ''),
+      discipline:    dec(params['discipline'] || ''),
+      currency:      dec(params['currency'] || 'GBP'),
+      contingency:   parseFloat(params['contingency'] || '10'),
+      prelim:        parseFloat(params['prelim'] || '5'),
+      projectId:     dec(params['projectId'] || ''),
+      lastSync:      dec(params['lastSync'] || '')
+    };
+  }
+  var tok  = sessionStorage.getItem('boq_token');
+  var usr  = sessionStorage.getItem('boq_user');
+  if (tok && usr) {
+    accessToken = tok;
+    user = JSON.parse(usr);
+    buildTopbar();
+    if (isRevitMode && currentProject) { openProject(currentProject); }
+    else { showSelector(); }
+  } else {
+    showScreen('screen-signin');
+    buildTopbar();
+  }
 };
 
-function loadConfig() {
-  // Read config from URL parameters (passed by Revit DashboardCommand)
-  var params = getUrlParams();
+function dec(v) { try { return decodeURIComponent(v); } catch(e) { return v||''; } }
 
-  if (params['spreadsheetId']) {
-    config = {
-      spreadsheetId: decodeURIComponent(params['spreadsheetId'] || ''),
-      folderId:      decodeURIComponent(params['folderId']      || ''),
-      projectName:   decodeURIComponent(params['projectName']   || 'Project'),
-      clientName:    decodeURIComponent(params['clientName']    || ''),
-      discipline:    decodeURIComponent(params['discipline']    || ''),
-      currency:      decodeURIComponent(params['currency']      || 'GBP'),
-      contingency:   parseFloat(params['contingency']           || '10'),
-      prelim:        parseFloat(params['prelim']                || '5'),
-      lastSync:      decodeURIComponent(params['lastSync']      || '')
-    };
-    initDashboard();
-    return;
-  }
-
-  // Fallback — try localhost (works when browser and Revit on same machine)
-  xhrGet(LOCAL_SERVER + '/project-info', function(err, data) {
-    if (err || !data || !data.spreadsheetId) {
-      showSetupBanner();
-      return;
+function startGoogleSignIn() {
+  if (typeof google === 'undefined') { showToast('Google sign-in not available', 'error'); return; }
+  var client = google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope: 'https://www.googleapis.com/auth/spreadsheets.readonly https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
+    callback: function(response) {
+      if (response.access_token) {
+        accessToken = response.access_token;
+        fetchUserInfo(function() {
+          sessionStorage.setItem('boq_token', accessToken);
+          sessionStorage.setItem('boq_user', JSON.stringify(user));
+          buildTopbar();
+          if (isRevitMode && currentProject) { openProject(currentProject); }
+          else { showSelector(); }
+        });
+      } else { showToast('Sign-in failed. Please try again.', 'error'); }
     }
-    config = data;
-    initDashboard();
+  });
+  client.requestAccessToken();
+}
+
+function fetchUserInfo(cb) {
+  apiGet('https://www.googleapis.com/oauth2/v2/userinfo', function(err, data) {
+    if (!err && data) { user = { name: data.name||'User', email: data.email||'', picture: data.picture||'' }; }
+    if (cb) cb();
   });
 }
 
-function initDashboard() {
-  // Update header
-  document.getElementById('project-title').textContent =
-    config.projectName || 'Untitled Project';
-  document.getElementById('project-sub').textContent =
-    (config.discipline || '') + ' | ' + (config.clientName || '');
-  document.getElementById('sheet-id-display').textContent =
-    'Sheet: ' + config.spreadsheetId.substring(0, 20) + '...';
+function signOut() {
+  sessionStorage.removeItem('boq_token');
+  sessionStorage.removeItem('boq_user');
+  accessToken = null; user = null; projects = []; currentProject = null;
+  closeProfileDropdown();
+  showScreen('screen-signin');
+  buildTopbar();
+  showToast('Signed out', 'success');
+}
 
-  // Update sheet link
-  var sheetLink = document.getElementById('sheet-link');
-  sheetLink.href = 'https://docs.google.com/spreadsheets/d/' +
-    config.spreadsheetId;
+function buildTopbar() {
+  var el = document.getElementById('topbar-right');
+  if (!user) { el.innerHTML = ''; return; }
+  var initials = (user.name||'U').split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase();
+  el.innerHTML =
+    '<div class="status-dot" id="status-dot"></div>' +
+    '<span id="status-text" style="font-size:12px;color:var(--text-sec)">Live</span>' +
+    '<div class="profile-wrap">' +
+      '<div class="profile-btn" onclick="toggleProfileDropdown()">' +
+        '<div class="profile-avatar">' + (user.picture ? '<img src="'+user.picture+'" alt="">' : initials) + '</div>' +
+        '<span>' + (user.name||user.email) + '</span> &#9662;' +
+      '</div>' +
+      '<div class="profile-dropdown" id="profile-dropdown">' +
+        '<div class="pd-header"><div class="pd-name">'+esc(user.name)+'</div><div class="pd-email">'+esc(user.email)+'</div></div>' +
+        '<div class="pd-item" onclick="goToSelector()">&#128203; My Projects</div>' +
+        '<div class="pd-item danger" onclick="signOut()">&#8594; Sign Out</div>' +
+      '</div>' +
+    '</div>';
+}
 
-  // Show last sync time from config if available
-  if (config.lastSync) {
-    document.getElementById('last-sync-label').textContent =
-      'Last sync: ' + config.lastSync;
+function toggleProfileDropdown() { var d=document.getElementById('profile-dropdown'); if(d) d.classList.toggle('open'); }
+function closeProfileDropdown()  { var d=document.getElementById('profile-dropdown'); if(d) d.classList.remove('open'); }
+document.addEventListener('click', function(e) { var w=document.querySelector('.profile-wrap'); if(w&&!w.contains(e.target)) closeProfileDropdown(); });
+
+function showSelector() {
+  showScreen('screen-selector');
+  loadProjects();
+}
+
+function goToSelector() { currentProject=null; showSelector(); }
+
+function loadProjects() {
+  var grid = document.getElementById('project-grid');
+  grid.innerHTML = '<div style="text-align:center;padding:60px;grid-column:1/-1"><div class="spinner"></div><div style="margin-top:16px;color:var(--text-sec);font-size:14px">Searching your Drive...</div></div>';
+  var q = encodeURIComponent("mimeType='application/vnd.google-apps.spreadsheet' and name contains 'BOQ'");
+  apiGet('https://www.googleapis.com/drive/v3/files?q='+q+'&fields=files(id,name,properties,modifiedTime,parents)&pageSize=50', function(err, data) {
+    if (err || !data || !data.files || !data.files.length) { showNoProjects(); return; }
+    projects = data.files.map(function(f) {
+      var p = f.properties||{};
+      return {
+        spreadsheetId: f.id,
+        projectName:   f.name.replace(' -- BOQ','').replace(' BOQ',''),
+        clientName:    p.clientName||'',
+        discipline:    p.discipline||'',
+        currency:      p.currency||'GBP',
+        contingency:   parseFloat(p.contingency||'10'),
+        prelim:        parseFloat(p.prelim||'5'),
+        lastSync:      f.modifiedTime ? f.modifiedTime.substring(0,19).replace('T',' ') : '',
+        folderId:      (f.parents&&f.parents[0])||''
+      };
+    });
+    renderProjectGrid();
+  });
+}
+
+function renderProjectGrid() {
+  var grid = document.getElementById('project-grid');
+  if (!projects.length) { showNoProjects(); return; }
+  var html = '';
+  for (var i=0;i<projects.length;i++) {
+    var p = projects[i];
+    html += '<div class="project-card" onclick="openProjectByIndex('+i+')">' +
+      '<div class="pc-name">'+esc(p.projectName)+'</div>' +
+      '<div class="pc-client">'+esc(p.clientName||'No client')+'</div>' +
+      '<div class="pc-meta">' +
+        (p.discipline?'<span class="pc-tag">'+esc(p.discipline)+'</span>':'') +
+        '<span class="pc-tag">'+esc(p.currency)+'</span></div>' +
+      (p.lastSync?'<div class="pc-sync">Last sync: '+esc(p.lastSync)+'</div>':'')+
+    '</div>';
   }
-
-  setStatus('loading', 'Loading BOQ data...');
-  loadBOQData();
-
-  // Auto-refresh
-  refreshTimer = setInterval(function() {
-    loadBOQData();
-  }, REFRESH_MS);
+  grid.innerHTML = html;
 }
 
-function showSetupBanner() {
-  document.getElementById('setup-banner').style.display = 'flex';
-  setStatus('offline', 'Not configured');
-  document.getElementById('project-title').textContent = 'No project configured';
-  setMetrics('—', '—', '—', '—');
+function showNoProjects() {
+  document.getElementById('project-grid').innerHTML =
+    '<div style="text-align:center;padding:60px;grid-column:1/-1;color:var(--text-sec)">' +
+    '<div style="font-size:36px;margin-bottom:12px;opacity:.3">&#128203;</div>' +
+    '<div style="font-family:'Rajdhani',sans-serif;font-size:18px;margin-bottom:8px">No projects found</div>' +
+    '<div style="font-size:13px;color:var(--text-ter)">Projects shared with you will appear here.<br>Ask the project creator to share from their Revit dashboard.</div></div>';
 }
 
-// ── DATA LOADING ──────────────────────────────────────────────────────
-function loadBOQData() {
-  setStatus('loading', 'Loading...');
+function openProjectByIndex(i) { openProject(projects[i]); }
 
-  // Dashboard is on HTTPS — cannot call HTTP localhost directly
-  // Instead try localhost (works if user opens dashboard from same machine)
-  // If blocked, show the Sheet link and inform user
-  xhrGet(LOCAL_SERVER + '/boq-data', function(err, data) {
-    if (!err && data && data.items) {
-      boqData     = data.items     || [];
-      summaryData = data.summary   || {};
-      changeLog   = data.changeLog || [];
+function openProject(project) {
+  currentProject = project;
+  showScreen('screen-dashboard');
+  document.getElementById('d-project-name').textContent = project.projectName||'Project';
+  document.getElementById('d-project-sub').textContent = [project.clientName,project.discipline].filter(Boolean).join(' | ');
+  document.getElementById('d-sheet-link').href = 'https://docs.google.com/spreadsheets/d/'+project.spreadsheetId;
+  if (project.lastSync) document.getElementById('d-last-sync').textContent = 'Last sync: '+project.lastSync;
+  document.getElementById('share-btn').style.display = isRevitMode ? 'inline-flex' : 'none';
+  loadBOQFromSheets(project.spreadsheetId);
+}
+
+function loadBOQFromSheets(id) {
+  setStatus('loading');
+  apiGet(SHEETS_API+'/'+id+'/values/BOQ!A:I', function(err, data) {
+    if (err||!data||!data.values) { setStatus('offline'); showToast('Could not read Sheet. Check permissions.','error'); return; }
+    parseSheetData(data.values);
+    apiGet(SHEETS_API+'/'+id+'/values/Change%20Log!A:E', function(err2, data2) {
+      if (!err2&&data2&&data2.values) parseChangeLog(data2.values);
       renderDashboard();
-      setStatus('online', 'Live');
-      updateLastSync();
-    } else {
-      // Cannot reach localhost — show Sheet link instead
-      setStatus('offline', 'Open Sheet for live data');
-      showSheetPrompt();
-    }
+      setStatus('online');
+      var n=new Date();
+      document.getElementById('d-last-sync').textContent='Last sync: '+n.getHours()+':'+pad(n.getMinutes())+':'+pad(n.getSeconds());
+    });
   });
 }
 
-function readFromSheets() {
-  loadBOQData();
+function parseSheetData(rows) {
+  boqItems = [];
+  if (!rows||rows.length<2) return;
+  for (var i=1;i<rows.length;i++) {
+    var r=rows[i]; if(!r||r.length<4) continue;
+    var qty=parseFloat(r[4])||0, rate=parseFloat(r[6])||0;
+    boqItems.push({ itemNumber:r[0]||'', description:r[1]||'', category:r[2]||'', typeName:r[3]||'', quantity:qty, unit:r[5]||'', rate:rate, total:qty*rate, status:(r[8]||'').toLowerCase() });
+  }
 }
 
-function showSheetPrompt() {
-  var sheetUrl = 'https://docs.google.com/spreadsheets/d/' +
-    (config.spreadsheetId || '');
-
-  document.getElementById('boq-empty').innerHTML =
-    '<div class="empty-icon">&#128203;</div>' +
-    '<div class="empty-title">View your BOQ in Google Sheets</div>' +
-    '<div class="empty-sub" style="margin-bottom:16px">' +
-    'Live data loads when dashboard is opened from the Revit ribbon button.</div>' +
-    '<a href="' + sheetUrl + '" target="_blank" class="sync-btn" ' +
-    'style="display:inline-flex;text-decoration:none;margin:0 auto">' +
-    'Open Google Sheet &#8594;</a>';
-
-  document.getElementById('boq-empty').style.display = 'block';
-  document.getElementById('boq-table').style.display = 'none';
-  setMetrics('—', '—', '—', '—');
+function parseChangeLog(rows) {
+  changeLogData = [];
+  if (!rows||rows.length<2) return;
+  for (var i=1;i<rows.length;i++) {
+    var r=rows[i]; if(!r||!r.length) continue;
+    changeLogData.push({ timestamp:r[0]||'', totalItems:parseInt(r[1])||0, missingCount:parseInt(r[2])||0, deletedCount:parseInt(r[3])||0, estimatedTotal:parseFloat(r[4])||0 });
+  }
 }
 
-// ── RENDER ────────────────────────────────────────────────────────────
-function renderDashboard() {
-  renderBOQTable();
-  renderSummary();
-  renderCategories();
-  renderMissingRates();
-  renderChangeLog();
-  updateMetrics();
-}
+function renderDashboard() { renderBOQTable(); renderSummary(); renderCategories(); renderMissing(); renderChangeLog(); updateMetrics(); }
 
 function renderBOQTable() {
-  var tbody = document.getElementById('boq-tbody');
-  var table = document.getElementById('boq-table');
-  var empty = document.getElementById('boq-empty');
+  var tbody=document.getElementById('boq-tbody'),table=document.getElementById('boq-table'),empty=document.getElementById('boq-empty');
+  var curr=getCurrencySymbol();
+  if (!boqItems.length){table.style.display='none';empty.style.display='block';document.getElementById('items-badge').textContent='0 items';return;}
+  table.style.display='table';empty.style.display='none';
+  document.getElementById('items-badge').textContent=boqItems.length+' items';
 
-  if (!boqData || boqData.length === 0) {
-    table.style.display = 'none';
-    empty.style.display = 'block';
-    document.getElementById('items-badge').textContent = '0 items';
-    return;
+  // Load previous totals from sessionStorage for diff comparison
+  var prevKey='boq_prev_'+(currentProject?currentProject.spreadsheetId:'x');
+  var prevTotals={};
+  try{prevTotals=JSON.parse(sessionStorage.getItem(prevKey)||'{}');}catch(e){}
+
+  // Save current totals for next comparison
+  var currTotals={};
+  for(var j=0;j<boqItems.length;j++){
+    var k=boqItems[j].category+'|'+(boqItems[j].description||boqItems[j].typeName);
+    currTotals[k]=boqItems[j].total;
   }
+  try{sessionStorage.setItem(prevKey,JSON.stringify(currTotals));}catch(e){}
 
-  table.style.display = 'table';
-  empty.style.display = 'none';
-  document.getElementById('items-badge').textContent = boqData.length + ' items';
+  var html='';
+  for(var i=0;i<boqItems.length;i++){
+    var r=boqItems[i];
+    var isMis=r.status.indexOf('missing')>-1,isDel=r.status.indexOf('deleted')>-1||r.status.indexOf('eleted')>-1;
+    var cls=isMis?'row-amber':isDel?'row-red':'';
+    var pill=isMis?'<span class="status-pill cb-amber">&#9888; Missing</span>':isDel?'<span class="status-pill cb-red">&#215; Deleted</span>':'<span class="status-pill cb-green">&#10003; OK</span>';
 
-  var html = '';
-  var currency = getCurrencySymbol(config.currency);
-
-  for (var i = 0; i < boqData.length; i++) {
-    var row    = boqData[i];
-    var status = row.status || '';
-    var rowCls = status.indexOf('missing') > -1 ? 'row-amber' :
-                 status.indexOf('eleted')  > -1 ? 'row-red'   : '';
-
-    var statusPill = '';
-    if (status.indexOf('missing') > -1) {
-      statusPill = '<span class="status-pill badge-amber">&#9888; Missing</span>';
-    } else if (status.indexOf('eleted') > -1) {
-      statusPill = '<span class="status-pill badge-red">&#215; Deleted</span>';
-    } else {
-      statusPill = '<span class="status-pill badge-green">&#10003; OK</span>';
+    // Diff from last sync
+    var itemKey=r.category+'|'+(r.description||r.typeName);
+    var diffHtml='<span style="color:var(--text-ter);font-size:11px">--</span>';
+    if(prevTotals.hasOwnProperty(itemKey)&&r.total){
+      var delta=r.total-prevTotals[itemKey];
+      if(Math.abs(delta)>0.01){
+        var sign=delta>0?'+':'';
+        var dColor=delta>0?'#e85555':'#34c77b';
+        var dArrow=delta>0?'&#9650;':'&#9660;';
+        diffHtml='<span style="color:'+dColor+';font-family:monospace;font-size:11px;white-space:nowrap">'+dArrow+' '+sign+fmtC(Math.abs(delta))+'</span>';
+      }
+    }else if(r.total&&!prevTotals.hasOwnProperty(itemKey)){
+      diffHtml='<span style="color:var(--blue);font-family:monospace;font-size:11px;font-weight:600">NEW</span>';
     }
 
-    var total = row.quantity && row.rate ?
-      formatCurrency(row.quantity * row.rate, currency) : '—';
-
-    html += '<tr class="' + rowCls + '">' +
-      '<td class="item-no">'    + (row.itemNumber  || '—') + '</td>' +
-      '<td class="description">'+ (row.description || row.typeName || '—') + '</td>' +
-      '<td>'                    + (row.category    || '—') + '</td>' +
-      '<td class="quantity">'   + (row.quantity    || '—') + '</td>' +
-      '<td>'                    + (row.unit        || '—') + '</td>' +
-      '<td class="rate">'       + (row.rate ? currency + row.rate : '—') + '</td>' +
-      '<td class="total">'      + total + '</td>' +
-      '<td>'                    + statusPill + '</td>' +
-      '</tr>';
+    html+='<tr class="'+cls+'">' +
+      '<td class="item-no">'+esc(r.itemNumber)+'</td>' +
+      '<td class="desc">'+esc(r.description||r.typeName)+'</td>' +
+      '<td>'+esc(r.category)+'</td>' +
+      '<td class="qty">'+r.quantity+'</td>' +
+      '<td>'+esc(r.unit)+'</td>' +
+      '<td style="font-family:monospace">'+(r.rate?curr+r.rate:'--')+'</td>' +
+      '<td class="total-col">'+(r.total?fmtC(r.total):'--')+'</td>' +
+      '<td style="text-align:right">'+diffHtml+'</td>' +
+      '<td>'+pill+'</td></tr>';
   }
-
-  tbody.innerHTML = html;
+  tbody.innerHTML=html;
 }
 
 function renderSummary() {
-  var el      = document.getElementById('summary-content');
-  var currency = getCurrencySymbol(config.currency);
-
-  if (!summaryData || !summaryData.subtotal) {
-    el.innerHTML = '<div class="empty-state" style="padding:24px"><div class="empty-sub">No summary data</div></div>';
-    return;
-  }
-
-  var contingencyPct = config.contingency || 10;
-  var prelimPct      = config.prelim      || 5;
-  var subtotal       = summaryData.subtotal  || 0;
-  var prelim         = subtotal * (prelimPct / 100);
-  var contingency    = (subtotal + prelim) * (contingencyPct / 100);
-  var grand          = subtotal + prelim + contingency;
-
-  el.innerHTML =
-    row('Subtotal',     formatCurrency(subtotal, currency), false) +
-    row('Prelims (' + prelimPct + '%)', formatCurrency(prelim, currency), false) +
-    row('Contingency (' + contingencyPct + '%)', formatCurrency(contingency, currency), false) +
-    '<div class="summary-row total">' +
-    '<div class="summary-label">GRAND TOTAL</div>' +
-    '<div class="summary-value">' + formatCurrency(grand, currency) + '</div>' +
-    '</div>';
-
-  function row(label, val, isTot) {
-    return '<div class="summary-row' + (isTot ? ' total' : '') + '">' +
-      '<div class="summary-label">' + label + '</div>' +
-      '<div class="summary-value">' + val + '</div>' +
-      '</div>';
-  }
+  var el=document.getElementById('summary-content'), p=currentProject||{};
+  var sub=boqItems.reduce(function(s,i){return s+i.total;},0);
+  if (!sub) { el.innerHTML='<div class="empty" style="padding:20px"><div style="font-size:13px;color:var(--text-ter)">No rate data yet</div></div>'; return; }
+  var prel=sub*((p.prelim||5)/100), cont=(sub+prel)*((p.contingency||10)/100), grand=sub+prel+cont;
+  el.innerHTML=sr('Subtotal',fmtC(sub))+sr('Prelims ('+(p.prelim||5)+'%)',fmtC(prel))+sr('Contingency ('+(p.contingency||10)+'%)',fmtC(cont))+'<div class="sum-row total"><div class="sum-label">GRAND TOTAL</div><div class="sum-value">'+fmtC(grand)+'</div></div>';
+  function sr(l,v){return '<div class="sum-row"><div class="sum-label">'+l+'</div><div class="sum-value">'+v+'</div></div>';}
 }
 
 function renderCategories() {
-  var el      = document.getElementById('category-content');
-  var currency = getCurrencySymbol(config.currency);
-
-  // Build category totals from boqData
-  var cats = {};
-  for (var i = 0; i < boqData.length; i++) {
-    var item = boqData[i];
-    var cat  = item.category || 'Other';
-    var val  = (item.quantity || 0) * (item.rate || 0);
-    cats[cat] = (cats[cat] || 0) + val;
-  }
-
-  var keys = Object.keys(cats);
-  if (keys.length === 0) {
-    el.innerHTML = '<div class="empty-state" style="padding:24px"><div class="empty-sub">No data</div></div>';
-    return;
-  }
-
-  // Find max for bar scaling
-  var max = 0;
-  for (var k = 0; k < keys.length; k++) {
-    if (cats[keys[k]] > max) max = cats[keys[k]];
-  }
-
-  // Sort by value descending
-  keys.sort(function(a, b) { return cats[b] - cats[a]; });
-
-  var html = '';
-  for (var j = 0; j < keys.length; j++) {
-    var pct = max > 0 ? Math.round((cats[keys[j]] / max) * 100) : 0;
-    html += '<div class="cat-row">' +
-      '<div class="cat-header">' +
-      '<span class="cat-name">' + keys[j] + '</span>' +
-      '<span class="cat-val">' + formatCurrency(cats[keys[j]], currency) + '</span>' +
-      '</div>' +
-      '<div class="cat-bar-bg">' +
-      '<div class="cat-bar-fill" style="width:' + pct + '%"></div>' +
-      '</div></div>';
-  }
-
-  el.innerHTML = html;
+  var el=document.getElementById('category-content'), cats={};
+  for (var i=0;i<boqItems.length;i++){var item=boqItems[i],cat=item.category||'Other';cats[cat]=(cats[cat]||0)+item.total;}
+  var keys=Object.keys(cats); if (!keys.length){el.innerHTML='<div class="empty" style="padding:20px"><div style="font-size:13px;color:var(--text-ter)">No data</div></div>';return;}
+  keys.sort(function(a,b){return cats[b]-cats[a];}); var max=cats[keys[0]]||1, html='';
+  for (var j=0;j<keys.length;j++){var pct=Math.round((cats[keys[j]]/max)*100);html+='<div class="cat-row"><div class="cat-header"><span class="cat-name">'+esc(keys[j])+'</span><span class="cat-val">'+fmtC(cats[keys[j]])+'</span></div><div class="cat-bar-bg"><div class="cat-bar-fill" style="width:'+pct+'%"></div></div></div>';}
+  el.innerHTML=html;
 }
 
-function renderMissingRates() {
-  var missing = [];
-  for (var i = 0; i < boqData.length; i++) {
-    var item = boqData[i];
-    if (item.status && item.status.indexOf('missing') > -1) {
-      missing.push(item);
-    }
-  }
-
-  var card  = document.getElementById('missing-card');
-  var badge = document.getElementById('missing-badge');
-  var mbadge = document.getElementById('missing-count-badge');
-  var el    = document.getElementById('missing-content');
-
-  if (missing.length === 0) {
-    card.style.display = 'none';
-    badge.style.display = 'none';
-    return;
-  }
-
-  card.style.display = 'block';
-  badge.style.display = 'inline-flex';
-  badge.textContent   = missing.length + ' missing';
-  mbadge.textContent  = missing.length + ' items';
-
-  var sheetUrl = 'https://docs.google.com/spreadsheets/d/' + config.spreadsheetId;
-  var html = '';
-  for (var j = 0; j < Math.min(missing.length, 8); j++) {
-    var m = missing[j];
-    html += '<div class="missing-row">' +
-      '<div>' +
-      '<div class="missing-name">' + (m.description || m.typeName || 'Unknown') + '</div>' +
-      '<div class="missing-cat">' + (m.category || '') + '</div>' +
-      '</div>' +
-      '<a class="fix-btn" href="' + sheetUrl + '" target="_blank">Fix in Sheet</a>' +
-      '</div>';
-  }
-  if (missing.length > 8) {
-    html += '<div style="padding:10px 18px;font-size:12px;color:var(--text-ter)">' +
-      '+ ' + (missing.length - 8) + ' more items...</div>';
-  }
-  el.innerHTML = html;
+function renderMissing() {
+  var missing=boqItems.filter(function(i){return i.status.indexOf('missing')>-1;});
+  var card=document.getElementById('missing-card'), badge=document.getElementById('missing-badge'), count=document.getElementById('missing-count'), el=document.getElementById('missing-content');
+  var sheetUrl='https://docs.google.com/spreadsheets/d/'+(currentProject?currentProject.spreadsheetId:'');
+  if (!missing.length){card.style.display='none';badge.style.display='none';return;}
+  card.style.display='block';badge.style.display='inline-flex';badge.textContent=missing.length+' missing';count.textContent=missing.length+' items';
+  var html='';
+  for (var i=0;i<Math.min(missing.length,8);i++){var m=missing[i];html+='<div class="miss-row"><div><div class="miss-name">'+esc(m.description||m.typeName)+'</div><div class="miss-cat">'+esc(m.category)+'</div></div><a class="btn btn-secondary" style="font-size:11px;padding:4px 10px" href="'+sheetUrl+'" target="_blank">Fix in Revit</a></div>';}
+  if (missing.length>8) html+='<div style="padding:10px 18px;font-size:12px;color:var(--text-ter)">+ '+(missing.length-8)+' more</div>';
+  el.innerHTML=html;
 }
 
 function renderChangeLog() {
-  var el    = document.getElementById('changelog-content');
-  var badge = document.getElementById('log-count-badge');
-
-  if (!changeLog || changeLog.length === 0) {
-    badge.textContent = '0 entries';
-    el.innerHTML = '<div class="empty-state"><div class="empty-sub">No sync history yet</div></div>';
-    return;
-  }
-
-  badge.textContent = changeLog.length + ' entries';
-
-  var currency = getCurrencySymbol(config.currency);
-  var html = '';
-  var recent = changeLog.slice(-10).reverse();
-
-  for (var i = 0; i < recent.length; i++) {
-    var entry = recent[i];
-    var dotColor = entry.missingCount > 0 ? 'var(--amber)' : 'var(--green)';
-    html += '<div class="log-row">' +
-      '<div class="log-dot" style="background:' + dotColor + '"></div>' +
-      '<div style="flex:1">' +
-      '<div class="log-desc">' +
-      'Synced <strong>' + (entry.totalItems || 0) + ' items</strong>' +
-      (entry.missingCount > 0 ? ' &mdash; <span style="color:var(--amber)">' + entry.missingCount + ' missing rates</span>' : '') +
-      (entry.deletedCount > 0 ? ' &mdash; <span style="color:var(--red)">' + entry.deletedCount + ' deleted</span>'  : '') +
-      '</div>' +
-      '<div class="log-time">' + (entry.timestamp || '—') + '</div>' +
-      '</div>' +
-      '<div style="font-family:\'Source Code Pro\',monospace;font-size:12px;color:var(--text-sec)">' +
-      formatCurrency(entry.estimatedTotal || 0, currency) +
-      '</div>' +
-      '</div>';
-  }
-
-  el.innerHTML = html;
+  var el=document.getElementById('log-content'), badge=document.getElementById('log-badge');
+  badge.textContent=changeLogData.length+' entries';
+  if (!changeLogData.length){el.innerHTML='<div class="empty"><div style="font-size:13px;color:var(--text-ter)">No sync history</div></div>';return;}
+  var recent=changeLogData.slice().reverse().slice(0,10), html='';
+  for (var i=0;i<recent.length;i++){var e=recent[i],dotColor=e.missingCount>0?'var(--amber)':'var(--green)';html+='<div class="log-row"><div class="log-dot" style="background:'+dotColor+'"></div><div style="flex:1"><div class="log-desc">Synced <strong>'+e.totalItems+' items</strong>'+(e.missingCount>0?' &mdash; <span style="color:var(--amber)">'+e.missingCount+' missing</span>':'')+(e.deletedCount>0?' &mdash; <span style="color:var(--red)">'+e.deletedCount+' deleted</span>':'')+'</div><div class="log-time">'+e.timestamp+'</div></div><div style="font-family:'Source Code Pro',monospace;font-size:12px;color:var(--text-sec)">'+fmtC(e.estimatedTotal)+'</div></div>';}
+  el.innerHTML=html;
 }
 
 function updateMetrics() {
-  var currency = getCurrencySymbol(config.currency);
+  var sub=boqItems.reduce(function(s,i){return s+i.total;},0);
+  var mis=boqItems.filter(function(i){return i.status.indexOf('missing')>-1;}).length;
+  var p=currentProject||{};
+  var prel=sub*((p.prelim||5)/100);
+  var cont=(sub+prel)*((p.contingency||10)/100);
+  var grand=sub+prel+cont;
 
-  // Count items
-  var totalItems   = boqData.length;
-  var missingCount = 0;
-  var subtotal     = 0;
+  // Load previous metric totals for comparison
+  var prevMetaKey='boq_meta_'+(currentProject?currentProject.spreadsheetId:'x');
+  var prevMeta={};
+  try{prevMeta=JSON.parse(sessionStorage.getItem(prevMetaKey)||'{}');}catch(e){}
+  // Save current
+  try{sessionStorage.setItem(prevMetaKey,JSON.stringify({sub:sub,grand:grand}));}catch(e){}
 
-  for (var i = 0; i < boqData.length; i++) {
-    var item = boqData[i];
-    if (item.status && item.status.indexOf('missing') > -1) missingCount++;
-    subtotal += (item.quantity || 0) * (item.rate || 0);
-  }
+  document.getElementById('m-items').textContent=boqItems.length||'--';
+  document.getElementById('m-missing').textContent=mis;
+  var mc=document.getElementById('m-missing');
+  mc.style.color=mis>0?'var(--amber)':mis===0&&boqItems.length>0?'var(--green)':'var(--text)';
 
-  var contingencyPct = config.contingency || 10;
-  var prelimPct      = config.prelim      || 5;
-  var prelim         = subtotal * (prelimPct / 100);
-  var contingency    = (subtotal + prelim) * (contingencyPct / 100);
-  var grand          = subtotal + prelim + contingency;
-
-  setMetrics(
-    totalItems,
-    formatCurrency(subtotal, currency),
-    missingCount,
-    formatCurrency(grand, currency));
-
-  // Update summary data
-  summaryData.subtotal = subtotal;
-}
-
-function setMetrics(items, total, missing, grand) {
-  document.getElementById('m-items').textContent   = items;
-  document.getElementById('m-total').textContent   = total;
-  document.getElementById('m-missing').textContent = missing;
-  document.getElementById('m-grand').textContent   = grand;
-
-  var mc = document.getElementById('m-missing');
-  if (typeof missing === 'number' && missing > 0) {
-    mc.style.color = 'var(--amber)';
-  } else {
-    mc.style.color = missing === 0 ? 'var(--green)' : 'var(--text)';
-  }
-}
-
-// ── SYNC TRIGGER ──────────────────────────────────────────────────────
-function triggerSync() {
-  var btn = document.getElementById('sync-btn');
-  btn.disabled = true;
-  btn.innerHTML = '&#9675; Syncing...';
-  setStatus('loading', 'Syncing...');
-
-  xhrPost(LOCAL_SERVER + '/trigger-sync', {}, function(err, data) {
-    btn.disabled = false;
-    btn.innerHTML = '&#8635; Sync Now';
-    if (err) {
-      showToast('Sync failed. Make sure Revit is open.', 'error');
-      setStatus('offline', 'Sync failed');
-      return;
+  // Subtotal
+  document.getElementById('m-subtotal').textContent=sub?fmtC(sub):'--';
+  var subSub=document.getElementById('m-subtotal-sub');
+  if(subSub){
+    if(prevMeta.sub&&Math.abs(sub-prevMeta.sub)>0.01){
+      var sd=sub-prevMeta.sub;
+      subSub.innerHTML='<span style="color:'+(sd>0?'#e85555':'#34c77b')+';font-size:11px">'+(sd>0?'&#9650;':'&#9660;')+' '+(sd>0?'+':'')+fmtC(Math.abs(sd))+' from last</span>';
+    }else{
+      subSub.textContent='Excl. contingency';
     }
-    showToast('Sync triggered successfully', 'success');
-    setTimeout(function() { loadBOQData(); }, 3000);
+  }
+
+  // Grand total
+  document.getElementById('m-grand').textContent=grand?fmtC(grand):'--';
+  var grandSub=document.getElementById('m-grand-sub');
+  if(grandSub){
+    if(prevMeta.grand&&Math.abs(grand-prevMeta.grand)>0.01){
+      var gd=grand-prevMeta.grand;
+      grandSub.innerHTML='<span style="color:'+(gd>0?'#e85555':'#34c77b')+';font-size:11px">'+(gd>0?'&#9650;':'&#9660;')+' '+(gd>0?'+':'')+fmtC(Math.abs(gd))+' from last</span>';
+    }else{
+      grandSub.textContent='Incl. contingency';
+    }
+  }
+}
+
+function openShareModal() {
+  var p=currentProject||{};
+  document.getElementById('share-preview-content').innerHTML='<b>'+esc(p.projectName||'--')+'</b><br>Client: '+esc(p.clientName||'--')+'<br>Discipline: '+esc(p.discipline||'--');
+  document.getElementById('share-modal').classList.add('open');
+}
+
+function closeShareModal() {
+  document.getElementById('share-modal').classList.remove('open');
+  document.getElementById('share-email').value='';
+  document.getElementById('share-message').value='';
+}
+
+function sendShare() {
+  var email=document.getElementById('share-email').value.trim();
+  if (!email||email.indexOf('@')<0){showToast('Please enter a valid email address','error');return;}
+  var btn=document.getElementById('share-send-btn'); btn.disabled=true; btn.textContent='Sending...';
+  xhrPost(LOCAL_SERVER+'/share-project',{email:email,message:document.getElementById('share-message').value.trim()},function(err,data){
+    btn.disabled=false; btn.textContent='Send Invitation';
+    if (err||(data&&!data.success)){showToast('Could not send. Make sure Revit is open.','error');return;}
+    closeShareModal(); showToast('Invitation sent to '+email,'success');
   });
 }
 
-// ── HELPERS ───────────────────────────────────────────────────────────
-function setStatus(type, text) {
-  var dot  = document.getElementById('status-dot');
-  var label = document.getElementById('status-text');
-  dot.className = 'status-dot ' + (type === 'online' ? '' : type);
-  label.textContent = text;
-}
-
-function updateLastSync() {
-  var now = new Date();
-  var timeStr = now.getHours() + ':' +
-    (now.getMinutes() < 10 ? '0' : '') + now.getMinutes() + ':' +
-    (now.getSeconds() < 10 ? '0' : '') + now.getSeconds();
-  document.getElementById('last-sync-label').textContent = 'Last sync: ' + timeStr;
-  setStatus('online', 'Live');
-}
-
-function getCurrencySymbol(code) {
-  var symbols = { GBP:'£', USD:'$', EUR:'€', AED:'AED ', SGD:'S$', LKR:'Rs ', AUD:'A$' };
-  return symbols[code] || (code || '') + ' ';
-}
-
-function formatCurrency(value, symbol) {
-  if (!value && value !== 0) return '—';
-  return symbol + Number(value).toLocaleString('en-GB', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-}
-
-function showToast(msg, type) {
-  var t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className   = 'toast show ' + (type || '');
-  setTimeout(function() { t.className = 'toast'; }, 3500);
-}
-
-function xhrGet(url, callback) {
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', url, true);
-  xhr.timeout = 5000;
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState === 4) {
-      if (xhr.status === 200) {
-        try { callback(null, JSON.parse(xhr.responseText)); }
-        catch(e) { callback(e); }
-      } else {
-        callback(new Error('HTTP ' + xhr.status));
-      }
-    }
-  };
-  xhr.onerror   = function() { callback(new Error('Connection failed')); };
-  xhr.ontimeout = function() { callback(new Error('Timeout')); };
-  xhr.send();
-}
-
-function xhrPost(url, data, callback) {
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', url, true);
-  xhr.setRequestHeader('Content-Type', 'application/json');
-  xhr.timeout = 10000;
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState === 4) {
-      if (xhr.status === 200) {
-        try { callback(null, JSON.parse(xhr.responseText)); }
-        catch(e) { callback(e); }
-      } else {
-        callback(new Error('HTTP ' + xhr.status));
-      }
-    }
-  };
-  xhr.onerror   = function() { callback(new Error('Connection failed')); };
-  xhr.ontimeout = function() { callback(new Error('Timeout')); };
-  xhr.send(JSON.stringify(data));
-}
+function showScreen(id){var ss=document.querySelectorAll('.screen');for(var i=0;i<ss.length;i++)ss[i].classList.remove('active');document.getElementById(id).classList.add('active');window.scrollTo(0,0);}
+function setStatus(type){var dot=document.getElementById('status-dot'),lbl=document.getElementById('status-text');if(!dot)return;dot.className='status-dot '+(type!=='online'?type:'');if(lbl)lbl.textContent=type==='online'?'Live':type==='loading'?'Loading...':'Offline';}
+function getUrlParams(){var r={},pairs=window.location.search.substring(1).split('&');for(var i=0;i<pairs.length;i++){var p=pairs[i].split('=');if(p[0])r[p[0]]=p[1]||'';}return r;}
+function getCurrencySymbol(){var syms={GBP:'£',USD:'$',EUR:'€',AED:'AED ',SGD:'S$',LKR:'Rs ',AUD:'A$'},code=(currentProject&&currentProject.currency)||'GBP';return syms[code]||(code+' ');}
+function fmtC(val){if(!val&&val!==0)return '--';var c=getCurrencySymbol();return c+Number(val).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function esc(s){if(!s)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function pad(n){return n<10?'0'+n:''+n;}
+function showToast(msg,type){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+(type||'');setTimeout(function(){t.className='toast';},3500);}
+function apiGet(url,cb){if(!accessToken){cb(new Error('Not signed in'));return;}var xhr=new XMLHttpRequest();xhr.open('GET',url,true);xhr.setRequestHeader('Authorization','Bearer '+accessToken);xhr.timeout=10000;xhr.onreadystatechange=function(){if(xhr.readyState===4){if(xhr.status===200){try{cb(null,JSON.parse(xhr.responseText));}catch(e){cb(e);}}else if(xhr.status===401){signOut();showToast('Session expired. Please sign in again.','error');}else{cb(new Error('HTTP '+xhr.status));}}};xhr.onerror=function(){cb(new Error('Network error'));};xhr.ontimeout=function(){cb(new Error('Timeout'));};xhr.send();}
+function xhrPost(url,data,cb){var xhr=new XMLHttpRequest();xhr.open('POST',url,true);xhr.setRequestHeader('Content-Type','application/json');xhr.timeout=15000;xhr.onreadystatechange=function(){if(xhr.readyState===4){if(xhr.status===200){try{cb(null,JSON.parse(xhr.responseText));}catch(e){cb(e);}}else{cb(new Error('HTTP '+xhr.status));}}};xhr.onerror=function(){cb(new Error('Connection failed'));};xhr.ontimeout=function(){cb(new Error('Timeout'));};xhr.send(JSON.stringify(data));}
 </script>
 </body>
 </html>
