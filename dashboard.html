@@ -255,6 +255,8 @@ var isRevitMode = false;
 
 window.onload = function() {
   var params = getUrlParams();
+
+  // Check if opened from Revit with project data in URL
   if (params['spreadsheetId']) {
     isRevitMode = true;
     currentProject = {
@@ -269,9 +271,32 @@ window.onload = function() {
       projectId:     dec(params['projectId'] || ''),
       lastSync:      dec(params['lastSync'] || '')
     };
+
+    // Use access token from URL if provided by Revit addin
+    // This skips the Google sign-in entirely
+    var urlToken = params['token'] ? dec(params['token']) : '';
+    if (urlToken) {
+      accessToken = urlToken;
+      // Store in session so it persists on page interactions
+      sessionStorage.setItem('boq_token', urlToken);
+
+      // Set a minimal user object from Revit context
+      // Fetch real user info in background
+      user = { name: 'Revit User', email: '', picture: '' };
+
+      // Try to get real user info with the token
+      fetchUserInfo(function() {
+        sessionStorage.setItem('boq_user', JSON.stringify(user));
+        buildTopbar();
+        openProject(currentProject);
+      });
+      return;
+    }
   }
-  var tok  = sessionStorage.getItem('boq_token');
-  var usr  = sessionStorage.getItem('boq_user');
+
+  // Check for stored session token
+  var tok = sessionStorage.getItem('boq_token');
+  var usr = sessionStorage.getItem('boq_user');
   if (tok && usr) {
     accessToken = tok;
     user = JSON.parse(usr);
@@ -401,7 +426,7 @@ function showNoProjects() {
   document.getElementById('project-grid').innerHTML =
     '<div style="text-align:center;padding:60px;grid-column:1/-1;color:var(--text-sec)">' +
     '<div style="font-size:36px;margin-bottom:12px;opacity:.3">&#128203;</div>' +
-    '<div style="font-family:'Rajdhani',sans-serif;font-size:18px;margin-bottom:8px">No projects found</div>' +
+    '<div style="font-family:Rajdhani,sans-serif;font-size:18px;margin-bottom:8px">No projects found</div>' +
     '<div style="font-size:13px;color:var(--text-ter)">Projects shared with you will appear here.<br>Ask the project creator to share from their Revit dashboard.</div></div>';
 }
 
@@ -545,7 +570,7 @@ function renderChangeLog() {
   badge.textContent=changeLogData.length+' entries';
   if (!changeLogData.length){el.innerHTML='<div class="empty"><div style="font-size:13px;color:var(--text-ter)">No sync history</div></div>';return;}
   var recent=changeLogData.slice().reverse().slice(0,10), html='';
-  for (var i=0;i<recent.length;i++){var e=recent[i],dotColor=e.missingCount>0?'var(--amber)':'var(--green)';html+='<div class="log-row"><div class="log-dot" style="background:'+dotColor+'"></div><div style="flex:1"><div class="log-desc">Synced <strong>'+e.totalItems+' items</strong>'+(e.missingCount>0?' &mdash; <span style="color:var(--amber)">'+e.missingCount+' missing</span>':'')+(e.deletedCount>0?' &mdash; <span style="color:var(--red)">'+e.deletedCount+' deleted</span>':'')+'</div><div class="log-time">'+e.timestamp+'</div></div><div style="font-family:'Source Code Pro',monospace;font-size:12px;color:var(--text-sec)">'+fmtC(e.estimatedTotal)+'</div></div>';}
+  for (var i=0;i<recent.length;i++){var e=recent[i],dotColor=e.missingCount>0?'var(--amber)':'var(--green)';html+='<div class="log-row"><div class="log-dot" style="background:'+dotColor+'"></div><div style="flex:1"><div class="log-desc">Synced <strong>'+e.totalItems+' items</strong>'+(e.missingCount>0?' &mdash; <span style="color:var(--amber)">'+e.missingCount+' missing</span>':'')+(e.deletedCount>0?' &mdash; <span style="color:var(--red)">'+e.deletedCount+' deleted</span>':'')+'</div><div class="log-time">'+e.timestamp+'</div></div><div style="font-family:Source Code Pro,monospace;font-size:12px;color:var(--text-sec)">'+fmtC(e.estimatedTotal)+'</div></div>';}
   el.innerHTML=html;
 }
 
@@ -620,7 +645,7 @@ function sendShare() {
 function showScreen(id){var ss=document.querySelectorAll('.screen');for(var i=0;i<ss.length;i++)ss[i].classList.remove('active');document.getElementById(id).classList.add('active');window.scrollTo(0,0);}
 function setStatus(type){var dot=document.getElementById('status-dot'),lbl=document.getElementById('status-text');if(!dot)return;dot.className='status-dot '+(type!=='online'?type:'');if(lbl)lbl.textContent=type==='online'?'Live':type==='loading'?'Loading...':'Offline';}
 function getUrlParams(){var r={},pairs=window.location.search.substring(1).split('&');for(var i=0;i<pairs.length;i++){var p=pairs[i].split('=');if(p[0])r[p[0]]=p[1]||'';}return r;}
-function getCurrencySymbol(){var syms={GBP:'£',USD:'$',EUR:'€',AED:'AED ',SGD:'S$',LKR:'Rs ',AUD:'A$'},code=(currentProject&&currentProject.currency)||'GBP';return syms[code]||(code+' ');}
+function getCurrencySymbol(){var syms={GBP:'\u00A3',USD:'$',EUR:'\u20AC',AED:'AED ',SGD:'S$',LKR:'Rs ',AUD:'A$'},code=(currentProject&&currentProject.currency)||'GBP';return syms[code]||(code+' ');}
 function fmtC(val){if(!val&&val!==0)return '--';var c=getCurrencySymbol();return c+Number(val).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function esc(s){if(!s)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function pad(n){return n<10?'0'+n:''+n;}
