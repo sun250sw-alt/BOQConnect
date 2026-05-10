@@ -140,7 +140,11 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 <body>
 <div class="topbar">
   <div class="logo"><div class="logo-mark">B</div>BOQ Connect</div>
-  <div class="topbar-right" id="topbar-right"></div>
+  <div class="topbar-right" id="topbar-right">
+    <button class="btn btn-primary" id="topbar-sync-btn" onclick="triggerDashSync()" style="display:none;font-size:12px;padding:6px 12px">
+      &#8635; Sync
+    </button>
+  </div>
 </div>
 
 <!-- SIGN IN -->
@@ -197,7 +201,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
           <div class="card-title">Bill of Quantities</div>
           <div style="display:flex;gap:6px"><span class="cbadge cb-amber" id="missing-badge" style="display:none">0 missing</span><span class="cbadge cb-blue" id="items-badge">-- items</span></div>
         </div>
-        <div style="overflow-x:auto">
+        <div style="overflow-x:auto;max-height:380px;overflow-y:auto">
           <div class="empty" id="boq-empty"><div style="font-size:28px;margin-bottom:10px">&#128203;</div><div style="font-family:'Rajdhani',sans-serif;font-size:15px;color:var(--text-sec);margin-bottom:4px">No BOQ data yet</div><div style="font-size:13px">Push to BOQ from Revit to populate</div></div>
           <table class="boq-table" id="boq-table" style="display:none"><thead><tr><th>Item</th><th>Description</th><th>Category</th><th>Qty</th><th>Unit</th><th>Rate</th><th>Total</th><th>Diff</th><th>Status</th></tr></thead><tbody id="boq-tbody"></tbody></table>
         </div>
@@ -212,9 +216,54 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
       <div class="card-head"><div class="card-title">Change Log</div><span class="cbadge cb-blue" id="log-badge">0 entries</span></div>
       <div id="log-content"><div class="empty"><div style="font-size:13px;color:var(--text-ter)">No sync history</div></div></div>
     </div>
-    <div style="margin-top:28px;padding-top:16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text-ter);font-family:'Source Code Pro',monospace">
-      <div>BOQ Connect v1.0.0 | Sanjaya Abeysinghe | SUN_SLDev</div>
-      <a href="mailto:Asanjayawaruna@hotmail.com" style="color:var(--text-ter);text-decoration:none">Asanjayawaruna@hotmail.com</a>
+    <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--border);font-size:11px;color:var(--text-ter);font-family:monospace">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div><strong style="color:var(--text-sec)">BOQ Connect</strong> v1.0.0 &nbsp;|&nbsp; Built for Autodesk Revit 2026</div>
+        <div style="display:flex;gap:16px">
+          <a href="#" onclick="openFooterModal('privacy')" style="color:var(--text-ter);text-decoration:none">Privacy Policy</a>
+          <a href="#" onclick="openFooterModal('terms')" style="color:var(--text-ter);text-decoration:none">Terms of Use</a>
+          <a href="#" onclick="openFooterModal('about')" style="color:var(--text-ter);text-decoration:none">About</a>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--border)">
+        <div>Developer: <span style="color:var(--text-sec)">Sanjaya Abeysinghe</span> &nbsp;|&nbsp; MSc PM, BSc(Hons) QS, BIM &nbsp;|&nbsp; SUN_SLDev</div>
+        <a href="mailto:Asanjayawaruna@hotmail.com" style="color:var(--blue);text-decoration:none">Asanjayawaruna@hotmail.com</a>
+      </div>
+    </div>
+
+    <!-- Footer modals -->
+    <div class="modal-overlay" id="modal-privacy" onclick="if(event.target===this)this.classList.remove('open')">
+      <div class="modal" style="max-height:80vh;overflow-y:auto">
+        <div class="modal-title">Privacy Policy</div>
+        <p style="font-size:13px;color:var(--text-sec);line-height:1.7;margin-bottom:10px">BOQ Connect collects your Google account email and project data solely to generate and update your BOQ Google Sheet. No data is stored on SUN_SLDev servers. All project data lives in your own Google Drive.</p>
+        <p style="font-size:13px;color:var(--text-sec);line-height:1.7;margin-bottom:10px">Google authentication tokens are stored locally in your browser session only. You can sign out at any time to revoke access.</p>
+        <p style="font-size:13px;color:var(--text-sec);line-height:1.7">For privacy enquiries contact: <a href="mailto:Asanjayawaruna@hotmail.com" style="color:var(--blue)">Asanjayawaruna@hotmail.com</a></p>
+        <div class="modal-actions"><button class="btn btn-secondary" onclick="document.getElementById('modal-privacy').classList.remove('open')">Close</button></div>
+      </div>
+    </div>
+    <div class="modal-overlay" id="modal-terms" onclick="if(event.target===this)this.classList.remove('open')">
+      <div class="modal" style="max-height:80vh;overflow-y:auto">
+        <div class="modal-title">Terms of Use</div>
+        <p style="font-size:13px;color:var(--text-sec);line-height:1.7;margin-bottom:10px">BOQ Connect is provided as-is for internal business use. All BOQ outputs must be independently verified by a qualified professional before use in any financial or contractual context.</p>
+        <p style="font-size:13px;color:var(--text-sec);line-height:1.7;margin-bottom:10px">SUN_SLDev accepts no liability for errors in quantity extraction or cost calculations. The software is licensed for use with Autodesk Revit 2026 only.</p>
+        <p style="font-size:13px;color:var(--text-sec);line-height:1.7">Unauthorised redistribution or modification is prohibited. All rights reserved &copy; 2024 Sanjaya Abeysinghe / SUN_SLDev.</p>
+        <div class="modal-actions"><button class="btn btn-secondary" onclick="document.getElementById('modal-terms').classList.remove('open')">Close</button></div>
+      </div>
+    </div>
+    <div class="modal-overlay" id="modal-about" onclick="if(event.target===this)this.classList.remove('open')">
+      <div class="modal">
+        <div class="modal-title">About BOQ Connect</div>
+        <div style="font-size:13px;color:var(--text-sec);line-height:1.8">
+          <div style="margin-bottom:8px"><strong style="color:var(--text)">BOQ Connect v1.0.0</strong></div>
+          <div>Developer: <strong style="color:var(--text)">Sanjaya Abeysinghe</strong></div>
+          <div>Credentials: MSc Project Management, BSc(Hons) Quantity Surveying, BIM</div>
+          <div>Company: <strong style="color:var(--text)">SUN_SLDev</strong></div>
+          <div style="margin-top:10px">Built for Autodesk Revit 2026</div>
+          <div>Technology: Revit API, Google Sheets API v4, Google Drive API v3</div>
+          <div style="margin-top:10px">Support: <a href="mailto:Asanjayawaruna@hotmail.com" style="color:var(--blue)">Asanjayawaruna@hotmail.com</a></div>
+        </div>
+        <div class="modal-actions"><button class="btn btn-secondary" onclick="document.getElementById('modal-about').classList.remove('open')">Close</button></div>
+      </div>
     </div>
   </div>
 </div>
@@ -339,6 +388,168 @@ function fetchUserInfo(cb) {
   });
 }
 
+function deleteProject(i) {
+  var p = projects[i];
+  if (!p) return;
+  var confirmed = confirm(
+    'Delete "' + p.projectName + '" from your Google Drive?' +
+    '\n\nThis will permanently delete:\n' +
+    '- The Drive folder\n' +
+    '- The Google Sheet\n\n' +
+    'This cannot be undone.');
+  if (!confirmed) return;
+
+  // Delete the spreadsheet from Drive
+  var xhr = new XMLHttpRequest();
+  xhr.open('DELETE', 'https://www.googleapis.com/drive/v3/files/' + p.spreadsheetId, true);
+  xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4) {
+      if (xhr.status === 204 || xhr.status === 200) {
+        // Also delete the folder if we have it
+        if (p.folderId) {
+          var xhr2 = new XMLHttpRequest();
+          xhr2.open('DELETE', 'https://www.googleapis.com/drive/v3/files/' + p.folderId, true);
+          xhr2.setRequestHeader('Authorization', 'Bearer ' + accessToken);
+          xhr2.send();
+        }
+        projects.splice(i, 1);
+        renderProjectGrid();
+        showToast('"' + p.projectName + '" deleted from Drive', 'success');
+      } else {
+        showToast('Could not delete project. Check your permissions.', 'error');
+      }
+    }
+  };
+  xhr.send();
+}
+
+function triggerDashSync() {
+  var btn = document.getElementById('topbar-sync-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Syncing...'; }
+  showToast('Syncing from Google Sheets...', '');
+  if (currentProject) {
+    loadBOQFromSheets(currentProject.spreadsheetId);
+  }
+  setTimeout(function() {
+    if (btn) { btn.disabled = false; btn.innerHTML = '&#8635; Sync'; }
+  }, 3000);
+}
+
+function openFooterModal(id) {
+  var el = document.getElementById('modal-' + id);
+  if (el) el.classList.add('open');
+}
+
+function renderRecentlyChanged() {
+  var el    = document.getElementById('recent-content');
+  var badge = document.getElementById('recent-badge');
+  if (!el) return;
+
+  // Load full item change history from sessionStorage
+  // Format: [{key, description, category, oldTotal, newTotal, total, timestamp}]
+  var histKey = 'boq_hist_' + (currentProject ? currentProject.spreadsheetId : 'x');
+  var history = [];
+  try { history = JSON.parse(sessionStorage.getItem(histKey) || '[]'); } catch(e) {}
+
+  // Load previous totals to detect new changes in this load
+  var prevKey = 'boq_prev_' + (currentProject ? currentProject.spreadsheetId : 'x');
+  var prevTotals = {};
+  try { prevTotals = JSON.parse(sessionStorage.getItem(prevKey) || '{}'); } catch(e) {}
+
+  var now = new Date();
+  var nowStr = now.getFullYear() + '-' +
+    pad(now.getMonth()+1) + '-' + pad(now.getDate()) + ' ' +
+    pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+
+  // Detect changes in current load vs previous
+  var newEntries = [];
+  for (var i = 0; i < boqItems.length; i++) {
+    var item = boqItems[i];
+    var key  = item.category + '|' + (item.description || item.typeName);
+    if (prevTotals.hasOwnProperty(key)) {
+      var delta = item.total - prevTotals[key];
+      if (Math.abs(delta) > 0.01) {
+        newEntries.push({
+          key:         key,
+          description: item.description || item.typeName,
+          category:    item.category,
+          oldTotal:    prevTotals[key],
+          newTotal:    item.total,
+          delta:       delta,
+          timestamp:   nowStr
+        });
+      }
+    } else if (item.total > 0) {
+      // New item
+      newEntries.push({
+        key:         key,
+        description: item.description || item.typeName,
+        category:    item.category,
+        oldTotal:    0,
+        newTotal:    item.total,
+        delta:       item.total,
+        timestamp:   nowStr,
+        isNew:       true
+      });
+    }
+  }
+
+  // Add new entries to history (prepend so newest first)
+  if (newEntries.length > 0) {
+    history = newEntries.concat(history);
+    // Keep last 100 entries max
+    if (history.length > 100) history = history.slice(0, 100);
+    try { sessionStorage.setItem(histKey, JSON.stringify(history)); } catch(e) {}
+  }
+
+  if (badge) badge.textContent = history.length + ' items';
+
+  if (!history.length) {
+    el.innerHTML = '<div class="empty"><div style="font-size:13px;color:var(--text-ter)">No change history yet. Changes appear here after each sync.</div></div>';
+    return;
+  }
+
+  var curr = getCurrencySymbol();
+  var html = '';
+
+  // Show all entries - container has scroll (5 visible at once ~280px)
+  for (var j = 0; j < history.length; j++) {
+    var h     = history[j];
+    var isUp  = h.delta > 0;
+    var color = isUp ? '#e85555' : '#34c77b';
+    var arrow = isUp ? '&#9650;' : '&#9660;';
+    var sign  = isUp ? '+' : '';
+    var label = h.isNew ? '<span style="color:var(--blue);font-size:10px;font-family:monospace;margin-left:6px">NEW</span>' : '';
+
+    html +=
+      '<div style="display:flex;align-items:center;justify-content:space-between;' +
+        'padding:9px 18px;border-bottom:1px solid var(--border)">' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="color:var(--text);font-weight:500;font-size:13px;' +
+            'white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' +
+            esc(h.description) + label +
+          '</div>' +
+          '<div style="font-size:11px;color:var(--text-ter);margin-top:1px;display:flex;gap:8px">' +
+            '<span>' + esc(h.category) + '</span>' +
+            '<span style="color:var(--text-ter)">&#183;</span>' +
+            '<span style="font-family:monospace">' + h.timestamp + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<div style="text-align:right;margin-left:12px;flex-shrink:0">' +
+          '<div style="font-family:monospace;font-size:13px;font-weight:600;color:var(--text)">' +
+            (h.newTotal ? curr + h.newTotal.toFixed(2) : '--') +
+          '</div>' +
+          '<div style="font-size:11px;color:' + color + ';font-family:monospace">' +
+            arrow + ' ' + sign + curr + Math.abs(h.delta).toFixed(2) +
+          '</div>' +
+        '</div>' +
+      '</div>';
+  }
+
+  el.innerHTML = html;
+}
+
 function signOut() {
   sessionStorage.removeItem('boq_token');
   sessionStorage.removeItem('boq_user');
@@ -374,6 +585,8 @@ function closeProfileDropdown()  { var d=document.getElementById('profile-dropdo
 document.addEventListener('click', function(e) { var w=document.querySelector('.profile-wrap'); if(w&&!w.contains(e.target)) closeProfileDropdown(); });
 
 function showSelector() {
+  var syncBtn = document.getElementById('topbar-sync-btn');
+  if (syncBtn) syncBtn.style.display = 'none';
   showScreen('screen-selector');
   loadProjects();
 }
@@ -410,14 +623,25 @@ function renderProjectGrid() {
   var html = '';
   for (var i=0;i<projects.length;i++) {
     var p = projects[i];
-    html += '<div class="project-card" onclick="openProjectByIndex('+i+')">' +
-      '<div class="pc-name">'+esc(p.projectName)+'</div>' +
-      '<div class="pc-client">'+esc(p.clientName||'No client')+'</div>' +
-      '<div class="pc-meta">' +
-        (p.discipline?'<span class="pc-tag">'+esc(p.discipline)+'</span>':'') +
-        '<span class="pc-tag">'+esc(p.currency)+'</span></div>' +
-      (p.lastSync?'<div class="pc-sync">Last sync: '+esc(p.lastSync)+'</div>':'')+
-    '</div>';
+    html +=
+      '<div class="project-card" style="position:relative">' +
+        '<div onclick="openProjectByIndex(' + i + ')" style="cursor:pointer;padding-right:60px">' +
+          '<div class="pc-name">' + esc(p.projectName) + '</div>' +
+          '<div class="pc-client">' + esc(p.clientName || 'No client') + '</div>' +
+          '<div class="pc-meta">' +
+            (p.discipline ? '<span class="pc-tag">' + esc(p.discipline) + '</span>' : '') +
+            '<span class="pc-tag">' + esc(p.currency) + '</span>' +
+          '</div>' +
+          (p.lastSync ? '<div class="pc-sync">Last sync: ' + esc(p.lastSync) + '</div>' : '') +
+        '</div>' +
+        '<button onclick="event.stopPropagation();deleteProject(' + i + ')" ' +
+          'title="Delete project from Drive" ' +
+          'style="position:absolute;top:12px;right:12px;background:var(--red-dim);' +
+            'border:1px solid var(--red-bdr);color:var(--red);border-radius:4px;' +
+            'padding:4px 10px;font-size:11px;cursor:pointer;font-family:monospace">' +
+          '&#215; Delete' +
+        '</button>' +
+      '</div>';
   }
   grid.innerHTML = html;
 }
@@ -433,6 +657,8 @@ function showNoProjects() {
 function openProjectByIndex(i) { openProject(projects[i]); }
 
 function openProject(project) {
+  var syncBtn = document.getElementById('topbar-sync-btn');
+  if (syncBtn) syncBtn.style.display = 'inline-flex';
   currentProject = project;
   showScreen('screen-dashboard');
   document.getElementById('d-project-name').textContent = project.projectName||'Project';
@@ -477,7 +703,7 @@ function parseChangeLog(rows) {
   }
 }
 
-function renderDashboard() { renderBOQTable(); renderSummary(); renderCategories(); renderMissing(); renderChangeLog(); updateMetrics(); }
+function renderDashboard() { renderBOQTable(); renderSummary(); renderCategories(); renderMissing(); renderChangeLog(); updateMetrics(); renderRecentlyChanged(); }
 
 function renderBOQTable() {
   var tbody=document.getElementById('boq-tbody'),table=document.getElementById('boq-table'),empty=document.getElementById('boq-empty');
@@ -645,7 +871,11 @@ function sendShare() {
 function showScreen(id){var ss=document.querySelectorAll('.screen');for(var i=0;i<ss.length;i++)ss[i].classList.remove('active');document.getElementById(id).classList.add('active');window.scrollTo(0,0);}
 function setStatus(type){var dot=document.getElementById('status-dot'),lbl=document.getElementById('status-text');if(!dot)return;dot.className='status-dot '+(type!=='online'?type:'');if(lbl)lbl.textContent=type==='online'?'Live':type==='loading'?'Loading...':'Offline';}
 function getUrlParams(){var r={},pairs=window.location.search.substring(1).split('&');for(var i=0;i<pairs.length;i++){var p=pairs[i].split('=');if(p[0])r[p[0]]=p[1]||'';}return r;}
-function getCurrencySymbol(){var syms={GBP:'\u00A3',USD:'$',EUR:'\u20AC',AED:'AED ',SGD:'S$',LKR:'Rs ',AUD:'A$'},code=(currentProject&&currentProject.currency)||'GBP';return syms[code]||(code+' ');}
+function getCurrencySymbol(){
+  var syms={GBP:'\u00A3',USD:'$',EUR:'\u20AC',AED:'AED ',SGD:'S$',LKR:'Rs ',AUD:'A$',EUR:'\u20AC'};
+  var code = (currentProject && currentProject.currency) ? currentProject.currency.toUpperCase() : 'GBP';
+  return syms[code] !== undefined ? syms[code] : (code + ' ');
+}
 function fmtC(val){if(!val&&val!==0)return '--';var c=getCurrencySymbol();return c+Number(val).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function esc(s){if(!s)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function pad(n){return n<10?'0'+n:''+n;}
