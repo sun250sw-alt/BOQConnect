@@ -199,7 +199,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
       <div class="card">
         <div class="card-head">
           <div class="card-title">Bill of Quantities</div>
-          <div style="display:flex;gap:6px"><span class="cbadge cb-amber" id="missing-badge" style="display:none">0 missing</span><span class="cbadge cb-blue" id="items-badge">-- items</span></div>
+          <div style="display:flex;gap:6px"><span class="cbadge cb-blue" id="items-badge">-- items</span></div>
         </div>
         <div style="overflow-x:auto;max-height:380px;overflow-y:auto">
           <div class="empty" id="boq-empty"><div style="font-size:28px;margin-bottom:10px">&#128203;</div><div style="font-family:'Rajdhani',sans-serif;font-size:15px;color:var(--text-sec);margin-bottom:4px">No BOQ data yet</div><div style="font-size:13px">Push to BOQ from Revit to populate</div></div>
@@ -209,7 +209,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
       <div style="display:flex;flex-direction:column;gap:16px">
         <div class="card"><div class="card-head"><div class="card-title">Cost Summary</div></div><div id="summary-content"><div class="empty" style="padding:20px"><div style="font-size:13px;color:var(--text-ter)">No data</div></div></div></div>
         <div class="card"><div class="card-head"><div class="card-title">By Category</div></div><div id="category-content"><div class="empty" style="padding:20px"><div style="font-size:13px;color:var(--text-ter)">No data</div></div></div></div>
-        <div class="card" id="missing-card" style="display:none"><div class="card-head"><div class="card-title">Needs Attention</div><span class="cbadge cb-amber" id="missing-count"></span></div><div id="missing-content"></div></div>
+
       </div>
     </div>
     <!-- Recently Changed Items -->
@@ -306,7 +306,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 <div class="toast" id="toast"></div>
 
 <script>
-var GOOGLE_CLIENT_ID = '919309576501-bpbd7783d3up2v2mo4dh171t6tjaceet.apps.googleusercontent.com';
+var GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
 var SHEETS_API = 'https://sheets.googleapis.com/v4/spreadsheets';
 var LOCAL_SERVER = 'http://localhost:5000';
 var DASHBOARD_URL = 'https://sun250sw-alt.github.io/BOQConnect/dashboard.html';
@@ -463,81 +463,94 @@ function renderRecentlyChanged() {
   var badge = document.getElementById('recent-badge');
   if (!el) return;
 
-  // Load full item change history from sessionStorage
-  // Format: [{key, description, category, oldTotal, newTotal, total, timestamp}]
+  // History stored in sessionStorage - persists during browser session
   var histKey = 'boq_hist_' + (currentProject ? currentProject.spreadsheetId : 'x');
-  var history = [];
-  try { history = JSON.parse(sessionStorage.getItem(histKey) || '[]'); } catch(e) {}
-
-  // Load previous totals to detect new changes in this load
   var prevKey = 'boq_prev_' + (currentProject ? currentProject.spreadsheetId : 'x');
-  var prevTotals = {};
-  try { prevTotals = JSON.parse(sessionStorage.getItem(prevKey) || '{}'); } catch(e) {}
 
-  var now = new Date();
-  var nowStr = now.getFullYear() + '-' +
-    pad(now.getMonth()+1) + '-' + pad(now.getDate()) + ' ' +
-    pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+  var history  = [];
+  var prevData = {};
+  try { history  = JSON.parse(sessionStorage.getItem(histKey) || '[]'); } catch(e) {}
+  try { prevData = JSON.parse(sessionStorage.getItem(prevKey) || '{}'); } catch(e) {}
 
-  // Detect changes in current load vs previous
-  var newEntries = [];
+  // Build current snapshot
+  var currData = {};
   for (var i = 0; i < boqItems.length; i++) {
     var item = boqItems[i];
     var key  = item.category + '|' + (item.description || item.typeName);
-    if (prevTotals.hasOwnProperty(key)) {
-      var delta = item.total - prevTotals[key];
-      if (Math.abs(delta) > 0.01) {
+    currData[key] = {
+      description: item.description || item.typeName,
+      category:    item.category,
+      total:       item.total,
+      rate:        item.rate,
+      quantity:    item.quantity
+    };
+  }
+
+  // Compare current vs previous and record changes
+  var now = new Date();
+  var nowStr = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) +
+    ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+
+  var newEntries = [];
+  var keys = Object.keys(currData);
+  for (var j = 0; j < keys.length; j++) {
+    var k    = keys[j];
+    var curr = currData[k];
+    var prev = prevData[k];
+
+    if (!prev) {
+      // Brand new item
+      if (curr.total > 0) {
         newEntries.push({
-          key:         key,
-          description: item.description || item.typeName,
-          category:    item.category,
-          oldTotal:    prevTotals[key],
-          newTotal:    item.total,
-          delta:       delta,
-          timestamp:   nowStr
+          description: curr.description,
+          category:    curr.category,
+          oldTotal:    0,
+          newTotal:    curr.total,
+          delta:       curr.total,
+          timestamp:   nowStr,
+          isNew:       true
         });
       }
-    } else if (item.total > 0) {
-      // New item
+    } else if (Math.abs(curr.total - prev.total) > 0.01) {
+      // Price changed
       newEntries.push({
-        key:         key,
-        description: item.description || item.typeName,
-        category:    item.category,
-        oldTotal:    0,
-        newTotal:    item.total,
-        delta:       item.total,
+        description: curr.description,
+        category:    curr.category,
+        oldTotal:    prev.total,
+        newTotal:    curr.total,
+        delta:       curr.total - prev.total,
         timestamp:   nowStr,
-        isNew:       true
+        isNew:       false
       });
     }
   }
 
-  // Add new entries to history (prepend so newest first)
+  // Prepend new entries to history
   if (newEntries.length > 0) {
     history = newEntries.concat(history);
-    // Keep last 100 entries max
-    if (history.length > 100) history = history.slice(0, 100);
+    if (history.length > 200) history = history.slice(0, 200);
     try { sessionStorage.setItem(histKey, JSON.stringify(history)); } catch(e) {}
   }
 
-  if (badge) badge.textContent = history.length + ' items';
+  // Save current as previous for next comparison
+  try { sessionStorage.setItem(prevKey, JSON.stringify(currData)); } catch(e) {}
+
+  if (badge) badge.textContent = history.length + ' changes';
 
   if (!history.length) {
-    el.innerHTML = '<div class="empty"><div style="font-size:13px;color:var(--text-ter)">No change history yet. Changes appear here after each sync.</div></div>';
+    el.innerHTML = '<div class="empty"><div style="font-size:13px;color:var(--text-ter)">No changes recorded yet. Sync from Revit to start tracking.</div></div>';
     return;
   }
 
-  var curr = getCurrencySymbol();
+  var curr2 = getCurrencySymbol();
   var html = '';
-
-  // Show all entries - container has scroll (5 visible at once ~280px)
-  for (var j = 0; j < history.length; j++) {
-    var h     = history[j];
-    var isUp  = h.delta > 0;
+  for (var h = 0; h < history.length; h++) {
+    var entry = history[h];
+    var isUp  = entry.delta > 0;
     var color = isUp ? '#e85555' : '#34c77b';
     var arrow = isUp ? '&#9650;' : '&#9660;';
     var sign  = isUp ? '+' : '';
-    var label = h.isNew ? '<span style="color:var(--blue);font-size:10px;font-family:monospace;margin-left:6px">NEW</span>' : '';
+    var newLabel = entry.isNew ? '<span style="color:var(--blue);font-size:10px;font-family:monospace;margin-left:6px;padding:1px 5px;background:var(--blue-dim);border-radius:3px">NEW</span>' : '';
 
     html +=
       '<div style="display:flex;align-items:center;justify-content:space-between;' +
@@ -545,25 +558,24 @@ function renderRecentlyChanged() {
         '<div style="flex:1;min-width:0">' +
           '<div style="color:var(--text);font-weight:500;font-size:13px;' +
             'white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' +
-            esc(h.description) + label +
+            esc(entry.description) + newLabel +
           '</div>' +
-          '<div style="font-size:11px;color:var(--text-ter);margin-top:1px;display:flex;gap:8px">' +
-            '<span>' + esc(h.category) + '</span>' +
-            '<span style="color:var(--text-ter)">&#183;</span>' +
-            '<span style="font-family:monospace">' + h.timestamp + '</span>' +
+          '<div style="font-size:11px;color:var(--text-ter);margin-top:2px;display:flex;gap:8px">' +
+            '<span>' + esc(entry.category) + '</span>' +
+            '<span>&#183;</span>' +
+            '<span style="font-family:monospace">' + entry.timestamp + '</span>' +
           '</div>' +
         '</div>' +
         '<div style="text-align:right;margin-left:12px;flex-shrink:0">' +
           '<div style="font-family:monospace;font-size:13px;font-weight:600;color:var(--text)">' +
-            (h.newTotal ? curr + h.newTotal.toFixed(2) : '--') +
+            (entry.newTotal ? curr2 + entry.newTotal.toFixed(2) : '--') +
           '</div>' +
           '<div style="font-size:11px;color:' + color + ';font-family:monospace">' +
-            arrow + ' ' + sign + curr + Math.abs(h.delta).toFixed(2) +
+            arrow + ' ' + sign + curr2 + Math.abs(entry.delta).toFixed(2) +
           '</div>' +
         '</div>' +
       '</div>';
   }
-
   el.innerHTML = html;
 }
 
@@ -720,7 +732,7 @@ function parseChangeLog(rows) {
   }
 }
 
-function renderDashboard() { renderBOQTable(); renderSummary(); renderCategories(); renderMissing(); renderChangeLog(); updateMetrics(); renderRecentlyChanged(); }
+function renderDashboard() { renderBOQTable(); renderSummary(); renderCategories(); renderChangeLog(); updateMetrics(); renderRecentlyChanged(); }
 
 function renderBOQTable() {
   var tbody=document.getElementById('boq-tbody'),table=document.getElementById('boq-table'),empty=document.getElementById('boq-empty');
@@ -747,7 +759,27 @@ function renderBOQTable() {
     var r=boqItems[i];
     var isMis=r.status.indexOf('missing')>-1,isDel=r.status.indexOf('deleted')>-1||r.status.indexOf('eleted')>-1;
     var cls=isMis?'row-amber':isDel?'row-red':'';
-    var pill=isMis?'<span class="status-pill cb-amber">&#9888; Missing</span>':isDel?'<span class="status-pill cb-red">&#215; Deleted</span>':'<span class="status-pill cb-green">&#10003; OK</span>';
+
+    // Build specific missing field indicators
+    var pill = '';
+    if (isDel) {
+      pill = '<span class="status-pill cb-red">&#215; Deleted</span>';
+    } else if (isMis) {
+      // Show which specific fields are missing based on empty values
+      var missingFields = [];
+      if (!r.itemNumber  || r.itemNumber  === '--') missingFields.push('Item No');
+      if (!r.description || r.description === '--') missingFields.push('Desc');
+      if (!r.unit        || r.unit        === '--') missingFields.push('Unit');
+      if (!r.rate        || r.rate === 0)           missingFields.push('Rate');
+      if (!r.quantity    || r.quantity === 0)       missingFields.push('Qty');
+      if (missingFields.length > 0) {
+        pill = '<span class="status-pill cb-amber" title="Missing: ' + missingFields.join(', ') + '">&#9888; ' + missingFields.join(', ') + '</span>';
+      } else {
+        pill = '<span class="status-pill cb-amber">&#9888; Check Revit</span>';
+      }
+    } else {
+      pill = '<span class="status-pill cb-green">&#10003; OK</span>';
+    }
 
     // Diff from last sync
     var itemKey=r.category+'|'+(r.description||r.typeName);
@@ -796,18 +828,6 @@ function renderCategories() {
   el.innerHTML=html;
 }
 
-function renderMissing() {
-  var missing=boqItems.filter(function(i){return i.status.indexOf('missing')>-1;});
-  var card=document.getElementById('missing-card'), badge=document.getElementById('missing-badge'), count=document.getElementById('missing-count'), el=document.getElementById('missing-content');
-  var sheetUrl='https://docs.google.com/spreadsheets/d/'+(currentProject?currentProject.spreadsheetId:'');
-  if (!missing.length){card.style.display='none';badge.style.display='none';return;}
-  card.style.display='block';badge.style.display='inline-flex';badge.textContent=missing.length+' missing';count.textContent=missing.length+' items';
-  var html='';
-  for (var i=0;i<Math.min(missing.length,8);i++){var m=missing[i];html+='<div class="miss-row"><div><div class="miss-name">'+esc(m.description||m.typeName)+'</div><div class="miss-cat">'+esc(m.category)+'</div></div><a class="btn btn-secondary" style="font-size:11px;padding:4px 10px" href="'+sheetUrl+'" target="_blank">Fix in Revit</a></div>';}
-  if (missing.length>8) html+='<div style="padding:10px 18px;font-size:12px;color:var(--text-ter)">+ '+(missing.length-8)+' more</div>';
-  el.innerHTML=html;
-}
-
 function renderChangeLog() {
   var el=document.getElementById('log-content'), badge=document.getElementById('log-badge');
   badge.textContent=changeLogData.length+' entries';
@@ -835,7 +855,7 @@ function updateMetrics() {
   document.getElementById('m-items').textContent=boqItems.length||'--';
   document.getElementById('m-missing').textContent=mis;
   var mc=document.getElementById('m-missing');
-  mc.style.color=mis>0?'var(--amber)':mis===0&&boqItems.length>0?'var(--green)':'var(--text)';
+  if (mc) mc.style.color=mis>0?'var(--amber)':mis===0&&boqItems.length>0?'var(--green)':'var(--text)';
 
   // Subtotal
   document.getElementById('m-subtotal').textContent=sub?fmtC(sub):'--';
@@ -889,9 +909,20 @@ function showScreen(id){var ss=document.querySelectorAll('.screen');for(var i=0;
 function setStatus(type){var dot=document.getElementById('status-dot'),lbl=document.getElementById('status-text');if(!dot)return;dot.className='status-dot '+(type!=='online'?type:'');if(lbl)lbl.textContent=type==='online'?'Live':type==='loading'?'Loading...':'Offline';}
 function getUrlParams(){var r={},pairs=window.location.search.substring(1).split('&');for(var i=0;i<pairs.length;i++){var p=pairs[i].split('=');if(p[0])r[p[0]]=p[1]||'';}return r;}
 function getCurrencySymbol(){
-  var syms={GBP:'\u00A3',USD:'$',EUR:'\u20AC',AED:'AED ',SGD:'S$',LKR:'Rs ',AUD:'A$',EUR:'\u20AC'};
-  var code = (currentProject && currentProject.currency) ? currentProject.currency.toUpperCase() : 'GBP';
-  return syms[code] !== undefined ? syms[code] : (code + ' ');
+  var syms = {
+    'GBP': String.fromCharCode(163),
+    'USD': '$',
+    'EUR': String.fromCharCode(8364),
+    'AED': 'AED ',
+    'SGD': 'S$',
+    'LKR': 'Rs ',
+    'AUD': 'A$'
+  };
+  var code = 'GBP';
+  if (currentProject && currentProject.currency) {
+    code = currentProject.currency.toString().trim().toUpperCase();
+  }
+  return syms.hasOwnProperty(code) ? syms[code] : (code + ' ');
 }
 function fmtC(val){if(!val&&val!==0)return '--';var c=getCurrencySymbol();return c+Number(val).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function esc(s){if(!s)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
