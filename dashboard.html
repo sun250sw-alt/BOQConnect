@@ -212,9 +212,26 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
         <div class="card" id="missing-card" style="display:none"><div class="card-head"><div class="card-title">Needs Attention</div><span class="cbadge cb-amber" id="missing-count"></span></div><div id="missing-content"></div></div>
       </div>
     </div>
+    <!-- Recently Changed Items -->
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-head">
+        <div class="card-title">Recently Changed Items</div>
+        <span class="cbadge cb-blue" id="recent-badge">0 items</span>
+      </div>
+      <div id="recent-content" style="max-height:280px;overflow-y:auto">
+        <div class="empty"><div style="font-size:13px;color:var(--text-ter)">No change history yet</div></div>
+      </div>
+    </div>
+
+    <!-- Change Log -->
     <div class="card">
-      <div class="card-head"><div class="card-title">Change Log</div><span class="cbadge cb-blue" id="log-badge">0 entries</span></div>
-      <div id="log-content"><div class="empty"><div style="font-size:13px;color:var(--text-ter)">No sync history</div></div></div>
+      <div class="card-head">
+        <div class="card-title">Sync History</div>
+        <span class="cbadge cb-blue" id="log-badge">0 entries</span>
+      </div>
+      <div id="log-content" style="max-height:260px;overflow-y:auto">
+        <div class="empty"><div style="font-size:13px;color:var(--text-ter)">No sync history</div></div>
+      </div>
     </div>
     <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--border);font-size:11px;color:var(--text-ter);font-family:monospace">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
