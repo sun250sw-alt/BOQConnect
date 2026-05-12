@@ -201,7 +201,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
           <div class="card-title">Bill of Quantities</div>
           <div style="display:flex;gap:6px"><span class="cbadge cb-blue" id="items-badge">-- items</span></div>
         </div>
-        <div style="overflow-x:auto;max-height:380px;overflow-y:auto">
+        <div style="overflow-x:auto;overflow-y:auto" id="boq-scroll-wrap">
           <div class="empty" id="boq-empty"><div style="font-size:28px;margin-bottom:10px">&#128203;</div><div style="font-family:'Rajdhani',sans-serif;font-size:15px;color:var(--text-sec);margin-bottom:4px">No BOQ data yet</div><div style="font-size:13px">Push to BOQ from Revit to populate</div></div>
           <table class="boq-table" id="boq-table" style="display:none"><thead><tr><th>Item</th><th>Description</th><th>Category</th><th>Qty</th><th>Unit</th><th>Rate</th><th>Total</th><th>Diff</th><th>Status</th></tr></thead><tbody id="boq-tbody"></tbody></table>
         </div>
@@ -465,7 +465,7 @@ function renderRecentlyChanged() {
 
   // History stored in sessionStorage - persists during browser session
   var histKey = 'boq_hist_' + (currentProject ? currentProject.spreadsheetId : 'x');
-  var prevKey = 'boq_prev_' + (currentProject ? currentProject.spreadsheetId : 'x');
+  var prevKey = 'boq_diff_' + (currentProject ? currentProject.spreadsheetId : 'x');
 
   var history  = [];
   var prevData = {};
@@ -700,17 +700,55 @@ function openProject(project) {
 
 function loadBOQFromSheets(id) {
   setStatus('loading');
+
+  // Read BOQ data
   apiGet(SHEETS_API+'/'+id+'/values/BOQ!A:I', function(err, data) {
-    if (err||!data||!data.values) { setStatus('offline'); showToast('Could not read Sheet. Check permissions.','error'); return; }
+    if (err||!data||!data.values) {
+      setStatus('offline');
+      showToast('Could not read Sheet. Check permissions.','error');
+      return;
+    }
     parseSheetData(data.values);
-    apiGet(SHEETS_API+'/'+id+'/values/Change%20Log!A:E', function(err2, data2) {
-      if (!err2&&data2&&data2.values) parseChangeLog(data2.values);
-      renderDashboard();
-      setStatus('online');
-      var n=new Date();
-      document.getElementById('d-last-sync').textContent='Last sync: '+n.getHours()+':'+pad(n.getMinutes())+':'+pad(n.getSeconds());
+
+    // Read Summary tab to get stored config (currency, contingency, prelim)
+    apiGet(SHEETS_API+'/'+id+'/values/Cost%20Summary!A1:B25', function(errS, dataS) {
+      if (!errS && dataS && dataS.values) {
+        parseSummaryConfig(dataS.values);
+      }
+
+      // Read Change Log
+      apiGet(SHEETS_API+'/'+id+'/values/Change%20Log!A:E', function(err2, data2) {
+        if (!err2&&data2&&data2.values) parseChangeLog(data2.values);
+        renderDashboard();
+        setStatus('online');
+        var n=new Date();
+        document.getElementById('d-last-sync').textContent=
+          'Last sync: '+pad(n.getHours())+':'+pad(n.getMinutes())+':'+pad(n.getSeconds());
+      });
     });
   });
+}
+
+// Read currency/contingency/prelim stored in Summary tab
+function parseSummaryConfig(rows) {
+  if (!rows || !currentProject) return;
+  for (var i = 0; i < rows.length; i++) {
+    var row = rows[i];
+    if (!row || row.length < 2) continue;
+    var key = (row[0] || '').toString().trim().toLowerCase();
+    var val = (row[1] || '').toString().trim();
+    if (key === 'currency' && val) {
+      currentProject.currency = val.toUpperCase();
+    }
+    if (key === 'contingency' && val) {
+      var pct = parseFloat(val.replace('%',''));
+      if (!isNaN(pct)) currentProject.contingency = pct;
+    }
+    if (key === 'prelims' || key === 'preliminary') {
+      var pct2 = parseFloat(val.replace('%',''));
+      if (!isNaN(pct2)) currentProject.prelim = pct2;
+    }
+  }
 }
 
 function parseSheetData(rows) {
@@ -732,7 +770,27 @@ function parseChangeLog(rows) {
   }
 }
 
-function renderDashboard() { renderBOQTable(); renderSummary(); renderCategories(); renderChangeLog(); updateMetrics(); renderRecentlyChanged(); }
+function renderDashboard() {
+  renderBOQTable();
+  renderSummary();
+  renderCategories();
+  renderChangeLog();
+  updateMetrics();
+  renderRecentlyChanged();
+  matchBOQHeight();
+}
+
+function matchBOQHeight() {
+  // Match BOQ scroll height to sidebar height
+  setTimeout(function() {
+    var sidebar = document.querySelector('.two-col > div:last-child');
+    var boqWrap = document.getElementById('boq-scroll-wrap');
+    if (sidebar && boqWrap) {
+      var h = sidebar.offsetHeight;
+      if (h > 200) boqWrap.style.maxHeight = h + 'px';
+    }
+  }, 100);
+}
 
 function renderBOQTable() {
   var tbody=document.getElementById('boq-tbody'),table=document.getElementById('boq-table'),empty=document.getElementById('boq-empty');
