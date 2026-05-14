@@ -1282,6 +1282,18 @@ body::before {
           <div class="hint">Prelims added before contingency</div>
         </div>
       </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Budget Cost (optional)</label>
+          <input type="number" id="f-budget" value="0" min="0" step="1000" placeholder="e.g. 500000">
+          <div class="hint">Target budget for this project. Used to track over/under spend.</div>
+        </div>
+        <div class="field">
+          <label>Budget Reference</label>
+          <input type="text" id="f-budget-ref" placeholder="e.g. Approved estimate, QS report">
+          <div class="hint">Notes on where this budget figure came from</div>
+        </div>
+      </div>
     </div>
 
     <div class="nav-row">
@@ -1784,6 +1796,8 @@ function saveProject() {
   state.currency    = document.getElementById('f-currency').value;
   state.contingency = parseFloat(document.getElementById('f-contingency').value) || 10;
   state.prelim      = parseFloat(document.getElementById('f-prelim').value) || 5;
+  state.budget      = parseFloat(document.getElementById('f-budget').value) || 0;
+  state.budgetRef   = document.getElementById('f-budget-ref').value || '';
 }
 
 // -- PARAMETERS -------------------------------------------------------
@@ -1880,7 +1894,8 @@ function renderReview() {
     ri('Units',        state.units === 'metric' ? 'Metric' : 'Imperial') +
     ri('Currency',     state.currency + ' (' + sym + ')') +
     ri('Contingency',  state.contingency + '%') +
-    ri('Prelims',      state.prelim + '%');
+    ri('Prelims',      state.prelim + '%') +
+    (state.budget > 0 ? ri('Budget', state.currency + ' ' + state.budget.toLocaleString()) : ri('Budget', 'Not set'));
 
   document.getElementById('review-sheets').innerHTML =
     ri('Drive Folder',   state.folderName,      'blue') +
@@ -1997,6 +2012,8 @@ function runCreationSteps() {
       currency:       state.currency,
       contingency:    state.contingency,
       prelim:         state.prelim,
+      budget:         state.budget || 0,
+      budgetRef:      state.budgetRef || '',
       folderName:     state.folderName,
       spreadsheetName: state.spreadsheetName,
       boqTab:         state.boqTab,
