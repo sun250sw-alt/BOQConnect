@@ -140,11 +140,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 <body>
 <div class="topbar">
   <div class="logo"><div class="logo-mark">B</div>BOQ Connect</div>
-  <div class="topbar-right" id="topbar-right">
-    <button class="btn btn-primary" id="topbar-sync-btn" onclick="triggerDashSync()" style="display:none;font-size:12px;padding:6px 12px">
-      &#8635; Sync
-    </button>
-  </div>
+  <div class="topbar-right" id="topbar-right"></div>
 </div>
 
 <!-- SIGN IN -->
@@ -192,7 +188,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
     <div class="metrics">
       <div class="metric-card blue"><div class="metric-label">Total Items</div><div class="metric-value blue" id="m-items">--</div><div class="metric-sub">Element types</div></div>
       <div class="metric-card green"><div class="metric-label">Subtotal</div><div class="metric-value green" id="m-subtotal">--</div><div class="metric-sub" id="m-subtotal-sub">Excl. contingency</div></div>
-      <div class="metric-card amber"><div class="metric-label">Missing Rates</div><div class="metric-value amber" id="m-missing">--</div><div class="metric-sub">Need attention</div></div>
+      <div class="metric-card amber"><div class="metric-label">Budget Cost</div><div class="metric-value amber" id="m-budget">--</div><div class="metric-sub" id="m-budget-sub">vs Grand Total</div></div>
       <div class="metric-card grey"><div class="metric-label">Grand Total</div><div class="metric-value" id="m-grand" style="color:var(--text)">--</div><div class="metric-sub" id="m-grand-sub">Incl. contingency</div></div>
     </div>
     <div class="two-col">
@@ -335,7 +331,9 @@ window.onload = function() {
       contingency:   parseFloat(params['contingency'] || '10'),
       prelim:        parseFloat(params['prelim'] || '5'),
       projectId:     dec(params['projectId'] || ''),
-      lastSync:      dec(params['lastSync'] || '')
+      lastSync:      dec(params['lastSync'] || ''),
+      budget:        parseFloat(params['budget'] || '0'),
+      budgetRef:     dec(params['budgetRef'] || '')
     };
 
     // Use access token from URL if provided by Revit addin
@@ -593,9 +591,11 @@ function buildTopbar() {
   var el = document.getElementById('topbar-right');
   if (!user) { el.innerHTML = ''; return; }
   var initials = (user.name||'U').split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase();
+  var showSync = (currentProject != null);
   el.innerHTML =
     '<div class="status-dot" id="status-dot"></div>' +
     '<span id="status-text" style="font-size:12px;color:var(--text-sec)">Live</span>' +
+    (showSync ? '<button class="btn btn-primary" id="topbar-sync-btn" onclick="triggerDashSync()" style="font-size:12px;padding:6px 14px">&#8635; Sync</button>' : '') +
     '<div class="profile-wrap">' +
       '<div class="profile-btn" onclick="toggleProfileDropdown()">' +
         '<div class="profile-avatar">' + (user.picture ? '<img src="'+user.picture+'" alt="">' : initials) + '</div>' +
@@ -614,8 +614,8 @@ function closeProfileDropdown()  { var d=document.getElementById('profile-dropdo
 document.addEventListener('click', function(e) { var w=document.querySelector('.profile-wrap'); if(w&&!w.contains(e.target)) closeProfileDropdown(); });
 
 function showSelector() {
-  var syncBtn = document.getElementById('topbar-sync-btn');
-  if (syncBtn) syncBtn.style.display = 'none';
+  currentProject = null;
+  buildTopbar();
   showScreen('screen-selector');
   loadProjects();
 }
@@ -652,16 +652,40 @@ function renderProjectGrid() {
   var html = '';
   for (var i=0;i<projects.length;i++) {
     var p = projects[i];
+    var curr2 = p.currency || 'GBP';
+    var syms2 = {'GBP': String.fromCharCode(163),'USD':'$','EUR':String.fromCharCode(8364),'AED':'AED ','SGD':'S$','LKR':'Rs ','AUD':'A$'};
+    var sym2  = syms2[curr2] || (curr2 + ' ');
+    var overBudget = p.budget > 0 && p.grandTotal > p.budget;
+    var underBudget = p.budget > 0 && p.grandTotal <= p.budget;
+
     html +=
       '<div class="project-card" style="position:relative">' +
         '<div onclick="openProjectByIndex(' + i + ')" style="cursor:pointer;padding-right:60px">' +
           '<div class="pc-name">' + esc(p.projectName) + '</div>' +
           '<div class="pc-client">' + esc(p.clientName || 'No client') + '</div>' +
-          '<div class="pc-meta">' +
+          '<div class="pc-meta" style="margin-bottom:10px">' +
             (p.discipline ? '<span class="pc-tag">' + esc(p.discipline) + '</span>' : '') +
-            '<span class="pc-tag">' + esc(p.currency) + '</span>' +
+            '<span class="pc-tag">' + curr2 + '</span>' +
           '</div>' +
-          (p.lastSync ? '<div class="pc-sync">Last sync: ' + esc(p.lastSync) + '</div>' : '') +
+          // Metrics row
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">' +
+            '<div style="background:var(--surface2);border-radius:4px;padding:7px 10px">' +
+              '<div style="font-size:10px;color:var(--text-ter);font-family:monospace;margin-bottom:2px">ITEMS</div>' +
+              '<div style="font-size:15px;font-weight:600;color:var(--blue);font-family:Rajdhani,sans-serif">' + (p.itemCount || '--') + '</div>' +
+            '</div>' +
+            '<div style="background:var(--surface2);border-radius:4px;padding:7px 10px">' +
+              '<div style="font-size:10px;color:var(--text-ter);font-family:monospace;margin-bottom:2px">GRAND TOTAL</div>' +
+              '<div style="font-size:15px;font-weight:600;color:var(--green);font-family:Rajdhani,sans-serif">' +
+                (p.grandTotal ? sym2 + p.grandTotal.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2}) : '--') +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          (p.budget > 0 ?
+            '<div style="font-size:11px;color:' + (overBudget?'#e85555':underBudget?'#34c77b':'var(--text-ter)') + ';font-family:monospace">' +
+              (overBudget ? '&#9650; Over budget' : '&#9660; Under budget') +
+              ' | Budget: ' + sym2 + p.budget.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2}) +
+            '</div>' : '') +
+          (p.lastSync ? '<div class="pc-sync" style="margin-top:8px">Last sync: ' + esc(p.lastSync) + '</div>' : '') +
         '</div>' +
         '<button onclick="event.stopPropagation();deleteProject(' + i + ')" ' +
           'title="Delete project from Drive" ' +
@@ -686,9 +710,8 @@ function showNoProjects() {
 function openProjectByIndex(i) { openProject(projects[i]); }
 
 function openProject(project) {
-  var syncBtn = document.getElementById('topbar-sync-btn');
-  if (syncBtn) syncBtn.style.display = 'inline-flex';
   currentProject = project;
+  buildTopbar();
   showScreen('screen-dashboard');
   document.getElementById('d-project-name').textContent = project.projectName||'Project';
   document.getElementById('d-project-sub').textContent = [project.clientName,project.discipline].filter(Boolean).join(' | ');
@@ -729,7 +752,7 @@ function loadBOQFromSheets(id) {
   });
 }
 
-// Read currency/contingency/prelim stored in Summary tab
+// Read currency/contingency/prelim/budget stored in Summary tab
 function parseSummaryConfig(rows) {
   if (!rows || !currentProject) return;
   for (var i = 0; i < rows.length; i++) {
@@ -747,6 +770,13 @@ function parseSummaryConfig(rows) {
     if (key === 'prelims' || key === 'preliminary') {
       var pct2 = parseFloat(val.replace('%',''));
       if (!isNaN(pct2)) currentProject.prelim = pct2;
+    }
+    if (key === 'budget' && val) {
+      var bud = parseFloat(val.replace(/[^0-9.]/g,''));
+      if (!isNaN(bud) && bud > 0) currentProject.budget = bud;
+    }
+    if (key === 'budget ref' && val) {
+      currentProject.budgetRef = val;
     }
   }
 }
@@ -897,7 +927,6 @@ function renderChangeLog() {
 
 function updateMetrics() {
   var sub=boqItems.reduce(function(s,i){return s+i.total;},0);
-  var mis=boqItems.filter(function(i){return i.status.indexOf('missing')>-1;}).length;
   var p=currentProject||{};
   var prel=sub*((p.prelim||5)/100);
   var cont=(sub+prel)*((p.contingency||10)/100);
@@ -911,9 +940,26 @@ function updateMetrics() {
   try{sessionStorage.setItem(prevMetaKey,JSON.stringify({sub:sub,grand:grand}));}catch(e){}
 
   document.getElementById('m-items').textContent=boqItems.length||'--';
-  document.getElementById('m-missing').textContent=mis;
-  var mc=document.getElementById('m-missing');
-  if (mc) mc.style.color=mis>0?'var(--amber)':mis===0&&boqItems.length>0?'var(--green)':'var(--text)';
+
+  // Budget vs actual
+  var budgetEl = document.getElementById('m-budget');
+  var budgetSubEl = document.getElementById('m-budget-sub');
+  var budget = currentProject ? (currentProject.budget || 0) : 0;
+  if (budgetEl) {
+    if (budget > 0) {
+      budgetEl.textContent = fmtC(budget);
+      if (budgetSubEl) {
+        var diff = grand - budget;
+        var over = diff > 0;
+        budgetSubEl.innerHTML = '<span style="color:' + (over?'#e85555':'#34c77b') + '">' +
+          (over ? '&#9650; ' : '&#9660; ') + (over ? '+' : '') + fmtC(Math.abs(diff)) +
+          (over ? ' over budget' : ' under budget') + '</span>';
+      }
+    } else {
+      budgetEl.textContent = 'Not set';
+      if (budgetSubEl) budgetSubEl.textContent = 'Set in project setup';
+    }
+  }
 
   // Subtotal
   document.getElementById('m-subtotal').textContent=sub?fmtC(sub):'--';
