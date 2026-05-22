@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BOQ Connect — Cash Flow</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0e11;--surface:#13151a;--surface2:#1a1d24;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);--text:#e8e9ec;--text-sec:#8b8d96;--text-ter:#4a4c55;--blue:#3266ad;--green:#1d9e75;--amber:#e8a020;--red:#d43c3c;--radius:10px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Source Sans 3',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(50,102,173,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(50,102,173,0.02) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
+.topbar{position:fixed;top:0;left:0;right:0;height:52px;background:rgba(13,14,17,0.96);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:100}
+.logo{display:flex;align-items:center;gap:10px;font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;letter-spacing:1px}
+.logo-mark{width:28px;height:28px;background:var(--blue);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.btn{display:inline-flex;align-items:center;gap:6px;border-radius:6px;font-family:'Source Sans 3',sans-serif;font-size:13px;padding:7px 14px;cursor:pointer;transition:all .15s;border:none;font-weight:500;text-decoration:none}
+.btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:#4070bb}
+.btn-secondary{background:transparent;color:var(--text-sec);border:1px solid var(--border2)}.btn-secondary:hover{border-color:rgba(50,102,173,0.4);color:var(--text)}
+.main{position:relative;z-index:1;padding:72px 24px 48px;max-width:1400px;margin:0 auto}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;position:relative;overflow:hidden}
+.metric::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.m-blue::before{background:var(--blue)}.m-green::before{background:var(--green)}.m-amber::before{background:var(--amber)}.m-red::before{background:var(--red)}
+.m-label{font-size:10px;color:var(--text-ter);letter-spacing:.8px;text-transform:uppercase;font-family:'Source Code Pro',monospace;margin-bottom:8px}
+.m-value{font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;letter-spacing:-1px;margin-bottom:3px}
+.m-sub{font-size:11px;color:var(--text-sec)}
+.controls{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+.tabs{display:flex;gap:3px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px}
+.tab{font-size:12px;padding:6px 14px;border-radius:6px;cursor:pointer;border:none;background:transparent;color:var(--text-sec);font-weight:400;transition:all .15s;font-family:'Source Sans 3',sans-serif}
+.tab.active{background:var(--blue);color:#fff;font-weight:500}
+.profiles{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.profiles span{font-size:11px;color:var(--text-sec)}
+.pb{font-size:11px;padding:4px 10px;border-radius:5px;cursor:pointer;border:0.5px solid var(--border2);background:transparent;color:var(--text-sec);transition:all .15s;font-family:'Source Sans 3',sans-serif}
+.pb.active{border-color:rgba(50,102,173,0.5);background:rgba(50,102,173,0.12);color:var(--blue)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
+.card-head{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--text-sec);display:flex;align-items:center;gap:7px}
+.card-title::before{content:'';width:3px;height:11px;background:var(--blue);border-radius:2px}
+.card-body{padding:18px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--text-sec);margin-bottom:12px}
+.legend-item{display:flex;align-items:center;gap:5px}
+.l-line{width:22px;height:3px;border-radius:2px;display:inline-block}
+.l-box{width:11px;height:11px;border-radius:2px;display:inline-block}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.chart-wrap{position:relative;height:260px}
+.chart-wrap-lg{position:relative;height:320px}
+.view{display:none}.view.active{display:block}
+
+/* TRANSPOSED TABLE */
+.cf-table-wrap{overflow-x:auto;margin-top:18px}
+.cf-table{border-collapse:collapse;font-size:12px;font-family:'Source Code Pro',monospace;min-width:100%}
+.cf-table th.row-header{padding:9px 14px;text-align:left;font-size:10px;color:var(--text-ter);font-weight:500;letter-spacing:.5px;text-transform:uppercase;border-right:1px solid var(--border2);white-space:nowrap;background:var(--surface2);position:sticky;left:0;z-index:2}
+.cf-table th.col-header{padding:8px 14px;text-align:right;font-size:11px;color:var(--text-sec);font-weight:500;border-bottom:1px solid var(--border);white-space:nowrap;background:var(--surface2);min-width:110px}
+.cf-table td{padding:9px 14px;text-align:right;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap}
+.cf-table tr:last-child td{border-bottom:none}
+.cf-table tr:hover td{background:var(--surface2)}
+.row-spend{color:var(--text);font-weight:600}
+.row-variance{}
+.row-cum{color:var(--blue)}
+.row-budget{color:var(--amber)}
+.no-data{text-align:center;padding:60px 24px;color:var(--text-ter)}
+.no-data-icon{font-size:32px;margin-bottom:12px;opacity:.4}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:12px 16px;font-size:13px;z-index:400;transform:translateY(80px);opacity:0;transition:all .3s;min-width:240px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{border-color:rgba(29,158,117,.4)}.toast.error{border-color:rgba(212,60,60,.4)}
+.spinner{width:32px;height:32px;border:3px solid var(--border2);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:900px){.metrics{grid-template-columns:1fr 1fr}.two-col{grid-template-columns:1fr}}
+@media print{.topbar,.controls{display:none}.main{padding:10px}.card{break-inside:avoid}body{background:#fff;color:#000}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-mark">B</div>
+    BOQ Connect &mdash; Cash Flow
+  </div>
+  <div class="topbar-right">
+    <a class="btn btn-secondary" id="back-btn" href="dashboard.html">&#8592; Dashboard</a>
+    <button class="btn btn-secondary" onclick="exportCSV()">&#128190; CSV</button>
+    <button class="btn btn-secondary" onclick="window.print()">&#128438; Print</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- Loading -->
+  <div id="loading" style="text-align:center;padding:80px 24px">
+    <div class="spinner"></div>
+    <div style="margin-top:16px;color:var(--text-sec);font-size:14px">Loading cash flow data...</div>
+  </div>
+
+  <!-- No programme data -->
+  <div id="no-data" style="display:none">
+    <div class="no-data">
+      <div class="no-data-icon">&#128197;</div>
+      <div style="font-family:'Rajdhani',sans-serif;font-size:18px;color:var(--text-sec);margin-bottom:8px">No programme dates set</div>
+      <div style="font-size:13px;margin-bottom:16px">Cash flow requires programme dates. Set start dates and durations in the Programme view first.</div>
+      <a class="btn btn-primary" id="prog-link" href="programme.html">Go to Programme &#8594;</a>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard" style="display:none">
+
+    <!-- Metrics -->
+    <div class="metrics">
+      <div class="metric m-blue">
+        <div class="m-label">Contract Sum</div>
+        <div class="m-value" id="m-contract" style="color:var(--blue)">--</div>
+        <div class="m-sub">excl. prelims &amp; contingency</div>
+      </div>
+      <div class="metric m-green">
+        <div class="m-label">Grand Total</div>
+        <div class="m-value" id="m-grand" style="color:var(--green)">--</div>
+        <div class="m-sub" id="m-grand-sub">incl. prelims &amp; contingency</div>
+      </div>
+      <div class="metric m-amber">
+        <div class="m-label">Budget</div>
+        <div class="m-value" id="m-budget" style="color:var(--amber)">--</div>
+        <div class="m-sub" id="m-budget-ref">approved estimate</div>
+      </div>
+      <div class="metric" id="m-var-card">
+        <div class="m-label">Variance</div>
+        <div class="m-value" id="m-variance">--</div>
+        <div class="m-sub" id="m-var-sub">vs budget</div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <div class="tabs">
+        <button class="tab active" onclick="setView('combined')">Combined</button>
+        <button class="tab"        onclick="setView('scurve')">S-Curve</button>
+        <button class="tab"        onclick="setView('monthly')">Monthly</button>
+      </div>
+      <div class="profiles">
+        <span>Spend profile:</span>
+        <button class="pb"        onclick="setProfile('linear')">Linear</button>
+        <button class="pb active" onclick="setProfile('scurve')">S-Curve</button>
+        <button class="pb"        onclick="setProfile('front')">Front loaded</button>
+        <button class="pb"        onclick="setProfile('back')">Back loaded</button>
+      </div>
+    </div>
+
+    <!-- COMBINED -->
+    <div class="view active" id="view-combined">
+      <div class="two-col">
+        <div class="card">
+          <div class="card-head"><div class="card-title">S-Curve &mdash; Cumulative</div></div>
+          <div class="card-body">
+            <div class="legend">
+              <div class="legend-item"><span class="l-line" style="background:var(--blue)"></span>Cumulative actual</div>
+              <div class="legend-item"><span class="l-line" style="background:var(--amber);border-top:2px dashed var(--amber);height:0;width:22px"></span>Budget</div>
+              <div class="legend-item"><span class="l-line" style="background:#6c63c4;border-top:2px dashed #6c63c4;height:0;width:22px"></span>Forecast</div>
+            </div>
+            <div class="chart-wrap"><canvas id="c-sc"></canvas></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">Monthly &mdash; Spend, Cumulative, Budget, Variance</div></div>
+          <div class="card-body">
+            <div class="legend">
+              <div class="legend-item"><span class="l-box" style="background:rgba(50,102,173,0.4)"></span>Monthly spend</div>
+              <div class="legend-item"><span class="l-line" style="background:var(--green)"></span>Cumulative</div>
+              <div class="legend-item"><span class="l-line" style="background:var(--amber);border-top:2px dashed var(--amber);height:0;width:22px"></span>Budget</div>
+              <div class="legend-item"><span class="l-box" style="background:rgba(212,60,60,0.35)"></span>Variance</div>
+            </div>
+            <div class="chart-wrap"><canvas id="c-mo"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S-CURVE FULL -->
+    <div class="view" id="view-scurve">
+      <div class="card">
+        <div class="card-head"><div class="card-title">S-Curve &mdash; All series</div></div>
+        <div class="card-body">
+          <div class="legend">
+            <div class="legend-item"><span class="l-box" style="background:rgba(50,102,173,0.35)"></span>Monthly spend</div>
+            <div class="legend-item"><span class="l-box" style="background:rgba(212,60,60,0.3)"></span>Variance</div>
+            <div class="legend-item"><span class="l-line" style="background:var(--blue)"></span>Cumulative actual</div>
+            <div class="legend-item"><span class="l-line" style="background:var(--amber);border-top:2px dashed var(--amber);height:0;width:22px"></span>Budget (cum.)</div>
+            <div class="legend-item"><span class="l-line" style="background:#6c63c4;border-top:2px dashed #6c63c4;height:0;width:22px"></span>Forecast (cum.)</div>
+          </div>
+          <div class="chart-wrap-lg"><canvas id="c-sc2"></canvas></div>
+          <div class="cf-table-wrap" id="table-sc"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MONTHLY FULL -->
+    <div class="view" id="view-monthly">
+      <div class="card">
+        <div class="card-head"><div class="card-title">Monthly Cash Flow &mdash; All series</div></div>
+        <div class="card-body">
+          <div class="legend">
+            <div class="legend-item"><span class="l-box" style="background:rgba(50,102,173,0.45)"></span>Monthly spend</div>
+            <div class="legend-item"><span class="l-box" style="background:rgba(212,60,60,0.3)"></span>Variance</div>
+            <div class="legend-item"><span class="l-line" style="background:var(--green)"></span>Cumulative actual</div>
+            <div class="legend-item"><span class="l-line" style="background:var(--amber);border-top:2px dashed var(--amber);height:0;width:22px"></span>Budget (cum.)</div>
+          </div>
+          <div class="chart-wrap-lg"><canvas id="c-mo2"></canvas></div>
+          <div class="cf-table-wrap" id="table-mo"></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /dashboard -->
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var LOCAL_SERVER  = 'http://localhost:5000';
+var SHEETS_API    = 'https://sheets.googleapis.com/v4/spreadsheets';
+var accessToken   = null;
+var spreadsheetId = null;
+var projectConfig = {};
+var flowData      = [];   // built from programme + BOQ
+var currentProfile= 'scurve';
+var currentView   = 'combined';
+var charts        = {};
+
+// ── INIT ──────────────────────────────────────────────────────────────
+window.onload = function() {
+  var params = getUrlParams();
+  spreadsheetId = params['spreadsheetId'] ? dec(params['spreadsheetId']) : null;
+  accessToken   = params['token']         ? dec(params['token'])         : sessionStorage.getItem('boq_token');
+  projectConfig = {
+    projectName:  dec(params['projectName']  || ''),
+    currency:     dec(params['currency']     || 'GBP'),
+    contingency:  parseFloat(params['contingency'] || '10'),
+    prelim:       parseFloat(params['prelim']       || '5'),
+    budget:       parseFloat(params['budget']       || '0'),
+    budgetRef:    dec(params['budgetRef']    || '')
+  };
+
+  // Update back link
+  if (spreadsheetId) {
+    document.getElementById('back-btn').href =
+      'dashboard.html?spreadsheetId=' + encodeURIComponent(spreadsheetId) +
+      '&currency=' + encodeURIComponent(projectConfig.currency) +
+      '&contingency=' + projectConfig.contingency;
+    document.getElementById('prog-link').href =
+      'programme.html?spreadsheetId=' + encodeURIComponent(spreadsheetId) +
+      (accessToken ? '&token=' + encodeURIComponent(accessToken) : '');
+  }
+
+  loadData();
+};
+
+// ── LOAD DATA FROM SHEETS ─────────────────────────────────────────────
+function loadData() {
+  if (!spreadsheetId || !accessToken) {
+    // Try LocalServer
+    xhrGet(LOCAL_SERVER + '/boq-data', function(err, data) {
+      if (err || !data) { showNoData(); return; }
+      loadFromLocalServer();
+    });
+    return;
+  }
+
+  // Read BOQ and Programme tabs in parallel
+  var boqDone = false, progDone = false;
+  var boqRows = [], progRows = [];
+
+  apiGet(SHEETS_API + '/' + spreadsheetId + '/values/BOQ!A:H', function(err, data) {
+    if (!err && data && data.values) boqRows = data.values;
+    boqDone = true;
+    if (boqDone && progDone) buildCashFlow(boqRows, progRows);
+  });
+
+  apiGet(SHEETS_API + '/' + spreadsheetId + '/values/Programme!A:J', function(err, data) {
+    if (!err && data && data.values) progRows = data.values;
+    progDone = true;
+    if (boqDone && progDone) buildCashFlow(boqRows, progRows);
+  });
+
+  // Also read summary for currency/budget
+  apiGet(SHEETS_API + '/' + spreadsheetId + '/values/Cost%20Summary!A1:B30', function(err, data) {
+    if (err || !data || !data.values) return;
+    data.values.forEach(function(row) {
+      if (!row || row.length < 2) return;
+      var k = (row[0] || '').toLowerCase().trim();
+      var v = (row[1] || '').toString().trim();
+      if (k === 'currency')    projectConfig.currency    = v.toUpperCase();
+      if (k === 'contingency') projectConfig.contingency = parseFloat(v) || 10;
+      if (k === 'prelims')     projectConfig.prelim      = parseFloat(v) || 5;
+      if (k === 'budget')      projectConfig.budget      = parseFloat(v) || 0;
+      if (k === 'budget ref')  projectConfig.budgetRef   = v;
+    });
+  });
+}
+
+function loadFromLocalServer() {
+  var boqDone = false, progDone = false;
+  var boqItems = [], progItems = [];
+
+  xhrGet(LOCAL_SERVER + '/boq-data', function(err, data) {
+    if (!err && data && data.items) boqItems = data.items;
+    boqDone = true;
+    if (boqDone && progDone) buildFromObjects(boqItems, progItems);
+  });
+
+  xhrGet(LOCAL_SERVER + '/programme-data', function(err, data) {
+    if (!err && data && data.items) progItems = data.items;
+    progDone = true;
+    if (boqDone && progDone) buildFromObjects(boqItems, progItems);
+  });
+}
+
+// ── BUILD CASH FLOW FROM SHEET ROWS ──────────────────────────────────
+function buildCashFlow(boqRows, progRows) {
+  // Parse BOQ: itemNumber=A, description=B, category=C, typeName=D, qty=E, unit=F, rate=G, total=H
+  var boqMap = {};
+  for (var i = 1; i < boqRows.length; i++) {
+    var r = boqRows[i];
+    if (!r || r.length < 8) continue;
+    var itemNo = (r[0] || '').trim();
+    if (!itemNo) continue;
+    boqMap[itemNo] = { total: parseFloat(r[7]) || 0, description: r[1] || '', category: r[2] || '' };
+  }
+
+  // Parse Programme: itemId=A, desc=B, cat=C, startDate=D, duration=E, endDate=F, pct=G, preds=H, workDays=I, notes=J
+  var progItems = [];
+  for (var j = 1; j < progRows.length; j++) {
+    var pr = progRows[j];
+    if (!pr || pr.length < 5) continue;
+    var itemId    = (pr[0] || '').trim();
+    var startDate = (pr[3] || '').trim();
+    var duration  = parseInt(pr[4]) || 0;
+    if (!itemId || !startDate || !duration) continue;
+
+    var boq = boqMap[itemId];
+    if (!boq || !boq.total) continue;
+
+    progItems.push({
+      itemId:    itemId,
+      desc:      pr[1] || boq.description,
+      category:  pr[2] || boq.category,
+      startDate: startDate,
+      duration:  duration,
+      total:     boq.total
+    });
+  }
+
+  if (progItems.length === 0) { showNoData(); return; }
+  buildFromObjects(progItems, null);
+}
+
+function buildFromObjects(items, progItems) {
+  // items can be BOQ items with dates OR programme items
+  var workItems = progItems || items;
+
+  // Filter to items that have start dates and duration
+  var valid = workItems.filter(function(i) {
+    return i.startDate && (i.duration || i.dur) && i.total;
+  });
+
+  if (valid.length === 0) { showNoData(); return; }
+
+  // Build monthly cash flow
+  flowData = computeFlow(valid, currentProfile);
+  document.getElementById('loading').style.display    = 'none';
+  document.getElementById('no-data').style.display    = 'none';
+  document.getElementById('dashboard').style.display  = 'block';
+
+  updateMetrics();
+  renderAll();
+}
+
+// ── COMPUTE MONTHLY FLOW ──────────────────────────────────────────────
+function computeFlow(items, profile) {
+  var mo = {};
+  items.forEach(function(item) {
+    var s   = parseDate(item.startDate || item.start);
+    var dur = parseInt(item.duration || item.dur) || 1;
+    if (!s) return;
+    for (var d = 0; d < dur; d++) {
+      var day = addDays(s, d);
+      var mk  = mkey(day);
+      var t   = d / dur;
+      var w   = profile === 'scurve' ? Math.sin(Math.PI * t)
+              : profile === 'front'  ? 1 - t * 0.6
+              : profile === 'back'   ? 0.4 + t * 0.6 : 1;
+      mo[mk] = (mo[mk] || 0) + (item.total / dur) * w;
+    }
+  });
+
+  // Normalise
+  var raw = Object.values(mo).reduce(function(a,b){return a+b;},0);
+  var act = items.reduce(function(a,i){return a+i.total;},0);
+  var sc  = raw > 0 ? act / raw : 1;
+
+  var BUDGET = projectConfig.budget || 0;
+  var keys   = Object.keys(mo).sort();
+  var bpm    = BUDGET > 0 ? BUDGET / keys.length : 0;
+  var cum = 0, cb = 0;
+
+  return keys.map(function(k) {
+    var sp = mo[k] * sc; cum += sp; cb += bpm;
+    return {
+      month:    mlbl(k),
+      spend:    Math.round(sp),
+      cum:      Math.round(cum),
+      budget:   bpm > 0 ? Math.round(cb) : null,
+      forecast: Math.round(cum * (1 + (projectConfig.contingency||10)/100)),
+      variance: bpm > 0 ? Math.round(cum - cb) : null
+    };
+  });
+}
+
+// ── METRICS ───────────────────────────────────────────────────────────
+function updateMetrics() {
+  var sym  = getCurrSym();
+  var tot  = flowData.length ? flowData[flowData.length-1].cum : 0;
+  var prel = tot * ((projectConfig.prelim||5)/100);
+  var cont = (tot+prel) * ((projectConfig.contingency||10)/100);
+  var grand = tot + prel + cont;
+  var bud  = projectConfig.budget || 0;
+  var vari = bud > 0 ? grand - bud : null;
+  var over = vari !== null && vari > 0;
+
+  setText('m-contract', sym + fmt(tot));
+  setText('m-grand',    sym + fmt(grand));
+  setText('m-budget',   bud > 0 ? sym + fmt(bud) : 'Not set');
+  setText('m-variance', vari !== null ? (over?'+':'-') + sym + fmt(Math.abs(vari)) : '--');
+  setText('m-grand-sub', over ? '\u25b2 over budget' : '\u25bc under budget');
+  setText('m-var-sub',   vari !== null ? (over ? 'over budget' : 'under budget') : 'no budget set');
+  setText('m-budget-ref', projectConfig.budgetRef || 'approved estimate');
+
+  var vc = document.getElementById('m-var-card');
+  var vm = document.getElementById('m-variance');
+  vc.querySelector('.m-label').textContent = 'Variance';
+  if (vari !== null) {
+    vc.style.borderTopColor = over ? 'var(--red)' : 'var(--green)';
+    vm.style.color = over ? 'var(--red)' : 'var(--green)';
+  }
+}
+
+// ── RENDER CHARTS ─────────────────────────────────────────────────────
+function renderAll() {
+  var d    = flowData;
+  var hasBudget = d.some(function(r){return r.budget !== null;});
+
+  var dualOpts = {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},
+    interaction:{mode:'index',intersect:false},
+    scales:{
+      x:{ticks:{font:{size:11},color:'#666',maxRotation:0},grid:{color:'rgba(255,255,255,0.05)'}},
+      yL:{position:'left',title:{display:true,text:'Cumulative (\u00A3)',font:{size:10},color:'#666'},ticks:{font:{size:10},color:'#666',callback:fmtk},grid:{color:'rgba(255,255,255,0.05)'}},
+      yR:{position:'right',title:{display:true,text:'Monthly / Variance (\u00A3)',font:{size:10},color:'#666'},ticks:{font:{size:10},color:'#666',callback:fmtk},grid:{display:false}}
+    }
+  };
+  var singleOpts = {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},
+    scales:{
+      x:{ticks:{font:{size:11},color:'#666',maxRotation:0},grid:{color:'rgba(255,255,255,0.05)'}},
+      y:{ticks:{font:{size:10},color:'#666',callback:fmtk},grid:{color:'rgba(255,255,255,0.05)'}}
+    }
+  };
+
+  var vcol = d.map(function(r){return r.variance>0?'rgba(212,60,60,0.28)':'rgba(29,158,117,0.28)';});
+  var vbrd = d.map(function(r){return r.variance>0?'rgba(212,60,60,0.6)':'rgba(29,158,117,0.6)';});
+
+  // c-sc: combined s-curve (lines only)
+  mk('c-sc',[
+    {type:'line',label:'Budget',data:d.map(function(r){return r.budget;}),borderColor:'#e8a020',borderWidth:2,borderDash:[7,4],pointRadius:0,fill:false,tension:0.35},
+    {type:'line',label:'Forecast',data:d.map(function(r){return r.forecast;}),borderColor:'#6c63c4',borderWidth:1.5,borderDash:[3,3],pointRadius:0,fill:false,tension:0.35},
+    {type:'line',label:'Cumulative',data:d.map(function(r){return r.cum;}),borderColor:'#3266ad',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#3266ad',fill:{target:'origin',above:'rgba(50,102,173,0.08)'},tension:0.4}
+  ],d,singleOpts);
+
+  // c-mo: combined monthly (bars + lines, dual axis)
+  mk('c-mo',[
+    {type:'bar',label:'Variance',data:d.map(function(r){return r.variance;}),backgroundColor:vcol,borderColor:vbrd,borderWidth:1,borderRadius:3,yAxisID:'yR'},
+    {type:'bar',label:'Monthly spend',data:d.map(function(r){return r.spend;}),backgroundColor:'rgba(50,102,173,0.38)',borderColor:'rgba(50,102,173,0.6)',borderWidth:1,borderRadius:4,yAxisID:'yR'},
+    {type:'line',label:'Budget',data:d.map(function(r){return r.budget;}),borderColor:'#e8a020',borderWidth:2,borderDash:[7,4],pointRadius:0,fill:false,tension:0.35,yAxisID:'yL'},
+    {type:'line',label:'Cumulative',data:d.map(function(r){return r.cum;}),borderColor:'#1d9e75',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#1d9e75',fill:false,tension:0.4,yAxisID:'yL'}
+  ],d,JSON.parse(JSON.stringify(dualOpts)));
+
+  // c-sc2: full s-curve (all series, dual axis)
+  mk('c-sc2',[
+    {type:'bar',label:'Monthly spend',data:d.map(function(r){return r.spend;}),backgroundColor:'rgba(50,102,173,0.3)',borderColor:'rgba(50,102,173,0.55)',borderWidth:1,borderRadius:3,yAxisID:'yR'},
+    {type:'bar',label:'Variance',data:d.map(function(r){return r.variance;}),backgroundColor:vcol,borderColor:vbrd,borderWidth:1,borderRadius:3,yAxisID:'yR'},
+    {type:'line',label:'Budget',data:d.map(function(r){return r.budget;}),borderColor:'#e8a020',borderWidth:2,borderDash:[7,4],pointRadius:0,fill:false,tension:0.35,yAxisID:'yL'},
+    {type:'line',label:'Forecast',data:d.map(function(r){return r.forecast;}),borderColor:'#6c63c4',borderWidth:1.5,borderDash:[3,3],pointRadius:0,fill:false,tension:0.35,yAxisID:'yL'},
+    {type:'line',label:'Cumulative',data:d.map(function(r){return r.cum;}),borderColor:'#3266ad',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#3266ad',fill:{target:'origin',above:'rgba(50,102,173,0.07)'},tension:0.4,yAxisID:'yL'}
+  ],d,JSON.parse(JSON.stringify(dualOpts)));
+  makeTransposedTable('table-sc', d);
+
+  // c-mo2: full monthly (all series, dual axis)
+  mk('c-mo2',[
+    {type:'bar',label:'Monthly spend',data:d.map(function(r){return r.spend;}),backgroundColor:'rgba(50,102,173,0.44)',borderColor:'rgba(50,102,173,0.65)',borderWidth:1,borderRadius:4,yAxisID:'yR'},
+    {type:'bar',label:'Variance',data:d.map(function(r){return r.variance;}),backgroundColor:vcol,borderColor:vbrd,borderWidth:1,borderRadius:3,yAxisID:'yR'},
+    {type:'line',label:'Budget',data:d.map(function(r){return r.budget;}),borderColor:'#e8a020',borderWidth:2,borderDash:[7,4],pointRadius:0,fill:false,tension:0.35,yAxisID:'yL'},
+    {type:'line',label:'Cumulative',data:d.map(function(r){return r.cum;}),borderColor:'#1d9e75',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#1d9e75',fill:false,tension:0.4,yAxisID:'yL'}
+  ],d,JSON.parse(JSON.stringify(dualOpts)));
+  makeTransposedTable('table-mo', d);
+}
+
+function mk(id, datasets, data, opts) {
+  if (charts[id]) { charts[id].destroy(); }
+  var ctx = document.getElementById(id);
+  if (!ctx) return;
+  charts[id] = new Chart(ctx, {
+    type:'bar',
+    data:{labels:data.map(function(d){return d.month;}),datasets:datasets},
+    options:opts
+  });
+}
+
+// ── TRANSPOSED TABLE ──────────────────────────────────────────────────
+// Months = column headers (same as X axis)
+// Series = row headers on left
+function makeTransposedTable(id, data) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var sym      = getCurrSym();
+  var hasBudget = data.some(function(r){return r.budget !== null;});
+
+  // Column headers = months
+  var colHeaders = data.map(function(r){return r.month;});
+
+  var rows = [
+    { label:'Monthly Spend', cls:'row-spend',    vals:data.map(function(r){return fmt2(r.spend, sym);}) },
+    { label:'Variance',      cls:'row-variance',  vals:data.map(function(r){
+      if (r.variance === null) return '--';
+      var col = r.variance > 0 ? '#d43c3c' : '#1d9e75';
+      var sign = r.variance > 0 ? '+' : '';
+      return '<span style="color:' + col + '">' + sign + sym + Math.round(Math.abs(r.variance)).toLocaleString() + '</span>';
+    })},
+    { label:'Cumulative',    cls:'row-cum',       vals:data.map(function(r){return fmt2(r.cum, sym);}) },
+    { label:'Budget (cum.)', cls:'row-budget',    vals:data.map(function(r){return r.budget!==null ? '<span style="color:#e8a020">' + sym + Math.round(r.budget).toLocaleString() + '</span>' : '--';}) },
+  ];
+
+  var html = '<table class="cf-table"><thead><tr>' +
+    '<th class="row-header">Series</th>' +
+    colHeaders.map(function(m){return '<th class="col-header">' + m + '</th>';}).join('') +
+    '</tr></thead><tbody>';
+
+  rows.forEach(function(row) {
+    if (!hasBudget && (row.label === 'Variance' || row.label === 'Budget (cum.)')) return;
+    html += '<tr><th class="row-header ' + row.cls + '">' + row.label + '</th>' +
+      row.vals.map(function(v){return '<td class="' + row.cls + '">' + v + '</td>';}).join('') +
+      '</tr>';
+  });
+
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+// ── EXPORT CSV ────────────────────────────────────────────────────────
+function exportCSV() {
+  if (!flowData.length) { showToast('No data to export','error'); return; }
+  var sym = getCurrSym();
+  var headers = ['Month','Monthly Spend','Variance','Cumulative','Budget (cum.)','Forecast'];
+  var rows = flowData.map(function(r){
+    return [r.month, r.spend, r.variance!==null?r.variance:'', r.cum, r.budget!==null?r.budget:'', r.forecast].join(',');
+  });
+  var csv = headers.join(',') + '\n' + rows.join('\n');
+  var a   = document.createElement('a');
+  a.href  = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'BOQ_CashFlow.csv';
+  a.click();
+  showToast('CSV downloaded','success');
+}
+
+// ── CONTROLS ──────────────────────────────────────────────────────────
+function setView(v) {
+  currentView = v;
+  document.querySelectorAll('.view').forEach(function(el){el.classList.remove('active');});
+  document.getElementById('view-' + v).classList.add('active');
+  document.querySelectorAll('.tab').forEach(function(b,i){
+    b.classList.toggle('active', ['combined','scurve','monthly'][i] === v);
+  });
+  setTimeout(renderAll, 50);
+}
+
+function setProfile(p) {
+  currentProfile = p;
+  document.querySelectorAll('.pb').forEach(function(b){b.classList.remove('active');});
+  event.target.classList.add('active');
+  flowData = computeFlow([], p); // recompute
+  loadData(); // reload and recompute
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────
+function showNoData() {
+  document.getElementById('loading').style.display   = 'none';
+  document.getElementById('no-data').style.display   = 'block';
+  document.getElementById('dashboard').style.display = 'none';
+}
+
+function getCurrSym() {
+  var syms = {GBP:'\u00A3',USD:'$',EUR:'\u20AC',AED:'AED ',SGD:'S$',LKR:'Rs ',AUD:'A$'};
+  var code = (projectConfig.currency || 'GBP').toUpperCase();
+  return syms[code] || (code + ' ');
+}
+
+function fmt(v)       { return Math.round(Math.abs(v)).toLocaleString(); }
+function fmt2(v, sym) { return sym + Math.round(Math.abs(v)).toLocaleString(); }
+function fmtk(v)      { if(Math.abs(v)>=1e6)return'\u00A3'+(v/1e6).toFixed(1)+'M';if(Math.abs(v)>=1e3)return'\u00A3'+(v/1e3).toFixed(0)+'k';return'\u00A3'+Math.round(v); }
+function setText(id,t) { var el=document.getElementById(id);if(el)el.textContent=t; }
+
+function parseDate(s) { if(!s)return null; var d=new Date(s); return isNaN(d)?null:d; }
+function addDays(d,n) { var r=new Date(d);r.setDate(r.getDate()+n);return r; }
+function mkey(d)      { return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+function mlbl(k)      { var p=k.split('-');return['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+p[1]-1]+' \''+p[0].slice(2); }
+function pad(n)       { return n<10?'0'+n:''+n; }
+function dec(v)       { try{return decodeURIComponent(v);}catch(e){return v||'';} }
+function getUrlParams(){ var r={},pairs=window.location.search.substring(1).split('&');pairs.forEach(function(p){var s=p.split('=');if(s[0])r[s[0]]=s[1]||'';});return r; }
+function showToast(m,t){ var el=document.getElementById('toast');el.textContent=m;el.className='toast show '+(t||'');setTimeout(function(){el.className='toast';},3000); }
+function apiGet(url,cb){ if(!accessToken){cb(new Error('No token'));return;}var xhr=new XMLHttpRequest();xhr.open('GET',url,true);xhr.setRequestHeader('Authorization','Bearer '+accessToken);xhr.timeout=10000;xhr.onreadystatechange=function(){if(xhr.readyState===4){if(xhr.status===200){try{cb(null,JSON.parse(xhr.responseText));}catch(e){cb(e);}}else cb(new Error('HTTP '+xhr.status));}};xhr.onerror=function(){cb(new Error('Network error'));};xhr.ontimeout=function(){cb(new Error('Timeout'));};xhr.send();}
+function xhrGet(url,cb){ var xhr=new XMLHttpRequest();xhr.open('GET',url,true);xhr.timeout=5000;xhr.onreadystatechange=function(){if(xhr.readyState===4){if(xhr.status===200){try{cb(null,JSON.parse(xhr.responseText));}catch(e){cb(e);}}else cb(new Error('HTTP '+xhr.status));}};xhr.onerror=function(){cb(new Error('Connection failed'));};xhr.ontimeout=function(){cb(new Error('Timeout'));};xhr.send();}
+</script>
+</body>
+</html>

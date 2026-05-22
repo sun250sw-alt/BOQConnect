@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BOQ Connect — Programme</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0e11;--surface:#13151a;--surface2:#1a1d24;--surface3:#22252e;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);--text:#e8e9ec;--text-sec:#8b8d96;--text-ter:#4a4c55;--blue:#0696d7;--blue-dim:rgba(6,150,215,0.10);--blue-bdr:rgba(6,150,215,0.28);--green:#34c77b;--amber:#f5a623;--red:#e85555;--radius:10px;--radius-sm:6px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Source Sans 3',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(6,150,215,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(6,150,215,0.02) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
+
+/* TOPBAR */
+.topbar{position:fixed;top:0;left:0;right:0;height:52px;background:rgba(13,14,17,0.96);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:100}
+.logo{display:flex;align-items:center;gap:10px;font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;letter-spacing:1px}
+.logo-mark{width:28px;height:28px;background:var(--blue);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.btn{display:inline-flex;align-items:center;gap:7px;border-radius:var(--radius-sm);font-family:'Source Sans 3',sans-serif;font-size:13px;padding:7px 14px;cursor:pointer;transition:all .2s;border:none;font-weight:500;text-decoration:none}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:hover{background:#0aa8f0}
+.btn-secondary{background:transparent;color:var(--text-sec);border:1px solid var(--border2)}
+.btn-secondary:hover{border-color:var(--blue-bdr);color:var(--text)}
+.btn-success{background:var(--green);color:#fff}
+.btn-danger{background:rgba(232,85,85,.1);color:var(--red);border:1px solid rgba(232,85,85,.3)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* MAIN */
+.main{position:relative;z-index:1;padding:68px 0 40px}
+
+/* TOOLBAR */
+.toolbar{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:var(--surface);border-bottom:1px solid var(--border);gap:12px;flex-wrap:wrap}
+.toolbar-left{display:flex;align-items:center;gap:10px}
+.toolbar-right{display:flex;align-items:center;gap:8px}
+.zoom-label{font-size:12px;color:var(--text-sec);font-family:'Source Code Pro',monospace}
+
+/* GANTT LAYOUT */
+.gantt-wrap{display:flex;overflow:hidden;height:calc(100vh - 140px)}
+
+/* LEFT PANEL - item list */
+.gantt-left{width:320px;min-width:320px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.gantt-left-header{display:grid;grid-template-columns:40px 1fr 60px 50px;gap:0;padding:8px 12px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:10px;font-family:'Source Code Pro',monospace;color:var(--text-ter);letter-spacing:.5px;text-transform:uppercase}
+.gantt-left-body{overflow-y:auto;flex:1}
+.gantt-row{display:grid;grid-template-columns:40px 1fr 60px 50px;gap:0;padding:0 12px;height:44px;align-items:center;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.gantt-row:hover{background:var(--surface2)}
+.gantt-row.selected{background:var(--blue-dim);border-left:2px solid var(--blue)}
+.gantt-row.critical{border-left:2px solid var(--red)}
+.row-id{font-size:11px;color:var(--text-ter);font-family:'Source Code Pro',monospace}
+.row-desc{font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-cat{font-size:10px;color:var(--text-ter);margin-top:1px}
+.row-dur{font-size:11px;font-family:'Source Code Pro',monospace;color:var(--text-sec);text-align:right}
+.row-pct{font-size:11px;font-family:'Source Code Pro',monospace;text-align:right}
+
+/* RIGHT PANEL - Gantt chart */
+.gantt-right{flex:1;overflow:auto;position:relative;background:var(--bg)}
+.gantt-header{position:sticky;top:0;z-index:10;background:var(--surface2);border-bottom:1px solid var(--border);display:flex}
+.week-col{min-width:60px;height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-right:1px solid var(--border);font-size:10px;font-family:'Source Code Pro',monospace}
+.week-num{color:var(--blue);font-weight:600;font-size:11px}
+.week-date{color:var(--text-ter);font-size:9px}
+.gantt-body{position:relative}
+.gantt-chart-row{display:flex;height:44px;border-bottom:1px solid var(--border);position:relative;align-items:center}
+.gantt-chart-row:hover{background:rgba(255,255,255,0.02)}
+.gantt-grid-line{position:absolute;top:0;bottom:0;width:1px;background:var(--border);pointer-events:none}
+.gantt-grid-line.today{background:var(--red);opacity:.5;z-index:2}
+.gantt-today-label{position:absolute;top:0;font-size:9px;color:var(--red);font-family:'Source Code Pro',monospace;white-space:nowrap;z-index:3;padding:2px 3px;background:rgba(232,85,85,.15);border-radius:2px}
+
+/* BARS */
+.gantt-bar{position:absolute;height:26px;border-radius:4px;cursor:pointer;transition:opacity .15s;display:flex;align-items:center;overflow:hidden;min-width:4px}
+.gantt-bar:hover{opacity:.85;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.gantt-bar-progress{height:100%;border-radius:4px;opacity:.5}
+.gantt-bar-label{position:absolute;left:6px;right:6px;font-size:11px;font-weight:500;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+
+/* DEPENDENCY ARROWS */
+.dep-svg{position:absolute;top:0;left:0;pointer-events:none;overflow:visible}
+
+/* CATEGORY COLOURS */
+.cat-walls{background:#0696d7}.cat-floors{background:#34c77b}.cat-roofs{background:#f5a623}
+.cat-columns{background:#8b5cf6}.cat-doors{background:#ec4899}.cat-windows{background:#14b8a6}
+.cat-ceilings{background:#f97316}.cat-framing{background:#06b6d4}.cat-default{background:#6b7280}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);z-index:300;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);width:90%;max-width:520px;padding:28px;animation:fadeUp .25s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.modal-title{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;margin-bottom:4px}
+.modal-sub{font-size:13px;color:var(--text-sec);margin-bottom:20px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;font-family:'Source Code Pro',monospace;color:var(--text-sec);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-family:'Source Sans 3',sans-serif;font-size:14px;padding:9px 12px;outline:none;transition:border-color .15s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-dim)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+
+/* LEGEND */
+.legend{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-sec)}
+.legend-dot{width:10px;height:10px;border-radius:2px}
+
+/* PROGRESS BAR */
+.pct-bar{height:3px;background:var(--surface3);border-radius:2px;margin-top:2px;overflow:hidden}
+.pct-fill{height:100%;border-radius:2px;background:var(--green);transition:width .3s}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:12px 16px;font-size:13px;z-index:400;transform:translateY(80px);opacity:0;transition:all .3s cubic-bezier(.175,.885,.32,1.275);min-width:240px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{border-color:rgba(52,199,123,.4)}
+.toast.error{border-color:rgba(232,85,85,.4)}
+
+/* EMPTY */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;color:var(--text-ter);text-align:center;gap:12px}
+.empty-icon{font-size:36px;opacity:.4}
+
+/* PRINT STYLES */
+@media print{
+  body{background:#fff;color:#000}
+  .topbar,.toolbar{display:none}
+  .gantt-wrap{height:auto;overflow:visible}
+  .gantt-left{background:#fff;border-color:#ccc}
+  .gantt-right{background:#fff}
+  .modal-overlay{display:none!important}
+  .toast{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo"><div class="logo-mark">B</div>BOQ Connect &mdash; Programme</div>
+  <div class="topbar-right">
+    <button class="btn btn-secondary" onclick="window.close ? window.close() : history.back()">&#8592; Dashboard</button>
+    <button class="btn btn-secondary" onclick="exportMSProject()">&#128190; MS Project</button>
+    <button class="btn btn-secondary" onclick="printProgramme()">&#128438; Print</button>
+    <button class="btn btn-primary" onclick="openSetupModal()">&#9881; Settings</button>
+  </div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div class="toolbar-left">
+    <span class="zoom-label">ZOOM:</span>
+    <button class="btn btn-secondary" style="padding:5px 10px;font-size:12px" onclick="changeZoom(-10)">&#8722;</button>
+    <span id="zoom-level" style="font-size:12px;font-family:'Source Code Pro',monospace;color:var(--text-sec);min-width:40px;text-align:center">60px</span>
+    <button class="btn btn-secondary" style="padding:5px 10px;font-size:12px" onclick="changeZoom(10)">+</button>
+    <div style="width:1px;height:20px;background:var(--border);margin:0 6px"></div>
+    <div class="legend" id="legend"></div>
+  </div>
+  <div class="toolbar-right">
+    <span id="critical-count" style="font-size:12px;color:var(--red);display:none"></span>
+    <span id="prog-summary" style="font-size:12px;color:var(--text-sec);font-family:'Source Code Pro',monospace"></span>
+  </div>
+</div>
+
+<!-- GANTT -->
+<div class="main">
+  <div class="gantt-wrap" id="gantt-wrap">
+
+    <!-- Left: item list -->
+    <div class="gantt-left">
+      <div class="gantt-left-header">
+        <div>ID</div>
+        <div>ITEM</div>
+        <div style="text-align:right">DAYS</div>
+        <div style="text-align:right">%</div>
+      </div>
+      <div class="gantt-left-body" id="gantt-left-body">
+        <div class="empty-state">
+          <div class="empty-icon">&#128197;</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:16px;color:var(--text-sec)">No programme data</div>
+          <div style="font-size:13px">Configure project settings first</div>
+          <button class="btn btn-primary" style="margin-top:8px" onclick="openSetupModal()">Setup Programme</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: chart -->
+    <div class="gantt-right" id="gantt-right">
+      <div class="gantt-header" id="gantt-header"></div>
+      <div class="gantt-body" id="gantt-body">
+        <svg class="dep-svg" id="dep-svg"></svg>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SETUP MODAL -->
+<div class="modal-overlay" id="modal-setup">
+  <div class="modal">
+    <div class="modal-title">Programme Settings</div>
+    <div class="modal-sub">Configure your project calendar. These settings affect all date calculations.</div>
+    <div class="field">
+      <label>Project Start Date *</label>
+      <input type="date" id="setup-start">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Working Days</label>
+        <select id="setup-workdays">
+          <option value="5">Mon - Fri (5 days)</option>
+          <option value="6">Mon - Sat (6 days)</option>
+          <option value="7">7 days</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Default Duration (days)</label>
+        <input type="number" id="setup-default-dur" value="5" min="1" max="365">
+      </div>
+    </div>
+    <div class="field">
+      <label>Public Holidays (one date per line, YYYY-MM-DD)</label>
+      <textarea id="setup-holidays" style="height:80px" placeholder="2024-12-25&#10;2024-12-26&#10;2025-01-01"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-setup')">Cancel</button>
+      <button class="btn btn-success" onclick="saveSetup()">Save & Apply</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT ITEM MODAL -->
+<div class="modal-overlay" id="modal-edit">
+  <div class="modal">
+    <div class="modal-title" id="edit-title">Edit Task</div>
+    <div class="modal-sub" id="edit-sub"></div>
+    <input type="hidden" id="edit-row-index">
+    <input type="hidden" id="edit-item-id">
+    <div class="field-row">
+      <div class="field">
+        <label>Start Date *</label>
+        <input type="date" id="edit-start">
+      </div>
+      <div class="field">
+        <label>Duration (days) *</label>
+        <input type="number" id="edit-duration" min="1" max="9999">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>% Complete</label>
+        <input type="number" id="edit-pct" min="0" max="100" value="0">
+      </div>
+      <div class="field">
+        <label>Working Days Only</label>
+        <select id="edit-workdays">
+          <option value="yes">Yes</option>
+          <option value="no">No (calendar days)</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Predecessors (Item IDs, comma separated)</label>
+      <input type="text" id="edit-predecessors" placeholder="e.g. 1.1, 2.3">
+    </div>
+    <div class="field">
+      <label>Notes</label>
+      <textarea id="edit-notes" style="height:60px"></textarea>
+    </div>
+    <div id="edit-end-date" style="font-size:12px;color:var(--text-sec);font-family:'Source Code Pro',monospace;margin-bottom:4px"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit')">Cancel</button>
+      <button class="btn btn-success" id="edit-save-btn" onclick="saveItem()">Save to Sheet</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var LOCAL_SERVER  = 'http://localhost:5000';
+var SHEETS_API    = 'https://sheets.googleapis.com/v4/spreadsheets';
+var WEEK_WIDTH    = 60; // px per week
+var ROW_HEIGHT    = 44;
+
+var progItems     = [];
+var progConfig    = { projectStart: '', workDays: 5, defaultDur: 5, holidays: [] };
+var accessToken   = null;
+var spreadsheetId = null;
+var selectedRow   = -1;
+
+// Category colours
+var CAT_COLORS = {
+  'Walls':              '#0696d7',
+  'Floors':             '#34c77b',
+  'Roofs':              '#f5a623',
+  'Columns':            '#8b5cf6',
+  'Doors':              '#ec4899',
+  'Windows':            '#14b8a6',
+  'Ceilings':           '#f97316',
+  'Structural Framing': '#06b6d4'
+};
+function getCatColor(cat) {
+  return CAT_COLORS[cat] || '#6b7280';
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────
+window.onload = function() {
+  var params = getUrlParams();
+  spreadsheetId = params['spreadsheetId'] ? dec(params['spreadsheetId']) : null;
+  accessToken   = params['token']         ? dec(params['token'])         : null;
+
+  // Load stored token from sessionStorage if not in URL
+  if (!accessToken) accessToken = sessionStorage.getItem('boq_token') || null;
+
+  // Load stored programme config
+  var stored = sessionStorage.getItem('prog_config_' + spreadsheetId);
+  if (stored) {
+    try { progConfig = JSON.parse(stored); } catch(e) {}
+  }
+
+  if (!progConfig.projectStart) {
+    // First time - show setup modal after short delay
+    setTimeout(function() { openSetupModal(); }, 500);
+  } else {
+    loadProgrammeData();
+  }
+};
+
+// ── LOAD DATA ─────────────────────────────────────────────────────────
+function loadProgrammeData() {
+  // Try LocalServer first
+  xhrGet(LOCAL_SERVER + '/programme-data', function(err, data) {
+    if (!err && data && data.items && data.items.length > 0) {
+      progItems = data.items;
+      if (data.progConfig) {
+        progConfig.projectStart = data.progConfig.projectStart || progConfig.projectStart;
+      }
+      renderGantt();
+      return;
+    }
+    // Fallback: read directly from Sheets
+    if (accessToken && spreadsheetId) {
+      readFromSheets();
+    } else {
+      renderGantt();
+    }
+  });
+}
+
+function readFromSheets() {
+  apiGet(SHEETS_API + '/' + spreadsheetId + '/values/Programme!A:J', function(err, data) {
+    if (err || !data || !data.values) return;
+    progItems = [];
+    for (var i = 1; i < data.values.length; i++) {
+      var r = data.values[i];
+      progItems.push({
+        itemId:       r[0] || '',
+        description:  r[1] || '',
+        category:     r[2] || '',
+        startDate:    r[3] || '',
+        duration:     r[4] || '',
+        endDate:      r[5] || '',
+        pctComplete:  r[6] || '0',
+        predecessors: r[7] || '',
+        workingDays:  r[8] || 'Yes',
+        notes:        r[9] || '',
+        rowIndex:     i + 1
+      });
+    }
+    renderGantt();
+  });
+}
+
+// ── GANTT RENDER ─────────────────────────────────────────────────────
+function renderGantt() {
+  if (!progConfig.projectStart || !progItems.length) {
+    // Show empty state with setup button
+    return;
+  }
+
+  computeDates();
+  computeCriticalPath();
+
+  var weeks   = getWeekHeaders();
+  renderHeader(weeks);
+  renderRows(weeks);
+  renderDependencies(weeks);
+  renderLegend();
+  updateSummary();
+}
+
+function computeDates() {
+  var projStart = parseDate(progConfig.projectStart);
+  progItems.forEach(function(item) {
+    // If no start date set, use project start
+    if (!item.startDate && projStart) {
+      item._start = projStart;
+    } else {
+      item._start = parseDate(item.startDate) || projStart;
+    }
+    item._dur = parseInt(item.duration) || (progConfig.defaultDur || 5);
+    item._end = calcEndDate(item._start, item._dur,
+      item.workingDays !== 'No', progConfig.holidays || []);
+    item._pct = parseFloat(item.pctComplete) || 0;
+  });
+}
+
+function computeCriticalPath() {
+  // Simple critical path: find items with no successors and trace back
+  var idMap = {};
+  progItems.forEach(function(item) { idMap[item.itemId] = item; });
+
+  // Calculate early start/finish using topological sort
+  progItems.forEach(function(item) {
+    item._earlyStart = item._start;
+    item._earlyFinish = item._end;
+    item._critical = false;
+  });
+
+  // Find items with longest path
+  var maxEnd = null;
+  progItems.forEach(function(item) {
+    if (!maxEnd || item._end > maxEnd) maxEnd = item._end;
+  });
+
+  // Mark critical items (those whose end = project end, simplified)
+  progItems.forEach(function(item) {
+    if (maxEnd && item._end &&
+        Math.abs(item._end - maxEnd) < 86400000) {
+      item._critical = true;
+    }
+  });
+}
+
+function getWeekHeaders() {
+  if (!progConfig.projectStart) return [];
+
+  var start = parseDate(progConfig.projectStart);
+  var end   = null;
+
+  progItems.forEach(function(item) {
+    if (item._end && (!end || item._end > end)) end = item._end;
+  });
+
+  if (!end) {
+    // Default 26 weeks
+    end = new Date(start.getTime() + 26 * 7 * 86400000);
+  }
+
+  // Add 4 weeks buffer
+  end = new Date(end.getTime() + 4 * 7 * 86400000);
+
+  var weeks = [];
+  var cur   = getWeekStart(start);
+  var weekNum = 1;
+
+  while (cur <= end) {
+    weeks.push({
+      date:    new Date(cur),
+      weekNum: weekNum,
+      label:   formatDate(cur)
+    });
+    cur = new Date(cur.getTime() + 7 * 86400000);
+    weekNum++;
+  }
+  return weeks;
+}
+
+function renderHeader(weeks) {
+  var el  = document.getElementById('gantt-header');
+  var html = '';
+  for (var i = 0; i < weeks.length; i++) {
+    var w = weeks[i];
+    html += '<div class="week-col" style="min-width:' + WEEK_WIDTH + 'px">' +
+      '<div class="week-num">W' + w.weekNum + '</div>' +
+      '<div class="week-date">' + w.label + '</div>' +
+    '</div>';
+  }
+  el.style.width = (weeks.length * WEEK_WIDTH) + 'px';
+  el.innerHTML = html;
+}
+
+function renderRows(weeks) {
+  var leftBody  = document.getElementById('gantt-left-body');
+  var chartBody = document.getElementById('gantt-body');
+  var svg       = document.getElementById('dep-svg');
+
+  var leftHtml  = '';
+  var chartHtml = '';
+  var today     = new Date();
+  today.setHours(0,0,0,0);
+  var projStart = parseDate(progConfig.projectStart);
+
+  for (var i = 0; i < progItems.length; i++) {
+    var item = progItems[i];
+    var color = getCatColor(item.category);
+    var pct   = item._pct || 0;
+    var critCls = item._critical ? ' critical' : '';
+
+    // Left panel row
+    leftHtml +=
+      '<div class="gantt-row' + critCls + '" id="lrow-' + i + '" onclick="selectRow(' + i + ')">' +
+        '<div class="row-id">' + esc(item.itemId) + '</div>' +
+        '<div>' +
+          '<div class="row-desc">' + esc(item.description) + '</div>' +
+          '<div class="pct-bar"><div class="pct-fill" style="width:' + pct + '%"></div></div>' +
+        '</div>' +
+        '<div class="row-dur">' + (item._dur || '--') + 'd</div>' +
+        '<div class="row-pct" style="color:' + (pct===100?'var(--green)':pct>0?'var(--amber)':'var(--text-ter)') + '">' +
+          pct + '%' +
+        '</div>' +
+      '</div>';
+
+    // Chart row
+    chartHtml += '<div class="gantt-chart-row" id="crow-' + i + '" style="width:' + (weeks.length * WEEK_WIDTH) + 'px">';
+
+    // Grid lines
+    for (var w = 0; w < weeks.length; w++) {
+      var isToday = weeks[w].date <= today && (w === weeks.length-1 || weeks[w+1].date > today);
+      chartHtml += '<div class="gantt-grid-line' + (isToday?' today':'') + '" style="left:' + (w*WEEK_WIDTH) + 'px"></div>';
+    }
+
+    // Draw bar
+    if (item._start && item._end && projStart) {
+      var barLeft  = dateToPx(item._start, projStart);
+      var barWidth = Math.max(4, dateToPx(item._end, projStart) - barLeft);
+
+      chartHtml +=
+        '<div class="gantt-bar" ' +
+          'style="left:' + barLeft + 'px;width:' + barWidth + 'px;background:' + color + ';opacity:0.9" ' +
+          'onclick="editItem(' + i + ')" title="' + esc(item.description) + '">' +
+          '<div class="gantt-bar-progress" style="width:' + pct + '%;background:#fff"></div>' +
+          '<div class="gantt-bar-label">' + esc(item.description) + '</div>' +
+        '</div>';
+    } else {
+      // No dates set - show placeholder
+      chartHtml +=
+        '<div style="position:absolute;left:8px;font-size:11px;color:var(--text-ter);line-height:44px">' +
+          'Click to set dates &rarr;' +
+        '</div>';
+    }
+
+    chartHtml += '</div>';
+  }
+
+  // Today line on header
+  if (projStart) {
+    var todayPx = dateToPx(today, projStart);
+    if (todayPx > 0) {
+      chartHtml += '<div class="gantt-grid-line today" style="left:' + todayPx + 'px;height:' + (progItems.length * ROW_HEIGHT) + 'px;top:0;position:absolute;z-index:5"></div>' +
+        '<div class="gantt-today-label" style="left:' + (todayPx+3) + 'px;top:4px">TODAY</div>';
+    }
+  }
+
+  leftBody.innerHTML  = leftHtml;
+  chartBody.innerHTML = chartHtml + '<svg class="dep-svg" id="dep-svg" style="position:absolute;top:0;left:0;width:' + (weeks.length*WEEK_WIDTH) + 'px;height:' + (progItems.length*ROW_HEIGHT) + 'px;pointer-events:none;overflow:visible"></svg>';
+
+  // Sync scroll
+  var leftScroll  = leftBody;
+  var rightScroll = document.getElementById('gantt-right');
+  rightScroll.addEventListener('scroll', function() {
+    leftScroll.scrollTop = rightScroll.scrollTop;
+  });
+  leftScroll.addEventListener('scroll', function() {
+    rightScroll.scrollTop = leftScroll.scrollTop;
+  });
+}
+
+function renderDependencies(weeks) {
+  setTimeout(function() {
+    var svg = document.getElementById('dep-svg');
+    if (!svg) return;
+    var projStart = parseDate(progConfig.projectStart);
+    var idMap = {};
+    progItems.forEach(function(item, idx) { idMap[item.itemId] = { item: item, idx: idx }; });
+
+    var paths = '';
+    progItems.forEach(function(item, idx) {
+      if (!item.predecessors || !item._start) return;
+      var preds = item.predecessors.split(',');
+      preds.forEach(function(pred) {
+        pred = pred.trim();
+        if (!pred || !idMap[pred]) return;
+        var from = idMap[pred];
+        if (!from.item._end) return;
+
+        var x1 = dateToPx(from.item._end, projStart);
+        var y1 = (from.idx + 0.5) * ROW_HEIGHT;
+        var x2 = dateToPx(item._start, projStart);
+        var y2 = (idx + 0.5) * ROW_HEIGHT;
+
+        var mx = (x1 + x2) / 2;
+        paths += '<path d="M' + x1 + ',' + y1 + ' C' + mx + ',' + y1 + ' ' + mx + ',' + y2 + ' ' + x2 + ',' + y2 + '" ' +
+          'fill="none" stroke="rgba(6,150,215,0.5)" stroke-width="1.5" marker-end="url(#arrow)"/>';
+      });
+    });
+
+    svg.innerHTML =
+      '<defs><marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">' +
+      '<path d="M0,0 L6,3 L0,6 Z" fill="rgba(6,150,215,0.6)"/></marker></defs>' +
+      paths;
+  }, 100);
+}
+
+function renderLegend() {
+  var cats = {};
+  progItems.forEach(function(item) { cats[item.category] = true; });
+  var el = document.getElementById('legend');
+  var html = '';
+  Object.keys(cats).forEach(function(cat) {
+    html += '<div class="legend-item"><div class="legend-dot" style="background:' + getCatColor(cat) + '"></div>' + esc(cat) + '</div>';
+  });
+  el.innerHTML = html;
+}
+
+function updateSummary() {
+  var total = progItems.length;
+  var scheduled = progItems.filter(function(i) { return i._start && i._end; }).length;
+  var completed = progItems.filter(function(i) { return i._pct >= 100; }).length;
+  var critical  = progItems.filter(function(i) { return i._critical; }).length;
+
+  document.getElementById('prog-summary').textContent =
+    scheduled + '/' + total + ' scheduled | ' + completed + ' complete';
+
+  var cc = document.getElementById('critical-count');
+  if (critical > 0) {
+    cc.style.display = 'inline';
+    cc.textContent = critical + ' critical items';
+  } else {
+    cc.style.display = 'none';
+  }
+}
+
+// ── SELECTION & EDITING ───────────────────────────────────────────────
+function selectRow(i) {
+  selectedRow = i;
+  var rows = document.querySelectorAll('.gantt-row');
+  rows.forEach(function(r) { r.classList.remove('selected'); });
+  var el = document.getElementById('lrow-' + i);
+  if (el) el.classList.add('selected');
+}
+
+function editItem(i) {
+  selectRow(i);
+  var item = progItems[i];
+  document.getElementById('edit-title').textContent = item.description || item.itemId;
+  document.getElementById('edit-sub').textContent = item.category + ' | Item: ' + item.itemId;
+  document.getElementById('edit-row-index').value = item.rowIndex;
+  document.getElementById('edit-item-id').value   = item.itemId;
+  document.getElementById('edit-start').value      = item.startDate || '';
+  document.getElementById('edit-duration').value   = item.duration  || (progConfig.defaultDur || 5);
+  document.getElementById('edit-pct').value        = item.pctComplete || '0';
+  document.getElementById('edit-predecessors').value = item.predecessors || '';
+  document.getElementById('edit-workdays').value   = (item.workingDays === 'No') ? 'no' : 'yes';
+  document.getElementById('edit-notes').value      = item.notes || '';
+  updateEditEndDate();
+  openModal('modal-edit');
+}
+
+function updateEditEndDate() {
+  var start = document.getElementById('edit-start').value;
+  var dur   = parseInt(document.getElementById('edit-duration').value) || 0;
+  var wdays = document.getElementById('edit-workdays').value === 'yes';
+  var el    = document.getElementById('edit-end-date');
+  if (start && dur) {
+    var s   = parseDate(start);
+    var end = calcEndDate(s, dur, wdays, progConfig.holidays || []);
+    el.textContent = 'End date: ' + formatDateLong(end);
+  } else {
+    el.textContent = '';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  var startEl = document.getElementById('edit-start');
+  var durEl   = document.getElementById('edit-duration');
+  var wdEl    = document.getElementById('edit-workdays');
+  if (startEl) startEl.addEventListener('change', updateEditEndDate);
+  if (durEl)   durEl.addEventListener('input', updateEditEndDate);
+  if (wdEl)    wdEl.addEventListener('change', updateEditEndDate);
+});
+
+function saveItem() {
+  var rowIndex  = parseInt(document.getElementById('edit-row-index').value);
+  var startDate = document.getElementById('edit-start').value;
+  var duration  = document.getElementById('edit-duration').value;
+  var pct       = document.getElementById('edit-pct').value;
+  var preds     = document.getElementById('edit-predecessors').value;
+  var wdays     = document.getElementById('edit-workdays').value === 'yes';
+  var notes     = document.getElementById('edit-notes').value;
+
+  if (!startDate || !duration) {
+    showToast('Please set a start date and duration', 'error');
+    return;
+  }
+
+  var btn = document.getElementById('edit-save-btn');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  var payload = {
+    rowIndex:     rowIndex,
+    startDate:    startDate,
+    duration:     duration,
+    pctComplete:  pct,
+    predecessors: preds,
+    workingDays:  wdays,
+    notes:        notes
+  };
+
+  xhrPost(LOCAL_SERVER + '/save-programme-item', payload, function(err, data) {
+    btn.disabled = false;
+    btn.textContent = 'Save to Sheet';
+
+    if (err || (data && !data.success)) {
+      // If LocalServer unavailable, save via Sheets API directly
+      saveViaSheets(payload, rowIndex);
+      return;
+    }
+
+    // Update local data
+    var itemIdx = progItems.findIndex(function(p) { return p.rowIndex === rowIndex; });
+    if (itemIdx > -1) {
+      progItems[itemIdx].startDate    = startDate;
+      progItems[itemIdx].duration     = duration;
+      progItems[itemIdx].pctComplete  = pct;
+      progItems[itemIdx].predecessors = preds;
+      progItems[itemIdx].workingDays  = wdays ? 'Yes' : 'No';
+      progItems[itemIdx].notes        = notes;
+      progItems[itemIdx].endDate      = data.endDate || '';
+    }
+
+    closeModal('modal-edit');
+    var weeks = getWeekHeaders();
+    computeDates();
+    computeCriticalPath();
+    renderHeader(weeks);
+    renderRows(weeks);
+    renderDependencies(weeks);
+    updateSummary();
+    showToast('Saved to Google Sheet', 'success');
+  });
+}
+
+function saveViaSheets(payload, rowIndex) {
+  if (!accessToken || !spreadsheetId) {
+    showToast('Cannot save: not connected to Google Sheets', 'error');
+    return;
+  }
+
+  var s   = parseDate(payload.startDate);
+  var dur = parseInt(payload.duration) || 1;
+  var end = calcEndDate(s, dur, payload.workingDays, progConfig.holidays || []);
+  var endStr = formatDateISO(end);
+
+  var range  = 'Programme!D' + rowIndex + ':J' + rowIndex;
+  var values = [[
+    payload.startDate,
+    payload.duration,
+    endStr,
+    payload.pctComplete,
+    payload.predecessors,
+    payload.workingDays ? 'Yes' : 'No',
+    payload.notes
+  ]];
+
+  var url = SHEETS_API + '/' + spreadsheetId +
+    '/values/' + encodeURIComponent(range) + '?valueInputOption=RAW';
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('PUT', url, true);
+  xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4) {
+      if (xhr.status === 200) {
+        // Update local
+        var idx = progItems.findIndex(function(p) { return p.rowIndex === rowIndex; });
+        if (idx > -1) {
+          progItems[idx].startDate   = payload.startDate;
+          progItems[idx].duration    = payload.duration;
+          progItems[idx].endDate     = endStr;
+          progItems[idx].pctComplete = payload.pctComplete;
+          progItems[idx].predecessors= payload.predecessors;
+          progItems[idx].workingDays = payload.workingDays ? 'Yes' : 'No';
+          progItems[idx].notes       = payload.notes;
+        }
+        closeModal('modal-edit');
+        var wks = getWeekHeaders();
+        computeDates(); computeCriticalPath();
+        renderHeader(wks); renderRows(wks);
+        renderDependencies(wks); updateSummary();
+        showToast('Saved to Google Sheet', 'success');
+      } else {
+        showToast('Save failed: ' + xhr.status, 'error');
+      }
+    }
+  };
+  xhr.send(JSON.stringify({ values: values }));
+}
+
+// ── SETUP MODAL ───────────────────────────────────────────────────────
+function openSetupModal() {
+  document.getElementById('setup-start').value = progConfig.projectStart || '';
+  document.getElementById('setup-workdays').value = String(progConfig.workDays || 5);
+  document.getElementById('setup-default-dur').value = progConfig.defaultDur || 5;
+  document.getElementById('setup-holidays').value =
+    (progConfig.holidays || []).join('\n');
+  openModal('modal-setup');
+}
+
+function saveSetup() {
+  var start = document.getElementById('setup-start').value;
+  if (!start) { showToast('Please set a project start date', 'error'); return; }
+
+  progConfig.projectStart = start;
+  progConfig.workDays     = parseInt(document.getElementById('setup-workdays').value) || 5;
+  progConfig.defaultDur   = parseInt(document.getElementById('setup-default-dur').value) || 5;
+  progConfig.holidays     = document.getElementById('setup-holidays').value
+    .split('\n').map(function(h) { return h.trim(); }).filter(Boolean);
+
+  // Save to sessionStorage
+  try {
+    sessionStorage.setItem('prog_config_' + spreadsheetId,
+      JSON.stringify(progConfig));
+  } catch(e) {}
+
+  // Save to LocalServer
+  xhrPost(LOCAL_SERVER + '/programme-config', {
+    projectStart: progConfig.projectStart,
+    workingDays:  progConfig.workDays !== 7,
+    holidays:     progConfig.holidays.join(',')
+  }, function() {});
+
+  closeModal('modal-setup');
+  loadProgrammeData();
+  showToast('Programme settings saved', 'success');
+}
+
+// ── EXPORT MS PROJECT ─────────────────────────────────────────────────
+function exportMSProject() {
+  var tasks = progItems.map(function(item, i) {
+    return '<Task>' +
+      '<UID>' + (i + 1) + '</UID>' +
+      '<ID>' + (i + 1) + '</ID>' +
+      '<Name>' + esc(item.description || item.itemId) + '</Name>' +
+      '<Duration>PT' + (item._dur || 0) + 'H0M0S</Duration>' +
+      '<Start>' + (item.startDate ? item.startDate + 'T08:00:00' : '') + '</Start>' +
+      '<Finish>' + (item.endDate  ? item.endDate   + 'T17:00:00' : '') + '</Finish>' +
+      '<PercentComplete>' + (item._pct || 0) + '</PercentComplete>' +
+      '<Notes>' + esc(item.notes || '') + '</Notes>' +
+      '</Task>';
+  }).join('');
+
+  // Build predecessor links
+  var links = '';
+  progItems.forEach(function(item, i) {
+    if (!item.predecessors) return;
+    var preds = item.predecessors.split(',');
+    preds.forEach(function(pred) {
+      pred = pred.trim();
+      var fromIdx = progItems.findIndex(function(p) { return p.itemId === pred; });
+      if (fromIdx > -1) {
+        links += '<PredecessorLink>' +
+          '<PredecessorUID>' + (fromIdx + 1) + '</PredecessorUID>' +
+          '<Type>1</Type>' +
+          '</PredecessorLink>';
+      }
+    });
+  });
+
+  var xml =
+    '<?xml version="1.0" encoding="UTF-8"?>' +
+    '<Project xmlns="http://schemas.microsoft.com/project">' +
+    '<Title>BOQ Connect Programme</Title>' +
+    '<Tasks>' + tasks + '</Tasks>' +
+    '</Project>';
+
+  var blob = new Blob([xml], { type: 'application/xml' });
+  var a    = document.createElement('a');
+  a.href   = URL.createObjectURL(blob);
+  a.download = 'BOQ_Programme.xml';
+  a.click();
+  showToast('MS Project file downloaded', 'success');
+}
+
+// ── PRINT ─────────────────────────────────────────────────────────────
+function printProgramme() {
+  window.print();
+}
+
+// ── ZOOM ─────────────────────────────────────────────────────────────
+function changeZoom(delta) {
+  WEEK_WIDTH = Math.max(30, Math.min(120, WEEK_WIDTH + delta));
+  document.getElementById('zoom-level').textContent = WEEK_WIDTH + 'px';
+  var weeks = getWeekHeaders();
+  renderHeader(weeks);
+  renderRows(weeks);
+  renderDependencies(weeks);
+}
+
+// ── DATE UTILITIES ────────────────────────────────────────────────────
+function parseDate(str) {
+  if (!str) return null;
+  var d = new Date(str);
+  if (isNaN(d.getTime())) return null;
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function getWeekStart(d) {
+  var day = d.getDay();
+  var diff = (day === 0) ? -6 : 1 - day;
+  var r = new Date(d);
+  r.setDate(r.getDate() + diff);
+  r.setHours(0,0,0,0);
+  return r;
+}
+
+function calcEndDate(start, days, workingOnly, holidays) {
+  if (!start || !days) return null;
+  var d = new Date(start);
+  var counted = 0;
+  var hols = (holidays || []).map(function(h) { return h.trim(); });
+
+  while (counted < days - 1) {
+    d.setDate(d.getDate() + 1);
+    if (workingOnly) {
+      var dow = d.getDay();
+      if (dow === 0 || dow === 6) continue;
+      if (hols.indexOf(formatDateISO(d)) > -1) continue;
+    }
+    counted++;
+  }
+  return d;
+}
+
+function dateToPx(date, projStart) {
+  if (!date || !projStart) return 0;
+  var ms  = date.getTime() - projStart.getTime();
+  var days = ms / 86400000;
+  return Math.round((days / 7) * WEEK_WIDTH);
+}
+
+function formatDate(d) {
+  if (!d) return '';
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return d.getDate() + ' ' + months[d.getMonth()];
+}
+
+function formatDateLong(d) {
+  if (!d) return '';
+  return d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+}
+
+function formatDateISO(d) {
+  if (!d) return '';
+  return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+}
+
+function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── MODAL & UTILS ─────────────────────────────────────────────────────
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('modal-overlay')) {
+    e.target.classList.remove('open');
+  }
+});
+
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + (type || '');
+  setTimeout(function() { t.className = 'toast'; }, 3000);
+}
+
+function getUrlParams() {
+  var r = {}, pairs = window.location.search.substring(1).split('&');
+  for (var i = 0; i < pairs.length; i++) {
+    var p = pairs[i].split('=');
+    if (p[0]) r[p[0]] = p[1] || '';
+  }
+  return r;
+}
+
+function dec(v) { try { return decodeURIComponent(v); } catch(e) { return v||''; } }
+
+function xhrGet(url, cb) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', url, true);
+  xhr.timeout = 5000;
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4) {
+      if (xhr.status === 200) { try { cb(null, JSON.parse(xhr.responseText)); } catch(e) { cb(e); } }
+      else cb(new Error('HTTP ' + xhr.status));
+    }
+  };
+  xhr.onerror   = function() { cb(new Error('Network error')); };
+  xhr.ontimeout = function() { cb(new Error('Timeout')); };
+  xhr.send();
+}
+
+function xhrPost(url, data, cb) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', url, true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 10000;
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4) {
+      if (xhr.status === 200) { try { cb(null, JSON.parse(xhr.responseText)); } catch(e) { cb(e); } }
+      else cb(new Error('HTTP ' + xhr.status));
+    }
+  };
+  xhr.onerror   = function() { cb(new Error('Connection failed')); };
+  xhr.ontimeout = function() { cb(new Error('Timeout')); };
+  xhr.send(JSON.stringify(data));
+}
+
+// Polyfill findIndex
+if (!Array.prototype.findIndex) {
+  Array.prototype.findIndex = function(fn) {
+    for (var i = 0; i < this.length; i++) { if (fn(this[i], i)) return i; }
+    return -1;
+  };
+}
+</script>
+</body>
+</html>
