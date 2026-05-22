@@ -181,6 +181,8 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
       </div>
       <div style="display:flex;gap:10px;align-items:center">
         <a class="btn btn-secondary" id="d-sheet-link" href="#" target="_blank">&#128203; Open Sheet</a>
+        <button class="btn btn-secondary" id="programme-btn" onclick="openProgramme()" style="display:none">&#128197; Programme</button>
+        <button class="btn btn-secondary" id="cashflow-btn" onclick="openCashFlow()" style="display:none">&#128200; Cash Flow</button>
         <button class="btn btn-secondary" onclick="goToSelector()">&#8592; Projects</button>
         <button class="btn btn-success" id="share-btn" style="display:none" onclick="openShareModal()">&#8679; Share</button>
       </div>
@@ -718,6 +720,8 @@ function openProject(project) {
   document.getElementById('d-sheet-link').href = 'https://docs.google.com/spreadsheets/d/'+project.spreadsheetId;
   if (project.lastSync) document.getElementById('d-last-sync').textContent = 'Last sync: '+project.lastSync;
   document.getElementById('share-btn').style.display = isRevitMode ? 'inline-flex' : 'none';
+  var pb=document.getElementById('programme-btn');if(pb)pb.style.display='inline-flex';
+  var cb=document.getElementById('cashflow-btn');if(cb)cb.style.display='inline-flex';
   loadBOQFromSheets(project.spreadsheetId);
 }
 
@@ -984,6 +988,29 @@ function updateMetrics() {
       grandSub.textContent='Incl. contingency';
     }
   }
+}
+
+function openCashFlow() {
+  if (!currentProject || !currentProject.spreadsheetId) return;
+  var url = 'https://sun250sw-alt.github.io/BOQConnect/cashflow.html' +
+    '?spreadsheetId=' + encodeURIComponent(currentProject.spreadsheetId) +
+    '&projectName='   + encodeURIComponent(currentProject.projectName || '') +
+    '&currency='      + encodeURIComponent(currentProject.currency || 'GBP') +
+    '&contingency='   + (currentProject.contingency || 10) +
+    '&prelim='        + (currentProject.prelim || 5) +
+    '&budget='        + (currentProject.budget || 0) +
+    '&budgetRef='     + encodeURIComponent(currentProject.budgetRef || '') +
+    (accessToken ? '&token=' + encodeURIComponent(accessToken) : '');
+  window.open(url, '_blank');
+}
+
+function openProgramme() {
+  if (!currentProject || !currentProject.spreadsheetId) return;
+  var url = 'https://sun250sw-alt.github.io/BOQConnect/programme.html' +
+    '?spreadsheetId=' + encodeURIComponent(currentProject.spreadsheetId) +
+    '&projectName='   + encodeURIComponent(currentProject.projectName || '') +
+    (accessToken ? '&token=' + encodeURIComponent(accessToken) : '');
+  window.open(url, '_blank');
 }
 
 function openShareModal() {
