@@ -304,7 +304,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 <div class="toast" id="toast"></div>
 
 <script>
-var GOOGLE_CLIENT_ID = '919309576501-bpbd7783d3up2v2mo4dh171t6tjaceet.apps.googleusercontent.com';
+var GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
 var SHEETS_API = 'https://sheets.googleapis.com/v4/spreadsheets';
 var LOCAL_SERVER = 'http://localhost:5000';
 var DASHBOARD_URL = 'https://sun250sw-alt.github.io/BOQConnect/dashboard.html';
@@ -630,21 +630,72 @@ function loadProjects() {
   var q = encodeURIComponent("mimeType='application/vnd.google-apps.spreadsheet' and name contains 'BOQ'");
   apiGet('https://www.googleapis.com/drive/v3/files?q='+q+'&fields=files(id,name,properties,modifiedTime,parents)&pageSize=50', function(err, data) {
     if (err || !data || !data.files || !data.files.length) { showNoProjects(); return; }
-    projects = data.files.map(function(f) {
+
+    var files = data.files;
+    var projs = files.map(function(f) {
       var p = f.properties||{};
       return {
         spreadsheetId: f.id,
         projectName:   f.name.replace(' -- BOQ','').replace(' BOQ',''),
         clientName:    p.clientName||'',
         discipline:    p.discipline||'',
-        currency:      p.currency||'GBP',
-        contingency:   parseFloat(p.contingency||'10'),
-        prelim:        parseFloat(p.prelim||'5'),
+        currency:      'GBP',
+        contingency:   10,
+        prelim:        5,
+        budget:        0,
+        budgetRef:     '',
         lastSync:      f.modifiedTime ? f.modifiedTime.substring(0,19).replace('T',' ') : '',
-        folderId:      (f.parents&&f.parents[0])||''
+        folderId:      (f.parents&&f.parents[0])||'',
+        grandTotal:    0,
+        itemCount:     0
       };
     });
-    renderProjectGrid();
+
+    // Load Summary + BOQ data for each project to get currency, budget, totals
+    var done = 0;
+    function checkDone() {
+      done++;
+      if (done >= projs.length) {
+        projects = projs;
+        renderProjectGrid();
+      }
+    }
+
+    projs.forEach(function(proj) {
+      // Read Summary tab for currency/budget/contingency
+      apiGet('https://sheets.googleapis.com/v4/spreadsheets/' + proj.spreadsheetId +
+        '/values/Cost%20Summary!A1:B30', function(err, d) {
+        if (!err && d && d.values) {
+          d.values.forEach(function(row) {
+            if (!row || row.length < 2) return;
+            var k = (row[0]||'').toLowerCase().trim();
+            var v = (row[1]||'').toString().trim();
+            if (k === 'currency'    && v) proj.currency    = v.toUpperCase();
+            if (k === 'contingency' && v) proj.contingency = parseFloat(v)||10;
+            if (k === 'prelims'     && v) proj.prelim      = parseFloat(v)||5;
+            if (k === 'budget'      && v) proj.budget      = parseFloat(v)||0;
+            if (k === 'budget ref'  && v) proj.budgetRef   = v;
+          });
+        }
+        // Read BOQ tab for item count and grand total
+        apiGet('https://sheets.googleapis.com/v4/spreadsheets/' + proj.spreadsheetId +
+          '/values/BOQ!G:H', function(err2, d2) {
+          if (!err2 && d2 && d2.values) {
+            var total = 0, count = 0;
+            for (var i = 1; i < d2.values.length; i++) {
+              var row = d2.values[i];
+              if (row && row[1] && parseFloat(row[1]) > 0) {
+                total += parseFloat(row[1]);
+                count++;
+              }
+            }
+            proj.grandTotal = total;
+            proj.itemCount  = count;
+          }
+          checkDone();
+        });
+      });
+    });
   });
 }
 
@@ -783,6 +834,8 @@ function parseSummaryConfig(rows) {
       currentProject.budgetRef = val;
     }
   }
+  // Re-render after config loaded so currency/budget are correct
+  renderDashboard();
 }
 
 function parseSheetData(rows) {
@@ -1006,10 +1059,12 @@ function openCashFlow() {
 
 function openProgramme() {
   if (!currentProject || !currentProject.spreadsheetId) return;
+  var tok = accessToken || sessionStorage.getItem('boq_token') || '';
   var url = 'https://sun250sw-alt.github.io/BOQConnect/programme.html' +
     '?spreadsheetId=' + encodeURIComponent(currentProject.spreadsheetId) +
     '&projectName='   + encodeURIComponent(currentProject.projectName || '') +
-    (accessToken ? '&token=' + encodeURIComponent(accessToken) : '');
+    '&currency='      + encodeURIComponent(currentProject.currency || 'GBP') +
+    (tok ? '&token=' + encodeURIComponent(tok) : '');
   window.open(url, '_blank');
 }
 
