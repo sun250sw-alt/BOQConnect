@@ -283,6 +283,80 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
   </div>
 </div>
 
+<!-- CUSTOM ITEM MODAL -->
+<div class="modal-overlay" id="modal-custom-item">
+  <div class="modal" style="max-width:580px;max-height:90vh;overflow-y:auto">
+    <div class="modal-title">Add Custom BOQ Item</div>
+    <div class="modal-sub">Add a custom item directly to your Google Sheet BOQ tab. Revit sync will never overwrite custom items.</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="field">
+        <label>Item Number *</label>
+        <input type="text" id="ci-itemno" placeholder="e.g. 6.1">
+      </div>
+      <div class="field">
+        <label>Category</label>
+        <input type="text" id="ci-category" placeholder="e.g. Groundworks">
+      </div>
+    </div>
+    <div class="field" style="margin-top:10px">
+      <label>Description *</label>
+      <input type="text" id="ci-description" placeholder="e.g. Clearing and Grubbing">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">
+      <div class="field">
+        <label>Unit</label>
+        <input type="text" id="ci-unit" placeholder="m², nr, m, t">
+      </div>
+      <div class="field">
+        <label>Rate (per unit)</label>
+        <input type="number" id="ci-rate" placeholder="0.00" min="0" step="0.01">
+      </div>
+    </div>
+
+    <!-- Quantity Calculator -->
+    <div style="margin-top:14px;background:var(--surface2);border:1px solid rgba(6,150,215,0.25);border-radius:8px;overflow:hidden">
+      <div style="padding:9px 14px;background:rgba(6,150,215,0.1);display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:11px;font-weight:600;color:#0696d7;font-family:monospace;text-transform:uppercase;letter-spacing:.5px">Quantity Calculator</span>
+        <button onclick="loadRevitQtys()" style="font-size:10px;color:#34c77b;background:rgba(52,199,123,0.1);border:1px solid rgba(52,199,123,0.3);border-radius:4px;padding:3px 8px;cursor:pointer">Load Revit Quantities</button>
+      </div>
+
+      <!-- Calc rows -->
+      <div id="calc-rows" style="padding:8px 0"></div>
+
+      <!-- Add row buttons -->
+      <div style="display:flex;gap:6px;padding:6px 12px;border-top:1px solid rgba(255,255,255,0.05)">
+        <button onclick="addCalcRow('fixed')"  style="font-size:10px;padding:4px 10px;border-radius:4px;cursor:pointer;background:rgba(6,150,215,0.1);border:1px solid rgba(6,150,215,0.25);color:#0696d7">+ Number</button>
+        <button onclick="addCalcRow('lxw')"    style="font-size:10px;padding:4px 10px;border-radius:4px;cursor:pointer;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.25);color:#8b5cf6">+ L &times; W</button>
+        <button onclick="addCalcRow('lxwxh')"  style="font-size:10px;padding:4px 10px;border-radius:4px;cursor:pointer;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.25);color:#8b5cf6">+ L &times; W &times; H</button>
+        <button onclick="addCalcRow('revit')"  style="font-size:10px;padding:4px 10px;border-radius:4px;cursor:pointer;background:rgba(52,199,123,0.1);border:1px solid rgba(52,199,123,0.25);color:#34c77b">+ Revit Qty</button>
+      </div>
+
+      <!-- Total -->
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(6,150,215,0.08);border-top:1px solid rgba(6,150,215,0.2)">
+        <span style="font-size:13px;color:#8b8d96">Total Quantity</span>
+        <span style="font-family:monospace;font-size:15px;font-weight:600;color:#e8e9ec" id="calc-total-qty">0</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(52,199,123,0.06);border-top:1px solid rgba(52,199,123,0.2)">
+        <span style="font-size:13px;color:#8b8d96">Line Total</span>
+        <span style="font-family:monospace;font-size:15px;font-weight:600;color:#34c77b" id="calc-line-total">--</span>
+      </div>
+    </div>
+
+    <!-- Revit quantities panel -->
+    <div id="revit-qty-panel" style="display:none;margin-top:10px;background:var(--surface2);border:1px solid rgba(139,92,246,0.25);border-radius:8px;overflow:hidden">
+      <div style="padding:8px 12px;background:rgba(139,92,246,0.1);font-size:11px;font-weight:600;color:#8b5cf6;font-family:monospace;text-transform:uppercase;letter-spacing:.5px">Available Revit Quantities</div>
+      <div id="revit-qty-list" style="max-height:180px;overflow-y:auto"></div>
+      <div style="padding:7px 12px;font-size:11px;color:#4a4c55;border-top:1px solid rgba(255,255,255,0.04)">Tap any row to insert into calculator</div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-custom-item')">Cancel</button>
+      <button class="btn btn-success" id="save-custom-btn" onclick="saveCustomItem()">Save to Sheet</button>
+    </div>
+  </div>
+</div>
+
 <!-- SHARE MODAL -->
 <div class="modal-overlay" id="share-modal">
   <div class="modal">
@@ -579,6 +653,226 @@ function renderRecentlyChanged() {
   el.innerHTML = html;
 }
 
+// ── CUSTOM ITEM ───────────────────────────────────────────────────────
+var calcRows = [];
+var revitQtys = [];
+
+function openAddItemModal() {
+  calcRows = [];
+  document.getElementById('ci-itemno').value      = '';
+  document.getElementById('ci-description').value = '';
+  document.getElementById('ci-category').value    = '';
+  document.getElementById('ci-unit').value        = '';
+  document.getElementById('ci-rate').value        = '';
+  document.getElementById('revit-qty-panel').style.display = 'none';
+  renderCalcRows();
+  addCalcRow('fixed');
+  document.getElementById('modal-custom-item').classList.add('open');
+}
+
+function addCalcRow(type) {
+  var id = Date.now() + Math.random();
+  calcRows.push({ id: id, type: type, label: '', l: '', w: '', h: '', multiplier: '1', revitKey: '' });
+  renderCalcRows();
+}
+
+function removeCalcRow(id) {
+  calcRows = calcRows.filter(function(r){ return r.id !== id; });
+  renderCalcRows();
+}
+
+function renderCalcRows() {
+  var el = document.getElementById('calc-rows');
+  if (!el) return;
+  var st = 'border-radius:4px;color:#e8e9ec;font-size:12px;padding:5px 6px;font-family:monospace;background:#13151a;border:1px solid rgba(255,255,255,0.1)';
+  var html = '';
+  for (var i = 0; i < calcRows.length; i++) {
+    var r = calcRows[i];
+    var rid = r.id;
+    html += '<div style="display:flex;align-items:center;gap:6px;padding:7px 12px;border-bottom:1px solid rgba(255,255,255,0.04)">';
+    if (r.type === 'fixed') {
+      html +=
+        '<span style="font-size:10px;color:#4a4c55;width:60px;flex-shrink:0">Number</span>' +
+        '<input type="number" placeholder="0.00" value="' + (r.l||'') + '" data-id="' + rid + '" data-field="l" oninput="onCalcInput(this)" style="flex:1;' + st + '">' +
+        '<span style="font-size:11px;color:#0696d7;font-family:monospace;min-width:60px;text-align:right">' + (parseFloat(r.l)||0).toFixed(2) + '</span>';
+    } else if (r.type === 'lxw') {
+      html +=
+        '<span style="font-size:10px;color:#4a4c55;width:60px;flex-shrink:0">L&times;W</span>' +
+        '<input type="number" placeholder="L" value="' + (r.l||'') + '" data-id="' + rid + '" data-field="l" oninput="onCalcInput(this)" style="width:60px;' + st + '">' +
+        '<span style="color:#4a4c55">&times;</span>' +
+        '<input type="number" placeholder="W" value="' + (r.w||'') + '" data-id="' + rid + '" data-field="w" oninput="onCalcInput(this)" style="width:60px;' + st + '">' +
+        '<span style="font-size:11px;color:#8b5cf6;font-family:monospace;min-width:60px;text-align:right">' + ((parseFloat(r.l)||0)*(parseFloat(r.w)||0)).toFixed(2) + '</span>';
+    } else if (r.type === 'lxwxh') {
+      html +=
+        '<span style="font-size:10px;color:#4a4c55;width:60px;flex-shrink:0">L&times;W&times;H</span>' +
+        '<input type="number" placeholder="L" value="' + (r.l||'') + '" data-id="' + rid + '" data-field="l" oninput="onCalcInput(this)" style="width:46px;' + st + '">' +
+        '<span style="color:#4a4c55">&times;</span>' +
+        '<input type="number" placeholder="W" value="' + (r.w||'') + '" data-id="' + rid + '" data-field="w" oninput="onCalcInput(this)" style="width:46px;' + st + '">' +
+        '<span style="color:#4a4c55">&times;</span>' +
+        '<input type="number" placeholder="H" value="' + (r.h||'') + '" data-id="' + rid + '" data-field="h" oninput="onCalcInput(this)" style="width:46px;' + st + '">' +
+        '<span style="font-size:11px;color:#8b5cf6;font-family:monospace;min-width:60px;text-align:right">' + ((parseFloat(r.l)||0)*(parseFloat(r.w)||0)*(parseFloat(r.h)||1)).toFixed(2) + '</span>';
+    } else if (r.type === 'revit') {
+      html +=
+        '<span style="font-size:10px;color:#4a4c55;width:60px;flex-shrink:0">Revit</span>' +
+        '<span style="flex:1;font-size:12px;color:#34c77b;font-family:monospace">' + esc(r.label||'Select from panel') + '</span>' +
+        '<input type="number" placeholder="x1" value="' + (r.multiplier||'1') + '" data-id="' + rid + '" data-field="multiplier" oninput="onCalcInput(this)" style="width:50px;' + st + '">' +
+        '<span style="font-size:11px;color:#34c77b;font-family:monospace;min-width:60px;text-align:right">' + ((parseFloat(r.l)||0)*(parseFloat(r.multiplier)||1)).toFixed(2) + '</span>';
+    }
+    html +=
+      '<button data-id="' + rid + '" onclick="removeCalcRowBtn(this)" style="color:#4a4c55;background:none;border:none;cursor:pointer;font-size:16px;padding:0 4px;flex-shrink:0">&times;</button>' +
+      '</div>';
+  }
+  el.innerHTML = html;
+  updateCalcTotal();
+}
+
+function onCalcInput(el) {
+  var id    = parseFloat(el.getAttribute("data-id"));
+  var field = el.getAttribute("data-field");
+  updateCalcRow(id, field, el.value);
+}
+
+function removeCalcRowBtn(el) {
+  var id = parseFloat(el.getAttribute("data-id"));
+  removeCalcRow(id);
+}
+
+function updateCalcRow(id, field, val) {
+  for (var i = 0; i < calcRows.length; i++) {
+    if (calcRows[i].id === id) {
+      calcRows[i][field] = val;
+      break;
+    }
+  }
+  renderCalcRows();
+}
+
+function calcRowValue(r) {
+  if (r.type === 'fixed')  return parseFloat(r.l) || 0;
+  if (r.type === 'lxw')    return (parseFloat(r.l)||0) * (parseFloat(r.w)||0);
+  if (r.type === 'lxwxh')  return (parseFloat(r.l)||0) * (parseFloat(r.w)||0) * (parseFloat(r.h)||1);
+  if (r.type === 'revit')  return (parseFloat(r.l)||0) * (parseFloat(r.multiplier)||1);
+  return 0;
+}
+
+function calcFormulaString(r) {
+  if (r.type === 'fixed')  return String(r.l||0);
+  if (r.type === 'lxw')    return (r.l||0) + ' x ' + (r.w||0);
+  if (r.type === 'lxwxh')  return (r.l||0) + ' x ' + (r.w||0) + ' x ' + (r.h||0);
+  if (r.type === 'revit')  return (r.label||'Revit') + ' x ' + (r.multiplier||1);
+  return '0';
+}
+
+function updateCalcTotal() {
+  var total = calcRows.reduce(function(sum, r){ return sum + calcRowValue(r); }, 0);
+  var rate  = parseFloat(document.getElementById('ci-rate').value) || 0;
+  var curr  = getCurrencySymbol();
+  var totalEl = document.getElementById('calc-total-qty');
+  var lineEl  = document.getElementById('calc-line-total');
+  if (totalEl) totalEl.textContent = total.toFixed(2);
+  if (lineEl)  lineEl.textContent  = rate > 0 ? curr + (total * rate).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2}) : '--';
+}
+
+// Also update when rate changes
+document.addEventListener('input', function(e) {
+  if (e.target && e.target.id === 'ci-rate') updateCalcTotal();
+});
+
+function loadRevitQtys() {
+  var panel = document.getElementById('revit-qty-panel');
+  var list  = document.getElementById('revit-qty-list');
+  panel.style.display = 'block';
+
+  if (!boqItems || !boqItems.length) {
+    list.innerHTML = '<div style="padding:12px;font-size:12px;color:#4a4c55">No BOQ items loaded. Sync from Revit first.</div>';
+    return;
+  }
+
+  revitQtys = boqItems.map(function(item) {
+    return { label: item.description || item.typeName, category: item.category, qty: item.quantity, unit: item.unit };
+  }).filter(function(i){ return i.qty > 0; });
+
+  var html = '';
+  for (var i = 0; i < revitQtys.length; i++) {
+    var q = revitQtys[i];
+    html += '<div onclick="insertRevitQty(' + i + ')" style="display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;font-size:12px">' +
+      '<div><div style="color:#e8e9ec">' + esc(q.label) + '</div>' +
+      '<div style="font-size:10px;color:#4a4c55">' + esc(q.category) + '</div></div>' +
+      '<div style="font-family:monospace;color:#34c77b;font-size:12px">' + q.qty + ' ' + esc(q.unit||'') + '</div>' +
+      '</div>';
+  }
+  list.innerHTML = html || '<div style="padding:12px;font-size:12px;color:#4a4c55">No quantities available.</div>';
+}
+
+function insertRevitQty(idx) {
+  var q = revitQtys[idx];
+  if (!q) return;
+  // Find existing revit row or add new one
+  var existing = calcRows.filter(function(r){ return r.type === 'revit' && !r.l; });
+  if (existing.length > 0) {
+    existing[0].l       = q.qty;
+    existing[0].label   = q.label;
+    existing[0].revitKey = q.label;
+  } else {
+    calcRows.push({ id: Date.now(), type: 'revit', label: q.label, l: q.qty, multiplier: '1', revitKey: q.label });
+  }
+  document.getElementById('revit-qty-panel').style.display = 'none';
+  renderCalcRows();
+}
+
+function saveCustomItem() {
+  var itemNo  = document.getElementById('ci-itemno').value.trim();
+  var desc    = document.getElementById('ci-description').value.trim();
+  var cat     = document.getElementById('ci-category').value.trim();
+  var unit    = document.getElementById('ci-unit').value.trim();
+  var rate    = parseFloat(document.getElementById('ci-rate').value) || 0;
+
+  if (!itemNo || !desc) { showToast('Item number and description are required', 'error'); return; }
+
+  var qty     = calcRows.reduce(function(s,r){ return s + calcRowValue(r); }, 0);
+  var formula = calcRows.map(calcFormulaString).join(' + ');
+  var total   = Math.round(qty * rate * 100) / 100;
+
+  if (!currentProject || !currentProject.spreadsheetId) {
+    showToast('No project loaded', 'error'); return;
+  }
+
+  var btn = document.getElementById('save-custom-btn');
+  btn.disabled = true; btn.textContent = 'Saving...';
+
+  // Append row to BOQ sheet: A=ItemNo, B=Desc, C=Cat, D=TypeName, E=Qty, F=Unit, G=Rate, H=Total, I=Status
+  var range  = 'BOQ!A:I';
+  var values = [[itemNo, desc, cat || 'Custom', 'Custom', qty.toFixed(2), unit, rate.toFixed(2), total.toFixed(2), 'Custom']];
+  var url    = 'https://sheets.googleapis.com/v4/spreadsheets/' +
+    currentProject.spreadsheetId + '/values/' + encodeURIComponent(range) +
+    ':append?valueInputOption=RAW&insertDataOption=INSERT_ROWS';
+
+  var tok = accessToken || sessionStorage.getItem('boq_token') || '';
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', url, true);
+  xhr.setRequestHeader('Authorization', 'Bearer ' + tok);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4) {
+      btn.disabled = false; btn.textContent = 'Save to Sheet';
+      if (xhr.status === 200) {
+        closeModal('modal-custom-item');
+        showToast('Custom item saved to Sheet', 'success');
+        // Add to local boqItems immediately
+        boqItems.push({
+          itemNumber: itemNo, description: desc, category: cat||'Custom',
+          typeName: 'Custom', quantity: qty, unit: unit, rate: rate,
+          total: total, status: 'custom'
+        });
+        renderDashboard();
+      } else {
+        showToast('Save failed: ' + xhr.status + '. Check Sheet permissions.', 'error');
+      }
+    }
+  };
+  xhr.send(JSON.stringify({ values: values }));
+}
+
 function signOut() {
   sessionStorage.removeItem('boq_token');
   sessionStorage.removeItem('boq_user');
@@ -773,6 +1067,7 @@ function openProject(project) {
   document.getElementById('share-btn').style.display = isRevitMode ? 'inline-flex' : 'none';
   var pb=document.getElementById('programme-btn');if(pb)pb.style.display='inline-flex';
   var cb=document.getElementById('cashflow-btn');if(cb)cb.style.display='inline-flex';
+  var ab=document.getElementById('add-item-btn');if(ab)ab.style.display=isRevitMode?'inline-block':'none';
   loadBOQFromSheets(project.spreadsheetId);
 }
 
@@ -906,11 +1201,13 @@ function renderBOQTable() {
     var cls=isMis?'row-amber':isDel?'row-red':'';
 
     // Build specific missing field indicators
+    var isCustom = r.status === 'custom';
     var pill = '';
-    if (isDel) {
+    if (isCustom) {
+      pill = '<span class="status-pill" style="background:rgba(139,92,246,0.15);color:#8b5cf6;border:1px solid rgba(139,92,246,0.3)">&#9998; Custom</span>';
+    } else if (isDel) {
       pill = '<span class="status-pill cb-red">&#215; Deleted</span>';
     } else if (isMis) {
-      // Show which specific fields are missing based on empty values
       var missingFields = [];
       if (!r.itemNumber  || r.itemNumber  === '--') missingFields.push('Item No');
       if (!r.description || r.description === '--') missingFields.push('Desc');
