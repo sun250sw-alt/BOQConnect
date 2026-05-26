@@ -341,10 +341,14 @@ function loadProgrammeData() {
 
 function readFromSheets() {
   apiGet(SHEETS_API + '/' + spreadsheetId + '/values/Programme!A:J', function(err, data) {
-    if (err || !data || !data.values) return;
+    if (err || !data || !data.values) {
+      showToast('Could not read Programme tab. Check Sheet permissions.', 'error');
+      return;
+    }
     progItems = [];
     for (var i = 1; i < data.values.length; i++) {
       var r = data.values[i];
+      if (!r || r.length < 1 || !r[0]) continue; // skip empty rows
       progItems.push({
         itemId:       r[0] || '',
         description:  r[1] || '',
@@ -365,8 +369,21 @@ function readFromSheets() {
 
 // ── GANTT RENDER ─────────────────────────────────────────────────────
 function renderGantt() {
-  if (!progConfig.projectStart || !progItems.length) {
-    // Show empty state with setup button
+  if (!progItems.length) {
+    // Truly empty - no items synced from Revit yet
+    document.getElementById('gantt-left-body').innerHTML =
+      '<div class="empty-state">' +
+      '<div class="empty-icon">&#128197;</div>' +
+      '<div style="font-family:Rajdhani,sans-serif;font-size:16px;color:var(--text-sec)">No programme items</div>' +
+      '<div style="font-size:13px;margin-top:6px">Push to BOQ from Revit first to populate items</div>' +
+      '</div>';
+    return;
+  }
+
+  // Show items in left panel regardless of dates
+  if (!progConfig.projectStart) {
+    // Items exist but no project start set - show list, prompt for setup
+    renderItemListOnly();
     return;
   }
 
@@ -379,6 +396,39 @@ function renderGantt() {
   renderDependencies(weeks);
   renderLegend();
   updateSummary();
+}
+
+function renderItemListOnly() {
+  // Show items in left panel with click-to-edit, no chart bars yet
+  var leftBody = document.getElementById('gantt-left-body');
+  var html = '';
+  for (var i = 0; i < progItems.length; i++) {
+    var item = progItems[i];
+    html += '<div class="gantt-row" onclick="editItem(' + i + ')">' +
+      '<div class="row-id">' + esc(item.itemId) + '</div>' +
+      '<div>' +
+        '<div class="row-desc">' + esc(item.description) + '</div>' +
+        '<div class="row-cat" style="font-size:10px;color:var(--text-ter)">' +
+          esc(item.category) + '</div>' +
+      '</div>' +
+      '<div class="row-dur" style="color:var(--text-ter)">--</div>' +
+      '<div class="row-pct" style="color:var(--text-ter)">0%</div>' +
+    '</div>';
+  }
+  leftBody.innerHTML = html;
+
+  // Show setup prompt in chart area
+  document.getElementById('gantt-header').innerHTML = '';
+  document.getElementById('gantt-body').innerHTML =
+    '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+    'height:300px;gap:14px;color:var(--text-sec)">' +
+    '<div style="font-size:32px;opacity:.4">&#128197;</div>' +
+    '<div style="font-family:Rajdhani,sans-serif;font-size:17px">' +
+      progItems.length + ' items loaded &mdash; set project start to view Gantt</div>' +
+    '<div style="font-size:13px;color:var(--text-ter)">Click any item on the left to set its dates</div>' +
+    '<button class="btn btn-primary" onclick="openSetupModal()" style="margin-top:4px">' +
+      '&#9881; Setup Programme</button>' +
+    '</div>';
 }
 
 function computeDates() {
