@@ -310,17 +310,24 @@ window.onload = function() {
     try { progConfig = JSON.parse(stored); } catch(e) {}
   }
 
-  if (!progConfig.projectStart) {
-    // First time - show setup modal after short delay
-    setTimeout(function() { openSetupModal(); }, 500);
-  } else {
+  // Always try to load data first regardless of projectStart
+  // Show setup modal only if data loads but no dates are configured
+  if (spreadsheetId) {
     loadProgrammeData();
+  } else {
+    // No spreadsheetId - show setup prompt
+    setTimeout(function() { openSetupModal(); }, 400);
   }
 };
 
 // ── LOAD DATA ─────────────────────────────────────────────────────────
 function loadProgrammeData() {
-  // Try LocalServer first
+  // If we have direct Sheets access, use it (more reliable than LocalServer)
+  if (accessToken && spreadsheetId) {
+    readFromSheets();
+    return;
+  }
+  // Otherwise try LocalServer
   xhrGet(LOCAL_SERVER + '/programme-data', function(err, data) {
     if (!err && data && data.items && data.items.length > 0) {
       progItems = data.items;
@@ -330,24 +337,28 @@ function loadProgrammeData() {
       renderGantt();
       return;
     }
-    // Fallback: read directly from Sheets
-    if (accessToken && spreadsheetId) {
-      readFromSheets();
-    } else {
-      renderGantt();
-    }
+    renderGantt();
   });
 }
 
 function readFromSheets() {
   apiGet(SHEETS_API + '/' + spreadsheetId + '/values/Programme!A:J', function(err, data) {
-    if (err || !data || !data.values) {
+    if (err) {
       showToast('Could not read Programme tab. Check Sheet permissions.', 'error');
+      // Try BOQ tab as fallback to at least show items
+      readFromBOQ();
+      return;
+    }
+    var rows = (data && data.values) ? data.values : [];
+    // If Programme tab is empty, fall back to BOQ tab
+    if (rows.length <= 1) {
+      showToast('Programme tab is empty. Run Push to BOQ from Revit first.', '');
+      readFromBOQ();
       return;
     }
     progItems = [];
-    for (var i = 1; i < data.values.length; i++) {
-      var r = data.values[i];
+    for (var i = 1; i < rows.length; i++) {
+      var r = rows[i];
       if (!r || r.length < 1 || !r[0]) continue; // skip empty rows
       progItems.push({
         itemId:       r[0] || '',
@@ -368,6 +379,36 @@ function readFromSheets() {
 }
 
 // ── GANTT RENDER ─────────────────────────────────────────────────────
+function readFromBOQ() {
+  // Fallback: read BOQ tab and show items without dates
+  apiGet(SHEETS_API + '/' + spreadsheetId + '/values/BOQ!A:I', function(err, data) {
+    if (err || !data || !data.values || data.values.length <= 1) {
+      renderGantt(); // show empty state
+      return;
+    }
+    progItems = [];
+    for (var i = 1; i < data.values.length; i++) {
+      var r = data.values[i];
+      if (!r || !r[0]) continue;
+      progItems.push({
+        itemId:       r[0] || '',
+        description:  r[1] || '',
+        category:     r[2] || '',
+        startDate:    '',
+        duration:     '',
+        endDate:      '',
+        pctComplete:  '0',
+        predecessors: '',
+        workingDays:  'Yes',
+        notes:        '',
+        rowIndex:     i + 1
+      });
+    }
+    showToast(progItems.length + ' BOQ items loaded. Set dates to build programme.', '');
+    renderGantt();
+  });
+}
+
 function renderGantt() {
   if (!progItems.length) {
     // Truly empty - no items synced from Revit yet
@@ -1064,6 +1105,26 @@ function xhrPost(url, data, cb) {
   xhr.onerror   = function() { cb(new Error('Connection failed')); };
   xhr.ontimeout = function() { cb(new Error('Timeout')); };
   xhr.send(JSON.stringify(data));
+}
+
+function apiGet(url, cb) {
+  if (!accessToken) { cb(new Error('No token')); return; }
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', url, true);
+  xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
+  xhr.timeout = 10000;
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4) {
+      if (xhr.status === 200) {
+        try { cb(null, JSON.parse(xhr.responseText)); } catch(e) { cb(e); }
+      } else {
+        cb(new Error('HTTP ' + xhr.status));
+      }
+    }
+  };
+  xhr.onerror   = function() { cb(new Error('Network error')); };
+  xhr.ontimeout = function() { cb(new Error('Timeout')); };
+  xhr.send();
 }
 
 // Polyfill findIndex
