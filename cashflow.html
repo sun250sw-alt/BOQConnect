@@ -354,17 +354,26 @@ function buildCashFlow(boqRows, progRows) {
 }
 
 function buildFromObjects(items, progItems) {
-  // items can be BOQ items with dates OR programme items
   var workItems = progItems || items;
 
-  // Filter to items that have start dates and duration
+  // Filter to items with dates AND total
   var valid = workItems.filter(function(i) {
-    return i.startDate && (i.duration || i.dur) && i.total;
+    return (i.startDate || i.start) && (i.duration || i.dur) && i.total;
   });
 
-  if (valid.length === 0) { showNoData(); return; }
+  // If no items have dates yet, show all BOQ items with a message
+  if (valid.length === 0) {
+    // Try using BOQ items directly if they have totals
+    var boqValid = items.filter(function(i){ return i.total > 0; });
+    if (boqValid.length > 0) {
+      showNoData('Programme dates not set. Set dates in the Programme view to generate cash flow.');
+    } else {
+      showNoData();
+    }
+    return;
+  }
 
-  // Build monthly cash flow
+  window._cfItems = valid; // cache for profile switching
   flowData = computeFlow(valid, currentProfile);
   document.getElementById('loading').style.display    = 'none';
   document.getElementById('no-data').style.display    = 'none';
@@ -587,15 +596,26 @@ function setProfile(p) {
   currentProfile = p;
   document.querySelectorAll('.pb').forEach(function(b){b.classList.remove('active');});
   event.target.classList.add('active');
-  flowData = computeFlow([], p); // recompute
-  loadData(); // reload and recompute
+  // Recompute flow with new profile using existing items
+  if (window._cfItems && window._cfItems.length) {
+    flowData = computeFlow(window._cfItems, p);
+    updateMetrics();
+    renderAll();
+  }
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────
-function showNoData() {
+function showNoData(msg) {
   document.getElementById('loading').style.display   = 'none';
   document.getElementById('no-data').style.display   = 'block';
   document.getElementById('dashboard').style.display = 'none';
+  if (msg) {
+    var el = document.querySelector('#no-data .no-data');
+    if (el) {
+      var p = el.querySelector('div:last-child');
+      if (p) p.textContent = msg;
+    }
+  }
 }
 
 function getCurrSym() {
