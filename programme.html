@@ -310,12 +310,12 @@ window.onload = function() {
     try { progConfig = JSON.parse(stored); } catch(e) {}
   }
 
-  // Always try to load data first regardless of projectStart
-  // Show setup modal only if data loads but no dates are configured
+  // Load programme config from Sheet first, then load data
   if (spreadsheetId) {
-    loadProgrammeData();
+    loadProgrammeConfigFromSheet(function() {
+      loadProgrammeData();
+    });
   } else {
-    // No spreadsheetId - show setup prompt
     setTimeout(function() { openSetupModal(); }, 400);
   }
 };
@@ -904,8 +904,7 @@ function saveSetup() {
 
   // Save to sessionStorage
   try {
-    sessionStorage.setItem('prog_config_' + spreadsheetId,
-      JSON.stringify(progConfig));
+    sessionStorage.setItem('prog_config_' + spreadsheetId, JSON.stringify(progConfig));
   } catch(e) {}
 
   // Save to LocalServer
@@ -915,9 +914,51 @@ function saveSetup() {
     holidays:     progConfig.holidays.join(',')
   }, function() {});
 
+  // Save to Google Sheet Programme!L1:N1 so it persists
+  saveProgrammeConfigToSheet();
+
   closeModal('modal-setup');
   loadProgrammeData();
   showToast('Programme settings saved', 'success');
+}
+
+function saveProgrammeConfigToSheet() {
+  if (!accessToken || !spreadsheetId) return;
+  var configStr = JSON.stringify({
+    projectStart: progConfig.projectStart,
+    workDays:     progConfig.workDays,
+    defaultDur:   progConfig.defaultDur,
+    holidays:     progConfig.holidays
+  });
+  var url = SHEETS_API + '/' + spreadsheetId +
+    '/values/' + encodeURIComponent('Programme!L1') +
+    '?valueInputOption=RAW';
+  var xhr = new XMLHttpRequest();
+  xhr.open('PUT', url, true);
+  xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.send(JSON.stringify({ values: [[configStr]] }));
+}
+
+function loadProgrammeConfigFromSheet(callback) {
+  if (!accessToken || !spreadsheetId) { if(callback)callback(); return; }
+  apiGet(SHEETS_API + '/' + spreadsheetId + '/values/' +
+    encodeURIComponent('Programme!L1'), function(err, data) {
+    if (!err && data && data.values && data.values[0] && data.values[0][0]) {
+      try {
+        var saved = JSON.parse(data.values[0][0]);
+        if (saved.projectStart) {
+          progConfig.projectStart = saved.projectStart;
+          progConfig.workDays     = saved.workDays     || 5;
+          progConfig.defaultDur   = saved.defaultDur   || 5;
+          progConfig.holidays     = saved.holidays      || [];
+          // Also save to sessionStorage
+          try { sessionStorage.setItem('prog_config_' + spreadsheetId, JSON.stringify(progConfig)); } catch(e) {}
+        }
+      } catch(e) {}
+    }
+    if (callback) callback();
+  });
 }
 
 // ── EXPORT MS PROJECT ─────────────────────────────────────────────────
