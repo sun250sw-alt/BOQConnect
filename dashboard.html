@@ -378,7 +378,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 <div class="toast" id="toast"></div>
 
 <script>
-var GOOGLE_CLIENT_ID = '919309576501-bpbd7783d3up2v2mo4dh171t6tjaceet.apps.googleusercontent.com';
+var GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
 var SHEETS_API = 'https://sheets.googleapis.com/v4/spreadsheets';
 var LOCAL_SERVER = 'http://localhost:5000';
 var DASHBOARD_URL = 'https://sun250sw-alt.github.io/BOQConnect/dashboard.html';
@@ -1067,7 +1067,7 @@ function openProject(project) {
   document.getElementById('share-btn').style.display = isRevitMode ? 'inline-flex' : 'none';
   var pb=document.getElementById('programme-btn');if(pb)pb.style.display='inline-flex';
   var cb=document.getElementById('cashflow-btn');if(cb)cb.style.display='inline-flex';
-  var ab=document.getElementById('add-item-btn');if(ab)ab.style.display=isRevitMode?'inline-block':'none';
+  var ab=document.getElementById('add-item-btn');if(ab)ab.style.display='inline-block';
   loadBOQFromSheets(project.spreadsheetId);
 }
 
@@ -1129,11 +1129,22 @@ function parseSummaryConfig(rows) {
       currentProject.budgetRef = val;
     }
   }
-  // Re-render after config loaded so currency/budget are correct
-  renderDashboard();
+  // Only re-render metric cards, not the whole BOQ table
+  // (renderBOQTable is already called by loadBOQFromSheets)
+  updateMetrics();
 }
 
 function parseSheetData(rows) {
+  // Save current totals as "previous" for diff comparison BEFORE overwriting
+  if (boqItems && boqItems.length && currentProject) {
+    var prevKey = 'boq_prev_' + currentProject.spreadsheetId;
+    var snapshot = {};
+    for (var pi = 0; pi < boqItems.length; pi++) {
+      var pk = boqItems[pi].category + '|' + (boqItems[pi].description || boqItems[pi].typeName);
+      snapshot[pk] = boqItems[pi].total;
+    }
+    try { sessionStorage.setItem(prevKey, JSON.stringify(snapshot)); } catch(e) {}
+  }
   boqItems = [];
   if (!rows||rows.length<2) return;
   for (var i=1;i<rows.length;i++) {
@@ -1186,13 +1197,8 @@ function renderBOQTable() {
   var prevTotals={};
   try{prevTotals=JSON.parse(sessionStorage.getItem(prevKey)||'{}');}catch(e){}
 
-  // Save current totals for next comparison
-  var currTotals={};
-  for(var j=0;j<boqItems.length;j++){
-    var k=boqItems[j].category+'|'+(boqItems[j].description||boqItems[j].typeName);
-    currTotals[k]=boqItems[j].total;
-  }
-  try{sessionStorage.setItem(prevKey,JSON.stringify(currTotals));}catch(e){}
+  // NOTE: prevTotals are saved in parseSheetData BEFORE new data loads
+  // Do not overwrite here - that would erase the diff on re-render
 
   var html='';
   for(var i=0;i<boqItems.length;i++){
