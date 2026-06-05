@@ -2,338 +2,354 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BOQ Connect Dashboard</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0d0e11;--surface:#13151a;--surface2:#1a1d24;--surface3:#22252e;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);--text:#e8e9ec;--text-sec:#8b8d96;--text-ter:#4a4c55;--blue:#0696d7;--blue-dim:rgba(6,150,215,0.10);--blue-bdr:rgba(6,150,215,0.28);--green:#34c77b;--green-dim:rgba(52,199,123,0.10);--green-bdr:rgba(52,199,123,0.28);--amber:#f5a623;--amber-dim:rgba(245,166,35,0.10);--amber-bdr:rgba(245,166,35,0.28);--red:#e85555;--red-dim:rgba(232,85,85,0.10);--red-bdr:rgba(232,85,85,0.28);--radius:10px;--radius-sm:6px}
+:root{--bg:#0d0e11;--surface:#13151a;--surface2:#1a1d24;--surface3:#22252e;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);--border3:rgba(255,255,255,0.16);--text:#e8e9ec;--text-sec:#8b8d96;--text-ter:#4a4c55;--blue:#0696d7;--blue-dim:rgba(6,150,215,0.10);--blue-bdr:rgba(6,150,215,0.28);--green:#34c77b;--green-dim:rgba(52,199,123,0.08);--green-bdr:rgba(52,199,123,0.25);--amber:#f5a623;--amber-dim:rgba(245,166,35,0.08);--amber-bdr:rgba(245,166,35,0.25);--red:#e85555;--red-dim:rgba(232,85,85,0.08);--red-bdr:rgba(232,85,85,0.25);--radius:10px;--radius-sm:6px;--radius-xs:4px}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Source Sans 3',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(6,150,215,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(6,150,215,0.02) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
-/* TOPBAR */
-.topbar{position:fixed;top:0;left:0;right:0;height:52px;background:rgba(13,14,17,0.96);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:100}
-.logo{display:flex;align-items:center;gap:10px;font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;letter-spacing:1px;cursor:pointer}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(6,150,215,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(6,150,215,0.025) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
+.topbar{position:fixed;top:0;left:0;right:0;height:52px;background:rgba(13,14,17,0.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;z-index:100}
+.logo{display:flex;align-items:center;gap:10px;font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;letter-spacing:1px}
 .logo-mark{width:28px;height:28px;background:var(--blue);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff}
-.topbar-right{display:flex;align-items:center;gap:8px}
-/* BUTTONS */
-.btn{display:inline-flex;align-items:center;gap:6px;border-radius:var(--radius-sm);font-family:'Source Sans 3',sans-serif;font-size:13px;padding:7px 14px;cursor:pointer;transition:all .2s;border:none;font-weight:500;text-decoration:none;white-space:nowrap}
-.btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:#0aa8f0}
-.btn-secondary{background:transparent;color:var(--text-sec);border:1px solid var(--border2)}.btn-secondary:hover{border-color:var(--blue-bdr);color:var(--text)}
-.btn-success{background:var(--green);color:#fff}.btn-success:hover{background:#2dd672}
-.btn-danger{background:rgba(232,85,85,.1);color:var(--red);border:1px solid rgba(232,85,85,.3)}
-/* SCREENS */
-.screen{display:none;position:relative;z-index:1;padding:68px 24px 40px;max-width:1400px;margin:0 auto}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.profile-wrap{position:relative}
+.profile-btn{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border2);border-radius:999px;padding:4px 12px 4px 4px;cursor:pointer;transition:all .2s;font-size:13px;color:var(--text-sec)}
+.profile-btn:hover{border-color:var(--blue-bdr);color:var(--text)}
+.profile-avatar{width:28px;height:28px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;overflow:hidden;flex-shrink:0}
+.profile-avatar img{width:100%;height:100%;object-fit:cover}
+.profile-dropdown{display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);min-width:220px;box-shadow:0 8px 32px rgba(0,0,0,.4);z-index:200;overflow:hidden}
+.profile-dropdown.open{display:block}
+.pd-header{padding:14px 16px;border-bottom:1px solid var(--border)}
+.pd-name{font-size:14px;font-weight:500;margin-bottom:2px}
+.pd-email{font-size:12px;color:var(--text-sec);font-family:'Source Code Pro',monospace}
+.pd-item{display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:13px;color:var(--text-sec);cursor:pointer;transition:all .15s}
+.pd-item:hover{background:var(--surface2);color:var(--text)}
+.pd-item.danger{color:var(--red)}
+.pd-item.danger:hover{background:var(--red-dim)}
+.btn{display:inline-flex;align-items:center;gap:7px;border-radius:var(--radius-sm);font-family:'Source Sans 3',sans-serif;font-size:13px;padding:7px 14px;cursor:pointer;transition:all .2s;border:none;text-decoration:none;font-weight:500}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:hover{background:#0aa8f0}
+.btn-secondary{background:transparent;color:var(--text-sec);border:1px solid var(--border2)}
+.btn-secondary:hover{border-color:var(--blue-bdr);color:var(--text)}
+.btn-success{background:var(--green);color:#fff}
+.btn-success:hover{background:#3dd97a}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.screen{display:none;position:relative;z-index:1;min-height:100vh}
 .screen.active{display:block}
-/* SIGN-IN SCREEN */
-.signin-wrap{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 52px)}
-.signin-card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:40px;width:360px;text-align:center}
-.signin-logo{width:56px;height:56px;background:var(--blue);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;margin:0 auto 20px}
-.signin-title{font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;margin-bottom:6px}
-.signin-sub{font-size:13px;color:var(--text-sec);margin-bottom:28px}
-.google-btn{width:100%;background:#fff;color:#1f1f1f;border:1px solid #ddd;border-radius:6px;padding:10px 16px;font-size:14px;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;transition:box-shadow .2s;font-weight:500}
-.google-btn:hover{box-shadow:0 2px 8px rgba(0,0,0,.15)}
-.google-icon{width:18px;height:18px}
-/* PROJECT GRID */
-.proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-top:24px}
-.proj-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
-.proj-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--blue);transform:scaleX(0);transition:transform .2s;transform-origin:left}
-.proj-card:hover{border-color:var(--blue-bdr);background:var(--surface2)}.proj-card:hover::before{transform:scaleX(1)}
-.proj-name{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;margin-bottom:4px}
-.proj-meta{font-size:12px;color:var(--text-sec);margin-bottom:12px}
-.proj-stats{display:flex;gap:12px;font-size:11px;font-family:'Source Code Pro',monospace}
-.proj-stat{display:flex;flex-direction:column;gap:2px}
-.proj-stat-val{font-size:14px;font-weight:600;color:var(--text)}
-.proj-stat-lbl{color:var(--text-ter)}
-/* DASHBOARD LAYOUT */
-.dash-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
-.dash-title{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700}
-.dash-sub{font-size:13px;color:var(--text-sec);margin-top:2px}
-.dash-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-/* METRICS */
-.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
-.metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;position:relative;overflow:hidden}
-.metric::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
-.m-blue::before{background:var(--blue)}.m-green::before{background:var(--green)}.m-amber::before{background:var(--amber)}.m-red::before{background:var(--red)}
-.m-lbl{font-size:10px;color:var(--text-ter);letter-spacing:.8px;text-transform:uppercase;font-family:'Source Code Pro',monospace;margin-bottom:8px}
-.m-val{font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;letter-spacing:-1px;margin-bottom:3px}
-.m-sub{font-size:11px;color:var(--text-sec)}
-/* TWO-COL LAYOUT */
-.two-col{display:grid;grid-template-columns:1fr 360px;gap:16px;align-items:start}
+.signin-center{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;text-align:center}
+.signin-icon{width:72px;height:72px;background:var(--blue);border-radius:18px;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color:#fff;margin:0 auto 24px;box-shadow:0 8px 32px rgba(6,150,215,.4)}
+.signin-title{font-family:'Rajdhani',sans-serif;font-size:36px;font-weight:700;letter-spacing:-.5px;margin-bottom:10px}
+.signin-title span{color:var(--blue)}
+.signin-sub{font-size:15px;color:var(--text-sec);line-height:1.7;max-width:400px;margin:0 auto 32px}
+.google-signin-btn{display:flex;align-items:center;gap:12px;background:#fff;color:#1a1a1a;border:none;border-radius:var(--radius-sm);padding:13px 28px;font-size:15px;font-family:'Source Sans 3',sans-serif;font-weight:500;cursor:pointer;transition:all .2s;box-shadow:0 2px 12px rgba(0,0,0,.3);margin:0 auto}
+.google-signin-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,.4)}
+.google-logo{width:20px;height:20px;flex-shrink:0}
+.selector-wrap{max-width:900px;margin:0 auto;padding:80px 24px 60px}
+.selector-title{font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;margin-bottom:6px}
+.selector-sub{font-size:14px;color:var(--text-sec);margin-bottom:28px}
+.project-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.project-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.project-card:hover{border-color:var(--blue-bdr);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.project-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--blue)}
+.pc-name{font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;margin-bottom:4px}
+.pc-client{font-size:13px;color:var(--text-sec);margin-bottom:12px}
+.pc-meta{display:flex;gap:8px;flex-wrap:wrap}
+.pc-tag{font-size:10px;font-family:'Source Code Pro',monospace;padding:3px 8px;border-radius:3px;background:var(--surface2);border:1px solid var(--border);color:var(--text-sec)}
+.pc-sync{font-size:11px;color:var(--text-ter);font-family:'Source Code Pro',monospace;margin-top:10px}
+.dash-wrap{max-width:1280px;margin:0 auto;padding:72px 28px 60px}
+.dash-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+.dash-title{font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;letter-spacing:-.3px;margin-bottom:4px}
+.dash-sub{font-size:13px;color:var(--text-sec);display:flex;align-items:center;gap:8px}
+.last-sync-badge{font-family:'Source Code Pro',monospace;font-size:11px;color:var(--text-ter);padding:3px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs)}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;position:relative;overflow:hidden}
+.metric-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.metric-card.blue::before{background:var(--blue)}.metric-card.green::before{background:var(--green)}.metric-card.amber::before{background:var(--amber)}.metric-card.grey::before{background:var(--border3)}
+.metric-label{font-size:10px;font-family:'Source Code Pro',monospace;color:var(--text-ter);letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px}
+.metric-value{font-family:'Rajdhani',sans-serif;font-size:30px;font-weight:700;letter-spacing:-1px;line-height:1;margin-bottom:4px}
+.metric-value.blue{color:var(--blue)}.metric-value.green{color:var(--green)}.metric-value.amber{color:var(--amber)}
+.metric-sub{font-size:12px;color:var(--text-sec)}
+.two-col{display:grid;grid-template-columns:1fr 340px;gap:18px;margin-bottom:18px}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
-.card-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.card-title{font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--text-sec);display:flex;align-items:center;gap:7px}
-.card-title::before{content:'';width:3px;height:11px;border-radius:2px}
-.ct-blue::before{background:var(--blue)}.ct-green::before{background:var(--green)}.ct-amber::before{background:var(--amber)}.ct-purple::before{background:#8b5cf6}
-/* BOQ TABLE */
+.card-head{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--border)}
+.card-title{font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--text-sec);display:flex;align-items:center;gap:8px}
+.card-title::before{content:'';width:3px;height:12px;background:var(--blue);border-radius:2px}
+.cbadge{font-size:10px;font-family:'Source Code Pro',monospace;padding:2px 7px;border-radius:3px}
+.cb-blue{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-bdr)}.cb-amber{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-bdr)}.cb-green{background:var(--green-dim);color:var(--green);border:1px solid var(--green-bdr)}.cb-red{background:var(--red-dim);color:var(--red);border:1px solid var(--red-bdr)}
 .boq-table{width:100%;border-collapse:collapse;font-size:13px}
-.boq-table th{background:var(--surface2);color:var(--text-ter);font-size:10px;font-family:'Source Code Pro',monospace;text-transform:uppercase;letter-spacing:.5px;padding:8px 10px;text-align:left;position:sticky;top:0;z-index:2;border-bottom:1px solid var(--border)}
-.boq-table td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:middle}
-.boq-table tr:hover td{background:rgba(255,255,255,0.02)}
-.boq-table tr.row-amber td{background:rgba(245,166,35,0.05)}
-.boq-table tr.row-red td{background:rgba(232,85,85,0.05);opacity:.7}
-#boq-scroll-wrap{overflow-y:auto;max-height:500px}
+.boq-table th{background:var(--surface2);color:var(--text-ter);font-family:'Source Code Pro',monospace;font-size:10px;font-weight:500;letter-spacing:.8px;text-transform:uppercase;padding:9px 14px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+.boq-table td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--text-sec);vertical-align:middle}
+.boq-table tr:last-child td{border-bottom:none}
+.boq-table tr:hover td{background:var(--surface2)}
 .item-no{font-family:'Source Code Pro',monospace;font-size:11px;color:var(--text-ter)}
-.total-col{text-align:right;font-family:'Source Code Pro',monospace}
-/* STATUS PILLS */
-.status-pill{display:inline-block;font-size:9px;padding:2px 6px;border-radius:3px;font-family:'Source Code Pro',monospace;font-weight:600;white-space:nowrap}
-.cbadge{font-size:11px;padding:3px 8px;border-radius:4px;font-family:'Source Code Pro',monospace}
-.cb-blue{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-bdr)}
-.cb-green{background:var(--green-dim);color:var(--green);border:1px solid var(--green-bdr)}
-.cb-amber{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-bdr)}
-.cb-red{background:var(--red-dim);color:var(--red);border:1px solid var(--red-bdr)}
-/* CATEGORIES */
-.cat-list{display:flex;flex-direction:column;gap:8px;padding:14px}
-.cat-item{display:flex;align-items:center;gap:10px}
-.cat-bar-wrap{flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
-.cat-bar{height:100%;border-radius:3px;background:var(--blue);transition:width .4s}
-.cat-name{font-size:12px;color:var(--text-sec);min-width:100px}
-.cat-val{font-size:11px;font-family:'Source Code Pro',monospace;color:var(--text-ter);min-width:70px;text-align:right}
-/* CHANGE LOG */
-.log-list{display:flex;flex-direction:column;gap:0;max-height:200px;overflow-y:auto;padding:8px 0}
-.log-item{padding:8px 14px;border-bottom:1px solid var(--border);font-size:12px;display:flex;justify-content:space-between;gap:8px}
-.log-time{color:var(--text-ter);font-family:'Source Code Pro',monospace;font-size:10px;white-space:nowrap}
-/* MODAL */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);z-index:300;align-items:center;justify-content:center}
+.desc{color:var(--text);font-weight:500}
+.qty{font-family:'Source Code Pro',monospace;color:var(--blue)}
+.total-col{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;color:var(--text);text-align:right}
+.row-amber td{background:rgba(245,166,35,0.04)!important}
+.row-red td{background:rgba(232,85,85,0.04)!important}
+.status-pill{display:inline-flex;align-items:center;font-size:10px;font-family:'Source Code Pro',monospace;padding:2px 7px;border-radius:3px}
+.sum-row{display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid var(--border);font-size:13px}
+.sum-row:last-child{border-bottom:none}
+.sum-label{color:var(--text-sec)}.sum-value{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:600}
+.sum-row.total{background:var(--blue-dim);border-top:1px solid var(--blue-bdr)}
+.sum-row.total .sum-label{color:var(--blue);font-weight:600}.sum-row.total .sum-value{color:var(--blue);font-size:18px}
+.cat-row{padding:10px 18px;border-bottom:1px solid var(--border)}
+.cat-row:last-child{border-bottom:none}
+.cat-header{display:flex;justify-content:space-between;margin-bottom:5px;font-size:12px}
+.cat-name{color:var(--text-sec)}.cat-val{font-family:'Source Code Pro',monospace;color:var(--text-ter);font-size:11px}
+.cat-bar-bg{height:3px;background:var(--surface3);border-radius:2px;overflow:hidden}
+.cat-bar-fill{height:100%;border-radius:2px;background:var(--blue);transition:width .6s ease}
+.log-row{display:flex;align-items:flex-start;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border);font-size:13px}
+.log-row:last-child{border-bottom:none}
+.log-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0}
+.log-time{font-family:'Source Code Pro',monospace;font-size:11px;color:var(--text-ter);margin-top:2px}
+.log-desc{color:var(--text-sec);line-height:1.5}
+.log-desc strong{color:var(--text)}
+.miss-row{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-bottom:1px solid var(--border);font-size:13px}
+.miss-row:last-child{border-bottom:none}
+.miss-name{color:var(--text);font-weight:500}
+.miss-cat{font-size:11px;color:var(--text-ter);margin-top:1px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:300;align-items:center;justify-content:center}
 .modal-overlay.open{display:flex}
-.modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);width:90%;max-width:520px;padding:28px;animation:fadeUp .25s ease;max-height:90vh;overflow-y:auto}
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-.modal-title{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;margin-bottom:4px}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);width:90%;max-width:480px;padding:28px}
+.modal-title{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;margin-bottom:6px}
 .modal-sub{font-size:13px;color:var(--text-sec);margin-bottom:20px}
-.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
 .field{margin-bottom:14px}
 .field label{display:block;font-size:11px;font-family:'Source Code Pro',monospace;color:var(--text-sec);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
-.field input,.field select,.field textarea{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-family:'Source Sans 3',sans-serif;font-size:14px;padding:9px 12px;outline:none;transition:border-color .15s}
-.field input:focus,.field select:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-dim)}
-.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-/* SPINNER */
-.spinner{width:32px;height:32px;border:3px solid var(--border2);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto}
-@keyframes spin{to{transform:rotate(360deg)}}
-/* TOAST */
-.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:12px 16px;font-size:13px;z-index:400;transform:translateY(80px);opacity:0;transition:all .3s cubic-bezier(.175,.885,.32,1.275);min-width:240px}
+.field input,.field textarea{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-family:'Source Sans 3',sans-serif;font-size:14px;padding:10px 14px;outline:none;transition:border-color .15s}
+.field input:focus,.field textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-dim)}
+.field textarea{resize:vertical;min-height:80px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:12px 16px;font-size:13px;display:flex;align-items:center;gap:10px;z-index:400;transform:translateY(80px);opacity:0;transition:all .3s cubic-bezier(.175,.885,.32,1.275);min-width:260px}
 .toast.show{transform:translateY(0);opacity:1}
-.toast.success{border-color:rgba(52,199,123,.4)}.toast.error{border-color:rgba(232,85,85,.4)}
-/* STATUS DOT */
-.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px}
-.sd-green{background:var(--green)}.sd-amber{background:var(--amber)}.sd-red{background:var(--red)}
-@media(max-width:1100px){.two-col{grid-template-columns:1fr}.metrics{grid-template-columns:1fr 1fr}}
-@media(max-width:600px){.metrics{grid-template-columns:1fr 1fr}.screen{padding:60px 12px 30px}}
-@media print{.topbar,.dash-actions,.modal-overlay,.toast{display:none!important}.screen{padding:0}}
+.toast.success{border-color:var(--green-bdr)}.toast.error{border-color:var(--red-bdr)}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse-dot 2s ease infinite;flex-shrink:0}
+.status-dot.offline{background:var(--red);box-shadow:0 0 6px var(--red);animation:none}
+.status-dot.loading{background:var(--amber);box-shadow:0 0 6px var(--amber);animation:none}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
+.spinner{width:40px;height:40px;border:3px solid var(--border2);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{padding:40px 24px;text-align:center;color:var(--text-ter)}
+@media(max-width:1024px){.metrics{grid-template-columns:repeat(2,1fr)}.two-col{grid-template-columns:1fr}}
+@media(max-width:600px){.metrics{grid-template-columns:1fr 1fr}.topbar{padding:0 16px}.dash-wrap{padding:64px 16px 40px}}
 </style>
 </head>
 <body>
-
-<!-- TOPBAR -->
 <div class="topbar">
-  <div class="logo" onclick="goToSelector()">
-    <div class="logo-mark">B</div>BOQ Connect
-  </div>
-  <div class="topbar-right" id="topbar-right">
-    <span id="status-indicator" style="font-size:12px;color:var(--text-ter);display:none">
-      <span class="status-dot sd-green" id="status-dot"></span>
-      <span id="status-text">Connected</span>
-    </span>
-    <button class="btn btn-secondary" id="sign-out-btn" style="display:none" onclick="signOut()">Sign out</button>
-  </div>
+  <div class="logo"><div class="logo-mark">B</div>BOQ Connect</div>
+  <div class="topbar-right" id="topbar-right"></div>
 </div>
 
-<!-- SCREEN: SIGN IN -->
+<!-- SIGN IN -->
 <div class="screen active" id="screen-signin">
-  <div class="signin-wrap">
-    <div class="signin-card">
-      <div class="signin-logo">B</div>
-      <div class="signin-title">BOQ Connect</div>
-      <div class="signin-sub">Sign in to access your projects and BOQ data stored in Google Drive.</div>
-      <button class="google-btn" onclick="startGoogleSignIn()">
-        <svg class="google-icon" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-        Sign in with Google
-      </button>
-      <div id="signin-error" style="margin-top:12px;font-size:12px;color:var(--red);display:none"></div>
-    </div>
+  <div class="signin-center">
+    <div class="signin-icon">B</div>
+    <h1 class="signin-title">BOQ <span>Connect</span></h1>
+    <p class="signin-sub">Sign in with your Google account to access your BOQ projects. Your data stays in your own Google Drive.</p>
+    <button class="google-signin-btn" onclick="startGoogleSignIn()">
+      <svg class="google-logo" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+      Sign in with Google
+    </button>
+    <p style="margin-top:16px;font-size:12px;color:var(--text-ter)">Developed by Sanjaya Abeysinghe &middot; SUN_SLDev</p>
   </div>
 </div>
 
-<!-- SCREEN: PROJECT SELECTOR -->
+<!-- PROJECT SELECTOR -->
 <div class="screen" id="screen-selector">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-    <div>
-      <h2 style="font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700">Your Projects</h2>
-      <div style="font-size:13px;color:var(--text-sec)">Select a project to open its BOQ dashboard</div>
-    </div>
-    <div id="user-info" style="text-align:right;font-size:12px;color:var(--text-sec)"></div>
-  </div>
-  <div class="proj-grid" id="project-grid">
-    <div style="text-align:center;padding:60px;grid-column:1/-1">
-      <div class="spinner"></div>
-      <div style="margin-top:16px;color:var(--text-sec);font-size:14px">Searching your Drive...</div>
+  <div class="selector-wrap">
+    <div class="selector-title">Your Projects</div>
+    <div class="selector-sub">Select a project to open its BOQ dashboard</div>
+    <div id="project-grid" class="project-grid">
+      <div style="text-align:center;padding:60px;grid-column:1/-1"><div class="spinner"></div><div style="margin-top:16px;color:var(--text-sec);font-size:14px">Searching your Drive...</div></div>
     </div>
   </div>
 </div>
 
-<!-- SCREEN: DASHBOARD -->
+<!-- DASHBOARD -->
 <div class="screen" id="screen-dashboard">
-  <div class="dash-header">
-    <div>
-      <div class="dash-title" id="d-project-name">Project</div>
-      <div class="dash-sub" id="d-project-sub"></div>
+  <div class="dash-wrap">
+    <div class="dash-header">
+      <div>
+        <div class="dash-title" id="d-project-name">Loading...</div>
+        <div class="dash-sub">
+          <span id="d-project-sub"></span>
+          <span class="last-sync-badge" id="d-last-sync">Last sync: --</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <a class="btn btn-secondary" id="d-sheet-link" href="#" target="_blank">&#128203; Open Sheet</a>
+        <button class="btn btn-secondary" id="programme-btn" onclick="openProgramme()" style="display:none">&#128197; Programme</button>
+        <button class="btn btn-secondary" id="cashflow-btn" onclick="openCashFlow()" style="display:none">&#128200; Cash Flow</button>
+        <button class="btn btn-secondary" onclick="goToSelector()">&#8592; Projects</button>
+        <button class="btn btn-success" id="share-btn" style="display:none" onclick="openShareModal()">&#8679; Share</button>
+      </div>
     </div>
-    <div class="dash-actions">
-      <a class="btn btn-secondary" id="d-sheet-link" href="#" target="_blank">&#128203; Open Sheet</a>
-      <button class="btn btn-secondary" id="programme-btn" onclick="openProgramme()" style="display:none">&#128197; Programme</button>
-      <button class="btn btn-secondary" id="cashflow-btn" onclick="openCashFlow()" style="display:none">&#128200; Cash Flow</button>
-      <button class="btn btn-secondary" onclick="goToSelector()">&#8592; Projects</button>
-      <button class="btn btn-success" id="share-btn" style="display:none" onclick="openShareModal()">&#8679; Share</button>
+    <div class="metrics">
+      <div class="metric-card blue"><div class="metric-label">Total Items</div><div class="metric-value blue" id="m-items">--</div><div class="metric-sub">Element types</div></div>
+      <div class="metric-card green"><div class="metric-label">Subtotal</div><div class="metric-value green" id="m-subtotal">--</div><div class="metric-sub" id="m-subtotal-sub">Excl. contingency</div></div>
+      <div class="metric-card amber"><div class="metric-label">Budget Cost</div><div class="metric-value amber" id="m-budget">--</div><div class="metric-sub" id="m-budget-sub">vs Grand Total</div></div>
+      <div class="metric-card grey"><div class="metric-label">Grand Total</div><div class="metric-value" id="m-grand" style="color:var(--text)">--</div><div class="metric-sub" id="m-grand-sub">Incl. contingency</div></div>
     </div>
-  </div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Bill of Quantities</div>
+          <div style="display:flex;gap:6px"><span class="cbadge cb-blue" id="items-badge">-- items</span></div>
+        </div>
+        <div style="overflow-x:auto;overflow-y:auto" id="boq-scroll-wrap">
+          <div class="empty" id="boq-empty"><div style="font-size:28px;margin-bottom:10px">&#128203;</div><div style="font-family:'Rajdhani',sans-serif;font-size:15px;color:var(--text-sec);margin-bottom:4px">No BOQ data yet</div><div style="font-size:13px">Push to BOQ from Revit to populate</div></div>
+          <table class="boq-table" id="boq-table" style="display:none"><thead><tr><th>Item</th><th>Description</th><th>Category</th><th>Qty</th><th>Unit</th><th>Rate</th><th>Total</th><th>Diff</th><th>Status</th></tr></thead><tbody id="boq-tbody"></tbody></table>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card"><div class="card-head"><div class="card-title">Cost Summary</div></div><div id="summary-content"><div class="empty" style="padding:20px"><div style="font-size:13px;color:var(--text-ter)">No data</div></div></div></div>
+        <div class="card"><div class="card-head"><div class="card-title">By Category</div></div><div id="category-content"><div class="empty" style="padding:20px"><div style="font-size:13px;color:var(--text-ter)">No data</div></div></div></div>
 
-  <!-- METRICS -->
-  <div class="metrics">
-    <div class="metric m-blue">
-      <div class="m-lbl">Total Items</div>
-      <div class="m-val" id="m-items" style="color:var(--blue)">--</div>
-      <div class="m-sub" id="m-last-sync">Last sync: --</div>
+      </div>
     </div>
-    <div class="metric m-green">
-      <div class="m-lbl">Contract Sum</div>
-      <div class="m-val" id="m-sub" style="color:var(--green)">--</div>
-      <div class="m-sub" id="m-sub-diff">excl. prelims &amp; contingency</div>
+    <!-- Recently Changed Items -->
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-head">
+        <div class="card-title">Recently Changed Items</div>
+        <span class="cbadge cb-blue" id="recent-badge">0 items</span>
+      </div>
+      <div id="recent-content" style="max-height:280px;overflow-y:auto">
+        <div class="empty"><div style="font-size:13px;color:var(--text-ter)">No change history yet</div></div>
+      </div>
     </div>
-    <div class="metric m-amber">
-      <div class="m-lbl">Grand Total</div>
-      <div class="m-val" id="m-grand" style="color:var(--amber)">--</div>
-      <div class="m-sub" id="m-grand-diff">incl. prelims &amp; contingency</div>
-    </div>
-    <div class="metric" id="m-budget-card">
-      <div class="m-lbl">Budget</div>
-      <div class="m-val" id="m-budget" style="color:var(--text-sec)">--</div>
-      <div class="m-sub" id="m-budget-sub">no budget set</div>
-    </div>
-  </div>
 
-  <div class="two-col">
-    <!-- BOQ TABLE -->
+    <!-- Change Log -->
     <div class="card">
       <div class="card-head">
-        <div class="card-title ct-blue">Bill of Quantities</div>
-        <div style="display:flex;gap:6px;align-items:center">
-          <span class="cbadge cb-amber" id="missing-badge" style="display:none">0 missing</span>
-          <span class="cbadge cb-blue" id="items-badge">-- items</span>
-          <button id="add-item-btn" onclick="openAddItemModal()" style="display:none;background:rgba(52,199,123,0.12);border:1px solid rgba(52,199,123,0.3);color:#34c77b;border-radius:4px;padding:3px 10px;font-size:11px;cursor:pointer;font-family:monospace">+ Custom Item</button>
+        <div class="card-title">Sync History</div>
+        <span class="cbadge cb-blue" id="log-badge">0 entries</span>
+      </div>
+      <div id="log-content" style="max-height:260px;overflow-y:auto">
+        <div class="empty"><div style="font-size:13px;color:var(--text-ter)">No sync history</div></div>
+      </div>
+    </div>
+    <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--border);font-size:11px;color:var(--text-ter);font-family:monospace">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div><strong style="color:var(--text-sec)">BOQ Connect</strong> v1.0.0 &nbsp;|&nbsp; Built for Autodesk Revit 2026</div>
+        <div style="display:flex;gap:16px">
+          <a href="#" onclick="openFooterModal('privacy')" style="color:var(--text-ter);text-decoration:none">Privacy Policy</a>
+          <a href="#" onclick="openFooterModal('terms')" style="color:var(--text-ter);text-decoration:none">Terms of Use</a>
+          <a href="#" onclick="openFooterModal('about')" style="color:var(--text-ter);text-decoration:none">About</a>
         </div>
       </div>
-      <div id="boq-scroll-wrap">
-        <table class="boq-table" id="boq-table" style="display:none">
-          <thead><tr>
-            <th>Item</th>
-            <th>Description</th>
-            <th>Category</th>
-            <th>Qty</th>
-            <th>Unit</th>
-            <th>Rate</th>
-            <th style="text-align:right">Total</th>
-            <th style="text-align:right">Change</th>
-            <th>Status</th>
-          </tr></thead>
-          <tbody id="boq-tbody"></tbody>
-        </table>
-        <div id="boq-empty" style="padding:40px;text-align:center;color:var(--text-ter)">
-          <div style="font-size:28px;opacity:.4;margin-bottom:8px">&#128203;</div>
-          <div style="font-family:'Rajdhani',sans-serif;font-size:16px;color:var(--text-sec)">No BOQ data</div>
-          <div style="font-size:12px;margin-top:4px">Push to BOQ from Revit to populate</div>
-        </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--border)">
+        <div>Developer: <span style="color:var(--text-sec)">Sanjaya Abeysinghe</span> &nbsp;|&nbsp; MSc PM, BSc(Hons) QS, BIM &nbsp;|&nbsp; SUN_SLDev</div>
+        <a href="mailto:Asanjayawaruna@hotmail.com" style="color:var(--blue);text-decoration:none">Asanjayawaruna@hotmail.com</a>
       </div>
     </div>
 
-    <!-- SIDEBAR -->
-    <div>
-      <!-- Summary -->
-      <div class="card" style="margin-bottom:14px">
-        <div class="card-head"><div class="card-title ct-green">Cost Summary</div></div>
-        <div id="summary-content" style="padding:12px 14px;font-size:13px"></div>
-      </div>
-      <!-- Categories -->
-      <div class="card" style="margin-bottom:14px">
-        <div class="card-head"><div class="card-title ct-amber">By Category</div></div>
-        <div id="categories-content"><div class="cat-list" id="cat-list"></div></div>
-      </div>
-      <!-- Recently changed -->
-      <div class="card" style="margin-bottom:14px">
-        <div class="card-head"><div class="card-title ct-purple">Recently Changed</div></div>
-        <div id="recently-changed" style="padding:10px 14px;font-size:12px;color:var(--text-ter)">No changes yet</div>
-      </div>
-      <!-- Change log -->
-      <div class="card">
-        <div class="card-head"><div class="card-title ct-blue">Sync History</div></div>
-        <div class="log-list" id="change-log"><div style="padding:12px 14px;font-size:12px;color:var(--text-ter)">No history</div></div>
+    <!-- Footer modals -->
+    <div class="modal-overlay" id="modal-privacy" onclick="if(event.target===this)this.classList.remove('open')">
+      <div class="modal" style="max-height:80vh;overflow-y:auto">
+        <div class="modal-title">Privacy Policy</div>
+        <p style="font-size:13px;color:var(--text-sec);line-height:1.7;margin-bottom:10px">BOQ Connect collects your Google account email and project data solely to generate and update your BOQ Google Sheet. No data is stored on SUN_SLDev servers. All project data lives in your own Google Drive.</p>
+        <p style="font-size:13px;color:var(--text-sec);line-height:1.7;margin-bottom:10px">Google authentication tokens are stored locally in your browser session only. You can sign out at any time to revoke access.</p>
+        <p style="font-size:13px;color:var(--text-sec);line-height:1.7">For privacy enquiries contact: <a href="mailto:Asanjayawaruna@hotmail.com" style="color:var(--blue)">Asanjayawaruna@hotmail.com</a></p>
+        <div class="modal-actions"><button class="btn btn-secondary" onclick="document.getElementById('modal-privacy').classList.remove('open')">Close</button></div>
       </div>
     </div>
-  </div>
-</div>
-
-<!-- SHARE MODAL -->
-<div class="modal-overlay" id="modal-share">
-  <div class="modal">
-    <div class="modal-title">Share Project</div>
-    <div class="modal-sub">Grant access to this project and send an email with the dashboard link.</div>
-    <div class="field">
-      <label>Email address</label>
-      <input type="email" id="share-email" placeholder="colleague@example.com">
+    <div class="modal-overlay" id="modal-terms" onclick="if(event.target===this)this.classList.remove('open')">
+      <div class="modal" style="max-height:80vh;overflow-y:auto">
+        <div class="modal-title">Terms of Use</div>
+        <p style="font-size:13px;color:var(--text-sec);line-height:1.7;margin-bottom:10px">BOQ Connect is provided as-is for internal business use. All BOQ outputs must be independently verified by a qualified professional before use in any financial or contractual context.</p>
+        <p style="font-size:13px;color:var(--text-sec);line-height:1.7;margin-bottom:10px">SUN_SLDev accepts no liability for errors in quantity extraction or cost calculations. The software is licensed for use with Autodesk Revit 2026 only.</p>
+        <p style="font-size:13px;color:var(--text-sec);line-height:1.7">Unauthorised redistribution or modification is prohibited. All rights reserved &copy; 2024 Sanjaya Abeysinghe / SUN_SLDev.</p>
+        <div class="modal-actions"><button class="btn btn-secondary" onclick="document.getElementById('modal-terms').classList.remove('open')">Close</button></div>
+      </div>
     </div>
-    <div class="field">
-      <label>Permission level</label>
-      <select id="share-role">
-        <option value="reader">View only</option>
-        <option value="writer">Can edit</option>
-      </select>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal('modal-share')">Cancel</button>
-      <button class="btn btn-success" id="share-confirm-btn" onclick="confirmShare()">Share &amp; Send Email</button>
+    <div class="modal-overlay" id="modal-about" onclick="if(event.target===this)this.classList.remove('open')">
+      <div class="modal">
+        <div class="modal-title">About BOQ Connect</div>
+        <div style="font-size:13px;color:var(--text-sec);line-height:1.8">
+          <div style="margin-bottom:8px"><strong style="color:var(--text)">BOQ Connect v1.0.0</strong></div>
+          <div>Developer: <strong style="color:var(--text)">Sanjaya Abeysinghe</strong></div>
+          <div>Credentials: MSc Project Management, BSc(Hons) Quantity Surveying, BIM</div>
+          <div>Company: <strong style="color:var(--text)">SUN_SLDev</strong></div>
+          <div style="margin-top:10px">Built for Autodesk Revit 2026</div>
+          <div>Technology: Revit API, Google Sheets API v4, Google Drive API v3</div>
+          <div style="margin-top:10px">Support: <a href="mailto:Asanjayawaruna@hotmail.com" style="color:var(--blue)">Asanjayawaruna@hotmail.com</a></div>
+        </div>
+        <div class="modal-actions"><button class="btn btn-secondary" onclick="document.getElementById('modal-about').classList.remove('open')">Close</button></div>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- CUSTOM ITEM MODAL -->
 <div class="modal-overlay" id="modal-custom-item">
-  <div class="modal" style="max-width:580px">
+  <div class="modal" style="max-width:580px;max-height:90vh;overflow-y:auto">
     <div class="modal-title">Add Custom BOQ Item</div>
-    <div class="modal-sub">Add a custom item directly to your Google Sheet. Revit sync will never overwrite custom items.</div>
-    <div class="field-row">
-      <div class="field"><label>Item Number</label><input type="text" id="ci-itemno" placeholder="e.g. 6.1"></div>
-      <div class="field"><label>Category</label><input type="text" id="ci-category" placeholder="e.g. Groundworks"></div>
+    <div class="modal-sub">Add a custom item directly to your Google Sheet BOQ tab. Revit sync will never overwrite custom items.</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="field">
+        <label>Item Number *</label>
+        <input type="text" id="ci-itemno" placeholder="e.g. 6.1">
+      </div>
+      <div class="field">
+        <label>Category</label>
+        <input type="text" id="ci-category" placeholder="e.g. Groundworks">
+      </div>
     </div>
-    <div class="field"><label>Description *</label><input type="text" id="ci-description" placeholder="e.g. Clearing and Grubbing"></div>
-    <div class="field-row">
-      <div class="field"><label>Unit</label><input type="text" id="ci-unit" placeholder="m², nr, m, t"></div>
-      <div class="field"><label>Rate (per unit)</label><input type="number" id="ci-rate" placeholder="0.00" min="0" step="0.01" oninput="updateCalcTotal()"></div>
+    <div class="field" style="margin-top:10px">
+      <label>Description *</label>
+      <input type="text" id="ci-description" placeholder="e.g. Clearing and Grubbing">
     </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">
+      <div class="field">
+        <label>Unit</label>
+        <input type="text" id="ci-unit" placeholder="m², nr, m, t">
+      </div>
+      <div class="field">
+        <label>Rate (per unit)</label>
+        <input type="number" id="ci-rate" placeholder="0.00" min="0" step="0.01">
+      </div>
+    </div>
+
     <!-- Quantity Calculator -->
-    <div style="background:var(--surface2);border:1px solid rgba(6,150,215,0.25);border-radius:8px;overflow:hidden;margin-top:4px">
+    <div style="margin-top:14px;background:var(--surface2);border:1px solid rgba(6,150,215,0.25);border-radius:8px;overflow:hidden">
       <div style="padding:9px 14px;background:rgba(6,150,215,0.1);display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:11px;font-weight:600;color:var(--blue);font-family:'Source Code Pro',monospace;text-transform:uppercase;letter-spacing:.5px">Quantity Calculator</span>
-        <button onclick="loadRevitQtys()" style="font-size:10px;color:var(--green);background:rgba(52,199,123,0.1);border:1px solid rgba(52,199,123,0.3);border-radius:4px;padding:3px 8px;cursor:pointer">Load Revit Quantities</button>
+        <span style="font-size:11px;font-weight:600;color:#0696d7;font-family:monospace;text-transform:uppercase;letter-spacing:.5px">Quantity Calculator</span>
+        <button onclick="loadRevitQtys()" style="font-size:10px;color:#34c77b;background:rgba(52,199,123,0.1);border:1px solid rgba(52,199,123,0.3);border-radius:4px;padding:3px 8px;cursor:pointer">Load Revit Quantities</button>
       </div>
-      <div id="calc-rows" style="padding:4px 0"></div>
-      <div style="display:flex;gap:6px;padding:6px 12px;border-top:1px solid var(--border)">
-        <button onclick="addCalcRow('fixed')" style="font-size:10px;padding:4px 10px;border-radius:4px;cursor:pointer;background:rgba(6,150,215,0.1);border:1px solid rgba(6,150,215,0.25);color:var(--blue)">+ Number</button>
-        <button onclick="addCalcRow('lxw')" style="font-size:10px;padding:4px 10px;border-radius:4px;cursor:pointer;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.25);color:#8b5cf6">+ L&times;W</button>
-        <button onclick="addCalcRow('lxwxh')" style="font-size:10px;padding:4px 10px;border-radius:4px;cursor:pointer;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.25);color:#8b5cf6">+ L&times;W&times;H</button>
-        <button onclick="addCalcRow('revit')" style="font-size:10px;padding:4px 10px;border-radius:4px;cursor:pointer;background:rgba(52,199,123,0.1);border:1px solid rgba(52,199,123,0.25);color:var(--green)">+ Revit Qty</button>
+
+      <!-- Calc rows -->
+      <div id="calc-rows" style="padding:8px 0"></div>
+
+      <!-- Add row buttons -->
+      <div style="display:flex;gap:6px;padding:6px 12px;border-top:1px solid rgba(255,255,255,0.05)">
+        <button onclick="addCalcRow('fixed')"  style="font-size:10px;padding:4px 10px;border-radius:4px;cursor:pointer;background:rgba(6,150,215,0.1);border:1px solid rgba(6,150,215,0.25);color:#0696d7">+ Number</button>
+        <button onclick="addCalcRow('lxw')"    style="font-size:10px;padding:4px 10px;border-radius:4px;cursor:pointer;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.25);color:#8b5cf6">+ L &times; W</button>
+        <button onclick="addCalcRow('lxwxh')"  style="font-size:10px;padding:4px 10px;border-radius:4px;cursor:pointer;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.25);color:#8b5cf6">+ L &times; W &times; H</button>
+        <button onclick="addCalcRow('revit')"  style="font-size:10px;padding:4px 10px;border-radius:4px;cursor:pointer;background:rgba(52,199,123,0.1);border:1px solid rgba(52,199,123,0.25);color:#34c77b">+ Revit Qty</button>
       </div>
-      <div style="display:flex;justify-content:space-between;padding:10px 14px;background:rgba(6,150,215,0.08);border-top:1px solid rgba(6,150,215,0.2)">
-        <span style="font-size:13px;color:var(--text-sec)">Total Quantity</span>
-        <span style="font-family:'Source Code Pro',monospace;font-size:15px;font-weight:600;color:var(--text)" id="calc-total-qty">0</span>
+
+      <!-- Total -->
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(6,150,215,0.08);border-top:1px solid rgba(6,150,215,0.2)">
+        <span style="font-size:13px;color:#8b8d96">Total Quantity</span>
+        <span style="font-family:monospace;font-size:15px;font-weight:600;color:#e8e9ec" id="calc-total-qty">0</span>
       </div>
-      <div style="display:flex;justify-content:space-between;padding:10px 14px;background:rgba(52,199,123,0.06);border-top:1px solid rgba(52,199,123,0.2)">
-        <span style="font-size:13px;color:var(--text-sec)">Line Total</span>
-        <span style="font-family:'Source Code Pro',monospace;font-size:15px;font-weight:600;color:var(--green)" id="calc-line-total">--</span>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(52,199,123,0.06);border-top:1px solid rgba(52,199,123,0.2)">
+        <span style="font-size:13px;color:#8b8d96">Line Total</span>
+        <span style="font-family:monospace;font-size:15px;font-weight:600;color:#34c77b" id="calc-line-total">--</span>
       </div>
     </div>
-    <!-- Revit qty panel -->
+
+    <!-- Revit quantities panel -->
     <div id="revit-qty-panel" style="display:none;margin-top:10px;background:var(--surface2);border:1px solid rgba(139,92,246,0.25);border-radius:8px;overflow:hidden">
-      <div style="padding:8px 12px;background:rgba(139,92,246,0.1);font-size:11px;font-weight:600;color:#8b5cf6;font-family:'Source Code Pro',monospace;text-transform:uppercase;letter-spacing:.5px">Available Revit Quantities</div>
+      <div style="padding:8px 12px;background:rgba(139,92,246,0.1);font-size:11px;font-weight:600;color:#8b5cf6;font-family:monospace;text-transform:uppercase;letter-spacing:.5px">Available Revit Quantities</div>
       <div id="revit-qty-list" style="max-height:180px;overflow-y:auto"></div>
-      <div style="padding:7px 12px;font-size:11px;color:var(--text-ter);border-top:1px solid var(--border)">Tap any row to insert into calculator</div>
+      <div style="padding:7px 12px;font-size:11px;color:#4a4c55;border-top:1px solid rgba(255,255,255,0.04)">Tap any row to insert into calculator</div>
     </div>
+
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('modal-custom-item')">Cancel</button>
       <button class="btn btn-success" id="save-custom-btn" onclick="saveCustomItem()">Save to Sheet</button>
@@ -341,158 +357,634 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
   </div>
 </div>
 
+<!-- SHARE MODAL -->
+<div class="modal-overlay" id="share-modal">
+  <div class="modal">
+    <div class="modal-title">Share Project</div>
+    <div class="modal-sub">Share this BOQ project with a team member. They will receive an email with dashboard access and the Google Sheet will be shared with them.</div>
+    <div class="field"><label>Team member email *</label><input type="email" id="share-email" placeholder="colleague@company.com"></div>
+    <div class="field"><label>Personal message (optional)</label><textarea id="share-message" placeholder="Add a note..."></textarea></div>
+    <div id="share-preview" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;font-size:12px;color:var(--text-sec);margin-top:4px">
+      <div style="font-family:'Source Code Pro',monospace;color:var(--text-ter);margin-bottom:6px;font-size:10px;letter-spacing:.5px;text-transform:uppercase">Included in email</div>
+      <div id="share-preview-content"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeShareModal()">Cancel</button>
+      <button class="btn btn-success" id="share-send-btn" onclick="sendShare()">Send Invitation</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-// ── CONFIG ─────────────────────────────────────────────────────────────
-var GOOGLE_CLIENT_ID  = '919309576501-bpbd7783d3up2v2mo4dh171t6tjaceet.apps.googleusercontent.com';
-var SHEETS_API        = 'https://sheets.googleapis.com/v4/spreadsheets';
-var DRIVE_API         = 'https://www.googleapis.com/drive/v3';
-var LOCAL_SERVER      = 'http://localhost:5000';
-var SCOPES            = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile';
+var GOOGLE_CLIENT_ID = '919309576501-bpbd7783d3up2v2mo4dh171t6tjaceet.apps.googleusercontent.com';
+var SHEETS_API = 'https://sheets.googleapis.com/v4/spreadsheets';
+var LOCAL_SERVER = 'http://localhost:5000';
+var DASHBOARD_URL = 'https://sun250sw-alt.github.io/BOQConnect/dashboard.html';
 
-// ── STATE ──────────────────────────────────────────────────────────────
-var accessToken    = null;
-var tokenClient    = null;
+var user = null;
+var accessToken = null;
+var projects = [];
 var currentProject = null;
-var projects       = [];
-var boqItems       = [];
-var changeLogData  = [];
-var isRevitMode    = false;
-var userInfo       = {};
-var calcRows       = [];
-var revitQtys      = [];
+var boqItems = [];
+var changeLogData = [];
+var isRevitMode = false;
 
-// ── INIT ───────────────────────────────────────────────────────────────
 window.onload = function() {
-  // Check if opened from Revit DashboardCommand (has URL params)
   var params = getUrlParams();
+
+  // Check if opened from Revit with project data in URL
   if (params['spreadsheetId']) {
-    isRevitMode    = true;
-    accessToken    = params['token'] ? dec(params['token']) : null;
-    if (!accessToken) accessToken = sessionStorage.getItem('boq_token') || null;
-    if (accessToken) sessionStorage.setItem('boq_token', accessToken);
-    loadRevitProject(params);
-    return;
+    isRevitMode = true;
+    currentProject = {
+      spreadsheetId: dec(params['spreadsheetId']),
+      folderId:      dec(params['folderId'] || ''),
+      projectName:   dec(params['projectName'] || 'Project'),
+      clientName:    dec(params['clientName'] || ''),
+      discipline:    dec(params['discipline'] || ''),
+      currency:      dec(params['currency'] || 'GBP'),
+      contingency:   parseFloat(params['contingency'] || '10'),
+      prelim:        parseFloat(params['prelim'] || '5'),
+      projectId:     dec(params['projectId'] || ''),
+      lastSync:      dec(params['lastSync'] || ''),
+      budget:        parseFloat(params['budget'] || '0'),
+      budgetRef:     dec(params['budgetRef'] || '')
+    };
+
+    // Use access token from URL if provided by Revit addin
+    // This skips the Google sign-in entirely
+    var urlToken = params['token'] ? dec(params['token']) : '';
+    if (urlToken) {
+      accessToken = urlToken;
+      // Store in session so it persists on page interactions
+      sessionStorage.setItem('boq_token', urlToken);
+
+      // Set a minimal user object from Revit context
+      // Fetch real user info in background
+      user = { name: 'Revit User', email: '', picture: '' };
+
+      // Try to get real user info with the token
+      fetchUserInfo(function() {
+        sessionStorage.setItem('boq_user', JSON.stringify(user));
+        buildTopbar();
+        openProject(currentProject);
+      });
+      return;
+    }
   }
-  // Check sessionStorage for existing token
-  var storedToken = sessionStorage.getItem('boq_token');
-  if (storedToken) {
-    accessToken = storedToken;
-    showScreen('screen-selector');
-    initTopbar();
-    loadProjects();
-    return;
+
+  // Check for stored session token
+  var tok = sessionStorage.getItem('boq_token');
+  var usr = sessionStorage.getItem('boq_user');
+  if (tok && usr) {
+    accessToken = tok;
+    user = JSON.parse(usr);
+    buildTopbar();
+    if (isRevitMode && currentProject) { openProject(currentProject); }
+    else { showSelector(); }
+  } else {
+    showScreen('screen-signin');
+    buildTopbar();
   }
-  // Load Google Identity Services
-  loadGIS();
 };
 
-function loadGIS() {
-  var s = document.createElement('script');
-  s.src = 'https://accounts.google.com/gsi/client';
-  s.onload = function() {
-    tokenClient = google.accounts.oauth2.initTokenClient({
-      client_id: GOOGLE_CLIENT_ID,
-      scope: SCOPES,
-      callback: onTokenResponse
-    });
-  };
-  document.head.appendChild(s);
-}
+function dec(v) { try { return decodeURIComponent(v); } catch(e) { return v||''; } }
 
 function startGoogleSignIn() {
-  if (!tokenClient) {
-    showError('Google Sign-In not loaded. Please refresh.');
-    return;
-  }
-  tokenClient.requestAccessToken({ prompt: 'consent' });
-}
-
-function onTokenResponse(resp) {
-  if (resp.error) { showError('Sign-in failed: ' + resp.error); return; }
-  accessToken = resp.access_token;
-  sessionStorage.setItem('boq_token', accessToken);
-  fetchUserInfo(function() {
-    showScreen('screen-selector');
-    initTopbar();
-    loadProjects();
+  if (typeof google === 'undefined') { showToast('Google sign-in not available', 'error'); return; }
+  var client = google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope: 'https://www.googleapis.com/auth/spreadsheets.readonly https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
+    callback: function(response) {
+      if (response.access_token) {
+        accessToken = response.access_token;
+        fetchUserInfo(function() {
+          sessionStorage.setItem('boq_token', accessToken);
+          sessionStorage.setItem('boq_user', JSON.stringify(user));
+          buildTopbar();
+          if (isRevitMode && currentProject) { openProject(currentProject); }
+          else { showSelector(); }
+        });
+      } else { showToast('Sign-in failed. Please try again.', 'error'); }
+    }
   });
+  client.requestAccessToken();
 }
 
 function fetchUserInfo(cb) {
   apiGet('https://www.googleapis.com/oauth2/v2/userinfo', function(err, data) {
-    if (!err && data) userInfo = data;
+    if (!err && data) { user = { name: data.name||'User', email: data.email||'', picture: data.picture||'' }; }
     if (cb) cb();
   });
 }
 
-function initTopbar() {
-  document.getElementById('sign-out-btn').style.display = 'inline-flex';
-  document.getElementById('status-indicator').style.display = 'inline-flex';
-  if (userInfo.email) {
-    document.getElementById('user-info').textContent = userInfo.email;
-  }
+function deleteProject(i) {
+  var p = projects[i];
+  if (!p) return;
+  var confirmed = confirm(
+    'Delete "' + p.projectName + '" from your Google Drive?' +
+    '\n\nThis will permanently delete:\n' +
+    '- The Drive folder\n' +
+    '- The Google Sheet\n\n' +
+    'This cannot be undone.');
+  if (!confirmed) return;
+
+  // Delete the spreadsheet from Drive
+  var xhr = new XMLHttpRequest();
+  xhr.open('DELETE', 'https://www.googleapis.com/drive/v3/files/' + p.spreadsheetId, true);
+  xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4) {
+      if (xhr.status === 204 || xhr.status === 200) {
+        // Also delete the folder if we have it
+        if (p.folderId) {
+          var xhr2 = new XMLHttpRequest();
+          xhr2.open('DELETE', 'https://www.googleapis.com/drive/v3/files/' + p.folderId, true);
+          xhr2.setRequestHeader('Authorization', 'Bearer ' + accessToken);
+          xhr2.send();
+        }
+        projects.splice(i, 1);
+        renderProjectGrid();
+        showToast('"' + p.projectName + '" deleted from Drive', 'success');
+      } else {
+        showToast('Could not delete project. Check your permissions.', 'error');
+      }
+    }
+  };
+  xhr.send();
 }
 
-// ── PROJECT LOADING ────────────────────────────────────────────────────
+function triggerDashSync() {
+  var btn = document.getElementById('topbar-sync-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Syncing...'; }
+  showToast('Syncing from Google Sheets...', '');
+  if (currentProject) {
+    loadBOQFromSheets(currentProject.spreadsheetId);
+  }
+  setTimeout(function() {
+    if (btn) { btn.disabled = false; btn.innerHTML = '&#8635; Sync'; }
+  }, 3000);
+}
+
+function openFooterModal(id) {
+  var el = document.getElementById('modal-' + id);
+  if (el) el.classList.add('open');
+}
+
+function renderRecentlyChanged() {
+  var el    = document.getElementById('recent-content');
+  var badge = document.getElementById('recent-badge');
+  if (!el) return;
+
+  // History stored in sessionStorage - persists during browser session
+  var histKey = 'boq_hist_' + (currentProject ? currentProject.spreadsheetId : 'x');
+  var prevKey = 'boq_diff_' + (currentProject ? currentProject.spreadsheetId : 'x');
+
+  var history  = [];
+  var prevData = {};
+  try { history  = JSON.parse(sessionStorage.getItem(histKey) || '[]'); } catch(e) {}
+  try { prevData = JSON.parse(sessionStorage.getItem(prevKey) || '{}'); } catch(e) {}
+
+  // Build current snapshot
+  var currData = {};
+  for (var i = 0; i < boqItems.length; i++) {
+    var item = boqItems[i];
+    var key  = item.category + '|' + (item.description || item.typeName);
+    currData[key] = {
+      description: item.description || item.typeName,
+      category:    item.category,
+      total:       item.total,
+      rate:        item.rate,
+      quantity:    item.quantity
+    };
+  }
+
+  // Compare current vs previous and record changes
+  var now = new Date();
+  var nowStr = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) +
+    ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+
+  var newEntries = [];
+  var keys = Object.keys(currData);
+  for (var j = 0; j < keys.length; j++) {
+    var k    = keys[j];
+    var curr = currData[k];
+    var prev = prevData[k];
+
+    if (!prev) {
+      // Brand new item
+      if (curr.total > 0) {
+        newEntries.push({
+          description: curr.description,
+          category:    curr.category,
+          oldTotal:    0,
+          newTotal:    curr.total,
+          delta:       curr.total,
+          timestamp:   nowStr,
+          isNew:       true
+        });
+      }
+    } else if (Math.abs(curr.total - prev.total) > 0.01) {
+      // Price changed
+      newEntries.push({
+        description: curr.description,
+        category:    curr.category,
+        oldTotal:    prev.total,
+        newTotal:    curr.total,
+        delta:       curr.total - prev.total,
+        timestamp:   nowStr,
+        isNew:       false
+      });
+    }
+  }
+
+  // Prepend new entries to history
+  if (newEntries.length > 0) {
+    history = newEntries.concat(history);
+    if (history.length > 200) history = history.slice(0, 200);
+    try { sessionStorage.setItem(histKey, JSON.stringify(history)); } catch(e) {}
+  }
+
+  // Save current as previous for next comparison
+  try { sessionStorage.setItem(prevKey, JSON.stringify(currData)); } catch(e) {}
+
+  if (badge) badge.textContent = history.length + ' changes';
+
+  if (!history.length) {
+    el.innerHTML = '<div class="empty"><div style="font-size:13px;color:var(--text-ter)">No changes recorded yet. Sync from Revit to start tracking.</div></div>';
+    return;
+  }
+
+  var curr2 = getCurrencySymbol();
+  var html = '';
+  for (var h = 0; h < history.length; h++) {
+    var entry = history[h];
+    var isUp  = entry.delta > 0;
+    var color = isUp ? '#e85555' : '#34c77b';
+    var arrow = isUp ? '&#9650;' : '&#9660;';
+    var sign  = isUp ? '+' : '';
+    var newLabel = entry.isNew ? '<span style="color:var(--blue);font-size:10px;font-family:monospace;margin-left:6px;padding:1px 5px;background:var(--blue-dim);border-radius:3px">NEW</span>' : '';
+
+    html +=
+      '<div style="display:flex;align-items:center;justify-content:space-between;' +
+        'padding:9px 18px;border-bottom:1px solid var(--border)">' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="color:var(--text);font-weight:500;font-size:13px;' +
+            'white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' +
+            esc(entry.description) + newLabel +
+          '</div>' +
+          '<div style="font-size:11px;color:var(--text-ter);margin-top:2px;display:flex;gap:8px">' +
+            '<span>' + esc(entry.category) + '</span>' +
+            '<span>&#183;</span>' +
+            '<span style="font-family:monospace">' + entry.timestamp + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<div style="text-align:right;margin-left:12px;flex-shrink:0">' +
+          '<div style="font-family:monospace;font-size:13px;font-weight:600;color:var(--text)">' +
+            (entry.newTotal ? curr2 + entry.newTotal.toFixed(2) : '--') +
+          '</div>' +
+          '<div style="font-size:11px;color:' + color + ';font-family:monospace">' +
+            arrow + ' ' + sign + curr2 + Math.abs(entry.delta).toFixed(2) +
+          '</div>' +
+        '</div>' +
+      '</div>';
+  }
+  el.innerHTML = html;
+}
+
+// ── CUSTOM ITEM ───────────────────────────────────────────────────────
+var calcRows = [];
+var revitQtys = [];
+
+function openAddItemModal() {
+  calcRows = [];
+  document.getElementById('ci-itemno').value      = '';
+  document.getElementById('ci-description').value = '';
+  document.getElementById('ci-category').value    = '';
+  document.getElementById('ci-unit').value        = '';
+  document.getElementById('ci-rate').value        = '';
+  document.getElementById('revit-qty-panel').style.display = 'none';
+  renderCalcRows();
+  addCalcRow('fixed');
+  document.getElementById('modal-custom-item').classList.add('open');
+}
+
+function addCalcRow(type) {
+  var id = Date.now() + Math.random();
+  calcRows.push({ id: id, type: type, label: '', l: '', w: '', h: '', multiplier: '1', revitKey: '' });
+  renderCalcRows();
+}
+
+function removeCalcRow(id) {
+  calcRows = calcRows.filter(function(r){ return r.id !== id; });
+  renderCalcRows();
+}
+
+function renderCalcRows() {
+  var el = document.getElementById('calc-rows');
+  if (!el) return;
+  var st = 'border-radius:4px;color:#e8e9ec;font-size:12px;padding:5px 6px;font-family:monospace;background:#13151a;border:1px solid rgba(255,255,255,0.1)';
+  var html = '';
+  for (var i = 0; i < calcRows.length; i++) {
+    var r = calcRows[i];
+    var rid = r.id;
+    html += '<div style="display:flex;align-items:center;gap:6px;padding:7px 12px;border-bottom:1px solid rgba(255,255,255,0.04)">';
+    if (r.type === 'fixed') {
+      html +=
+        '<span style="font-size:10px;color:#4a4c55;width:60px;flex-shrink:0">Number</span>' +
+        '<input type="number" placeholder="0.00" value="' + (r.l||'') + '" data-id="' + rid + '" data-field="l" oninput="onCalcInput(this)" style="flex:1;' + st + '">' +
+        '<span style="font-size:11px;color:#0696d7;font-family:monospace;min-width:60px;text-align:right">' + (parseFloat(r.l)||0).toFixed(2) + '</span>';
+    } else if (r.type === 'lxw') {
+      html +=
+        '<span style="font-size:10px;color:#4a4c55;width:60px;flex-shrink:0">L&times;W</span>' +
+        '<input type="number" placeholder="L" value="' + (r.l||'') + '" data-id="' + rid + '" data-field="l" oninput="onCalcInput(this)" style="width:60px;' + st + '">' +
+        '<span style="color:#4a4c55">&times;</span>' +
+        '<input type="number" placeholder="W" value="' + (r.w||'') + '" data-id="' + rid + '" data-field="w" oninput="onCalcInput(this)" style="width:60px;' + st + '">' +
+        '<span style="font-size:11px;color:#8b5cf6;font-family:monospace;min-width:60px;text-align:right">' + ((parseFloat(r.l)||0)*(parseFloat(r.w)||0)).toFixed(2) + '</span>';
+    } else if (r.type === 'lxwxh') {
+      html +=
+        '<span style="font-size:10px;color:#4a4c55;width:60px;flex-shrink:0">L&times;W&times;H</span>' +
+        '<input type="number" placeholder="L" value="' + (r.l||'') + '" data-id="' + rid + '" data-field="l" oninput="onCalcInput(this)" style="width:46px;' + st + '">' +
+        '<span style="color:#4a4c55">&times;</span>' +
+        '<input type="number" placeholder="W" value="' + (r.w||'') + '" data-id="' + rid + '" data-field="w" oninput="onCalcInput(this)" style="width:46px;' + st + '">' +
+        '<span style="color:#4a4c55">&times;</span>' +
+        '<input type="number" placeholder="H" value="' + (r.h||'') + '" data-id="' + rid + '" data-field="h" oninput="onCalcInput(this)" style="width:46px;' + st + '">' +
+        '<span style="font-size:11px;color:#8b5cf6;font-family:monospace;min-width:60px;text-align:right">' + ((parseFloat(r.l)||0)*(parseFloat(r.w)||0)*(parseFloat(r.h)||1)).toFixed(2) + '</span>';
+    } else if (r.type === 'revit') {
+      html +=
+        '<span style="font-size:10px;color:#4a4c55;width:60px;flex-shrink:0">Revit</span>' +
+        '<span style="flex:1;font-size:12px;color:#34c77b;font-family:monospace">' + esc(r.label||'Select from panel') + '</span>' +
+        '<input type="number" placeholder="x1" value="' + (r.multiplier||'1') + '" data-id="' + rid + '" data-field="multiplier" oninput="onCalcInput(this)" style="width:50px;' + st + '">' +
+        '<span style="font-size:11px;color:#34c77b;font-family:monospace;min-width:60px;text-align:right">' + ((parseFloat(r.l)||0)*(parseFloat(r.multiplier)||1)).toFixed(2) + '</span>';
+    }
+    html +=
+      '<button data-id="' + rid + '" onclick="removeCalcRowBtn(this)" style="color:#4a4c55;background:none;border:none;cursor:pointer;font-size:16px;padding:0 4px;flex-shrink:0">&times;</button>' +
+      '</div>';
+  }
+  el.innerHTML = html;
+  updateCalcTotal();
+}
+
+function onCalcInput(el) {
+  var id    = parseFloat(el.getAttribute("data-id"));
+  var field = el.getAttribute("data-field");
+  updateCalcRow(id, field, el.value);
+}
+
+function removeCalcRowBtn(el) {
+  var id = parseFloat(el.getAttribute("data-id"));
+  removeCalcRow(id);
+}
+
+function updateCalcRow(id, field, val) {
+  for (var i = 0; i < calcRows.length; i++) {
+    if (calcRows[i].id === id) {
+      calcRows[i][field] = val;
+      break;
+    }
+  }
+  renderCalcRows();
+}
+
+function calcRowValue(r) {
+  if (r.type === 'fixed')  return parseFloat(r.l) || 0;
+  if (r.type === 'lxw')    return (parseFloat(r.l)||0) * (parseFloat(r.w)||0);
+  if (r.type === 'lxwxh')  return (parseFloat(r.l)||0) * (parseFloat(r.w)||0) * (parseFloat(r.h)||1);
+  if (r.type === 'revit')  return (parseFloat(r.l)||0) * (parseFloat(r.multiplier)||1);
+  return 0;
+}
+
+function calcFormulaString(r) {
+  if (r.type === 'fixed')  return String(r.l||0);
+  if (r.type === 'lxw')    return (r.l||0) + ' x ' + (r.w||0);
+  if (r.type === 'lxwxh')  return (r.l||0) + ' x ' + (r.w||0) + ' x ' + (r.h||0);
+  if (r.type === 'revit')  return (r.label||'Revit') + ' x ' + (r.multiplier||1);
+  return '0';
+}
+
+function updateCalcTotal() {
+  var total = calcRows.reduce(function(sum, r){ return sum + calcRowValue(r); }, 0);
+  var rate  = parseFloat(document.getElementById('ci-rate').value) || 0;
+  var curr  = getCurrencySymbol();
+  var totalEl = document.getElementById('calc-total-qty');
+  var lineEl  = document.getElementById('calc-line-total');
+  if (totalEl) totalEl.textContent = total.toFixed(2);
+  if (lineEl)  lineEl.textContent  = rate > 0 ? curr + (total * rate).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2}) : '--';
+}
+
+// Also update when rate changes
+document.addEventListener('input', function(e) {
+  if (e.target && e.target.id === 'ci-rate') updateCalcTotal();
+});
+
+function loadRevitQtys() {
+  var panel = document.getElementById('revit-qty-panel');
+  var list  = document.getElementById('revit-qty-list');
+  panel.style.display = 'block';
+
+  if (!boqItems || !boqItems.length) {
+    list.innerHTML = '<div style="padding:12px;font-size:12px;color:#4a4c55">No BOQ items loaded. Sync from Revit first.</div>';
+    return;
+  }
+
+  revitQtys = boqItems.map(function(item) {
+    return { label: item.description || item.typeName, category: item.category, qty: item.quantity, unit: item.unit };
+  }).filter(function(i){ return i.qty > 0; });
+
+  var html = '';
+  for (var i = 0; i < revitQtys.length; i++) {
+    var q = revitQtys[i];
+    html += '<div onclick="insertRevitQty(' + i + ')" style="display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;font-size:12px">' +
+      '<div><div style="color:#e8e9ec">' + esc(q.label) + '</div>' +
+      '<div style="font-size:10px;color:#4a4c55">' + esc(q.category) + '</div></div>' +
+      '<div style="font-family:monospace;color:#34c77b;font-size:12px">' + q.qty + ' ' + esc(q.unit||'') + '</div>' +
+      '</div>';
+  }
+  list.innerHTML = html || '<div style="padding:12px;font-size:12px;color:#4a4c55">No quantities available.</div>';
+}
+
+function insertRevitQty(idx) {
+  var q = revitQtys[idx];
+  if (!q) return;
+  // Find existing revit row or add new one
+  var existing = calcRows.filter(function(r){ return r.type === 'revit' && !r.l; });
+  if (existing.length > 0) {
+    existing[0].l       = q.qty;
+    existing[0].label   = q.label;
+    existing[0].revitKey = q.label;
+  } else {
+    calcRows.push({ id: Date.now(), type: 'revit', label: q.label, l: q.qty, multiplier: '1', revitKey: q.label });
+  }
+  document.getElementById('revit-qty-panel').style.display = 'none';
+  renderCalcRows();
+}
+
+function saveCustomItem() {
+  var itemNo  = document.getElementById('ci-itemno').value.trim();
+  var desc    = document.getElementById('ci-description').value.trim();
+  var cat     = document.getElementById('ci-category').value.trim();
+  var unit    = document.getElementById('ci-unit').value.trim();
+  var rate    = parseFloat(document.getElementById('ci-rate').value) || 0;
+
+  if (!itemNo || !desc) { showToast('Item number and description are required', 'error'); return; }
+
+  var qty     = calcRows.reduce(function(s,r){ return s + calcRowValue(r); }, 0);
+  var formula = calcRows.map(calcFormulaString).join(' + ');
+  var total   = Math.round(qty * rate * 100) / 100;
+
+  if (!currentProject || !currentProject.spreadsheetId) {
+    showToast('No project loaded', 'error'); return;
+  }
+
+  var btn = document.getElementById('save-custom-btn');
+  btn.disabled = true; btn.textContent = 'Saving...';
+
+  // Append row to BOQ sheet: A=ItemNo, B=Desc, C=Cat, D=TypeName, E=Qty, F=Unit, G=Rate, H=Total, I=Status
+  var range  = 'BOQ!A:I';
+  var values = [[itemNo, desc, cat || 'Custom', 'Custom', qty.toFixed(2), unit, rate.toFixed(2), total.toFixed(2), 'Custom']];
+  var url    = 'https://sheets.googleapis.com/v4/spreadsheets/' +
+    currentProject.spreadsheetId + '/values/' + encodeURIComponent(range) +
+    ':append?valueInputOption=RAW&insertDataOption=INSERT_ROWS';
+
+  var tok = accessToken || sessionStorage.getItem('boq_token') || '';
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', url, true);
+  xhr.setRequestHeader('Authorization', 'Bearer ' + tok);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4) {
+      btn.disabled = false; btn.textContent = 'Save to Sheet';
+      if (xhr.status === 200) {
+        closeModal('modal-custom-item');
+        showToast('Custom item saved to Sheet', 'success');
+        // Add to local boqItems immediately
+        boqItems.push({
+          itemNumber: itemNo, description: desc, category: cat||'Custom',
+          typeName: 'Custom', quantity: qty, unit: unit, rate: rate,
+          total: total, status: 'custom'
+        });
+        renderDashboard();
+      } else {
+        showToast('Save failed: ' + xhr.status + '. Check Sheet permissions.', 'error');
+      }
+    }
+  };
+  xhr.send(JSON.stringify({ values: values }));
+}
+
+function signOut() {
+  sessionStorage.removeItem('boq_token');
+  sessionStorage.removeItem('boq_user');
+  accessToken = null; user = null; projects = []; currentProject = null;
+  closeProfileDropdown();
+  showScreen('screen-signin');
+  buildTopbar();
+  showToast('Signed out', 'success');
+}
+
+function buildTopbar() {
+  var el = document.getElementById('topbar-right');
+  if (!user) { el.innerHTML = ''; return; }
+  var initials = (user.name||'U').split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase();
+  var showSync = (currentProject != null);
+  el.innerHTML =
+    '<div class="status-dot" id="status-dot"></div>' +
+    '<span id="status-text" style="font-size:12px;color:var(--text-sec)">Live</span>' +
+    (showSync ? '<button class="btn btn-primary" id="topbar-sync-btn" onclick="triggerDashSync()" style="font-size:12px;padding:6px 14px">&#8635; Sync</button>' : '') +
+    '<div class="profile-wrap">' +
+      '<div class="profile-btn" onclick="toggleProfileDropdown()">' +
+        '<div class="profile-avatar">' + (user.picture ? '<img src="'+user.picture+'" alt="">' : initials) + '</div>' +
+        '<span>' + (user.name||user.email) + '</span> &#9662;' +
+      '</div>' +
+      '<div class="profile-dropdown" id="profile-dropdown">' +
+        '<div class="pd-header"><div class="pd-name">'+esc(user.name)+'</div><div class="pd-email">'+esc(user.email)+'</div></div>' +
+        '<div class="pd-item" onclick="goToSelector()">&#128203; My Projects</div>' +
+        '<div class="pd-item danger" onclick="signOut()">&#8594; Sign Out</div>' +
+      '</div>' +
+    '</div>';
+}
+
+function toggleProfileDropdown() { var d=document.getElementById('profile-dropdown'); if(d) d.classList.toggle('open'); }
+function closeProfileDropdown()  { var d=document.getElementById('profile-dropdown'); if(d) d.classList.remove('open'); }
+document.addEventListener('click', function(e) { var w=document.querySelector('.profile-wrap'); if(w&&!w.contains(e.target)) closeProfileDropdown(); });
+
+function showSelector() {
+  currentProject = null;
+  buildTopbar();
+  showScreen('screen-selector');
+  loadProjects();
+}
+
+function goToSelector() { currentProject=null; showSelector(); }
+
 function loadProjects() {
   var grid = document.getElementById('project-grid');
   grid.innerHTML = '<div style="text-align:center;padding:60px;grid-column:1/-1"><div class="spinner"></div><div style="margin-top:16px;color:var(--text-sec);font-size:14px">Searching your Drive...</div></div>';
-
   var q = encodeURIComponent("mimeType='application/vnd.google-apps.spreadsheet' and name contains 'BOQ'");
-  apiGet(DRIVE_API + '/files?q=' + q + '&fields=files(id,name,properties,modifiedTime,parents)&pageSize=50', function(err, data) {
+  apiGet('https://www.googleapis.com/drive/v3/files?q='+q+'&fields=files(id,name,properties,modifiedTime,parents)&pageSize=50', function(err, data) {
     if (err || !data || !data.files || !data.files.length) { showNoProjects(); return; }
 
     var files = data.files;
     var projs = files.map(function(f) {
-      var p = f.properties || {};
+      var p = f.properties||{};
       return {
         spreadsheetId: f.id,
         projectName:   f.name.replace(' -- BOQ','').replace(' BOQ',''),
-        clientName:    p.clientName || '',
-        discipline:    p.discipline || '',
+        clientName:    p.clientName||'',
+        discipline:    p.discipline||'',
         currency:      'GBP',
         contingency:   10,
         prelim:        5,
         budget:        0,
         budgetRef:     '',
         lastSync:      f.modifiedTime ? f.modifiedTime.substring(0,19).replace('T',' ') : '',
-        folderId:      (f.parents && f.parents[0]) || '',
+        folderId:      (f.parents&&f.parents[0])||'',
         grandTotal:    0,
         itemCount:     0
       };
     });
 
+    // Load Summary + BOQ data for each project to get currency, budget, totals
     var done = 0;
     function checkDone() {
       done++;
-      if (done >= projs.length) { projects = projs; renderProjectGrid(); }
+      if (done >= projs.length) {
+        projects = projs;
+        renderProjectGrid();
+      }
     }
 
     projs.forEach(function(proj) {
-      // Read Summary for currency/budget
-      apiGet(SHEETS_API + '/' + proj.spreadsheetId + '/values/Cost%20Summary!A1:B30', function(err, d) {
+      // Read Summary tab for currency/budget/contingency
+      apiGet('https://sheets.googleapis.com/v4/spreadsheets/' + proj.spreadsheetId +
+        '/values/Cost%20Summary!A1:B30', function(err, d) {
         if (!err && d && d.values) {
           d.values.forEach(function(row) {
             if (!row || row.length < 2) return;
-            var k = (row[0]||'').toLowerCase().trim(), v = (row[1]||'').toString().trim();
+            var k = (row[0]||'').toLowerCase().trim();
+            var v = (row[1]||'').toString().trim();
             if (k === 'currency'    && v) proj.currency    = v.toUpperCase();
-            if (k === 'contingency' && v) proj.contingency = parseFloat(v) || 10;
-            if (k === 'prelims'     && v) proj.prelim      = parseFloat(v) || 5;
-            if (k === 'budget'      && v) proj.budget      = parseFloat(v) || 0;
+            if (k === 'contingency' && v) proj.contingency = parseFloat(v)||10;
+            if (k === 'prelims'     && v) proj.prelim      = parseFloat(v)||5;
+            if (k === 'budget'      && v) proj.budget      = parseFloat(v)||0;
             if (k === 'budget ref'  && v) proj.budgetRef   = v;
           });
         }
-        // Read BOQ for item count and total
-        apiGet(SHEETS_API + '/' + proj.spreadsheetId + '/values/BOQ!G:H', function(err2, d2) {
+        // Read BOQ tab for item count and grand total
+        apiGet('https://sheets.googleapis.com/v4/spreadsheets/' + proj.spreadsheetId +
+          '/values/BOQ!G:H', function(err2, d2) {
           if (!err2 && d2 && d2.values) {
             var total = 0, count = 0;
             for (var i = 1; i < d2.values.length; i++) {
               var row = d2.values[i];
-              if (row && row[1] && parseFloat(row[1]) > 0) { total += parseFloat(row[1]); count++; }
+              if (row && row[1] && parseFloat(row[1]) > 0) {
+                total += parseFloat(row[1]);
+                count++;
+              }
             }
-            proj.grandTotal = total; proj.itemCount = count;
+            proj.grandTotal = total;
+            proj.itemCount  = count;
           }
           checkDone();
         });
@@ -505,155 +997,178 @@ function renderProjectGrid() {
   var grid = document.getElementById('project-grid');
   if (!projects.length) { showNoProjects(); return; }
   var html = '';
-  projects.forEach(function(p) {
-    var sym  = getSymbol(p.currency);
-    var cont = (p.contingency || 10) / 100;
-    var prel = (p.prelim || 5) / 100;
-    var grand = p.grandTotal * (1 + prel) * (1 + cont);
-    html += '<div class="proj-card" onclick="openProject(' + JSON.stringify(p).replace(/"/g,'&quot;') + ')">' +
-      '<div class="proj-name">' + esc(p.projectName) + '</div>' +
-      '<div class="proj-meta">' + [p.clientName, p.discipline].filter(Boolean).join(' &middot; ') + '</div>' +
-      '<div class="proj-stats">' +
-        '<div class="proj-stat"><span class="proj-stat-val">' + (p.itemCount || '--') + '</span><span class="proj-stat-lbl">items</span></div>' +
-        '<div class="proj-stat"><span class="proj-stat-val">' + (p.grandTotal ? sym + Math.round(grand).toLocaleString() : '--') + '</span><span class="proj-stat-lbl">grand total</span></div>' +
-        '<div class="proj-stat"><span class="proj-stat-val" style="font-size:10px">' + (p.lastSync ? p.lastSync.substring(0,10) : '--') + '</span><span class="proj-stat-lbl">last sync</span></div>' +
-      '</div>' +
-    '</div>';
-  });
+  for (var i=0;i<projects.length;i++) {
+    var p = projects[i];
+    var curr2 = p.currency || 'GBP';
+    var syms2 = {'GBP': String.fromCharCode(163),'USD':'$','EUR':String.fromCharCode(8364),'AED':'AED ','SGD':'S$','LKR':'Rs ','AUD':'A$'};
+    var sym2  = syms2[curr2] || (curr2 + ' ');
+    var overBudget = p.budget > 0 && p.grandTotal > p.budget;
+    var underBudget = p.budget > 0 && p.grandTotal <= p.budget;
+
+    html +=
+      '<div class="project-card" style="position:relative">' +
+        '<div onclick="openProjectByIndex(' + i + ')" style="cursor:pointer;padding-right:60px">' +
+          '<div class="pc-name">' + esc(p.projectName) + '</div>' +
+          '<div class="pc-client">' + esc(p.clientName || 'No client') + '</div>' +
+          '<div class="pc-meta" style="margin-bottom:10px">' +
+            (p.discipline ? '<span class="pc-tag">' + esc(p.discipline) + '</span>' : '') +
+            '<span class="pc-tag">' + curr2 + '</span>' +
+          '</div>' +
+          // Metrics row
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">' +
+            '<div style="background:var(--surface2);border-radius:4px;padding:7px 10px">' +
+              '<div style="font-size:10px;color:var(--text-ter);font-family:monospace;margin-bottom:2px">ITEMS</div>' +
+              '<div style="font-size:15px;font-weight:600;color:var(--blue);font-family:Rajdhani,sans-serif">' + (p.itemCount || '--') + '</div>' +
+            '</div>' +
+            '<div style="background:var(--surface2);border-radius:4px;padding:7px 10px">' +
+              '<div style="font-size:10px;color:var(--text-ter);font-family:monospace;margin-bottom:2px">GRAND TOTAL</div>' +
+              '<div style="font-size:15px;font-weight:600;color:var(--green);font-family:Rajdhani,sans-serif">' +
+                (p.grandTotal ? sym2 + p.grandTotal.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2}) : '--') +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          (p.budget > 0 ?
+            '<div style="font-size:11px;color:' + (overBudget?'#e85555':underBudget?'#34c77b':'var(--text-ter)') + ';font-family:monospace">' +
+              (overBudget ? '&#9650; Over budget' : '&#9660; Under budget') +
+              ' | Budget: ' + sym2 + p.budget.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2}) +
+            '</div>' : '') +
+          (p.lastSync ? '<div class="pc-sync" style="margin-top:8px">Last sync: ' + esc(p.lastSync) + '</div>' : '') +
+        '</div>' +
+        '<button onclick="event.stopPropagation();deleteProject(' + i + ')" ' +
+          'title="Delete project from Drive" ' +
+          'style="position:absolute;top:12px;right:12px;background:var(--red-dim);' +
+            'border:1px solid var(--red-bdr);color:var(--red);border-radius:4px;' +
+            'padding:4px 10px;font-size:11px;cursor:pointer;font-family:monospace">' +
+          '&#215; Delete' +
+        '</button>' +
+      '</div>';
+  }
   grid.innerHTML = html;
 }
 
 function showNoProjects() {
   document.getElementById('project-grid').innerHTML =
-    '<div style="text-align:center;padding:60px;grid-column:1/-1;color:var(--text-ter)">' +
-    '<div style="font-size:32px;opacity:.4;margin-bottom:12px">&#128203;</div>' +
-    '<div style="font-family:Rajdhani,sans-serif;font-size:18px;color:var(--text-sec)">No BOQ projects found</div>' +
-    '<div style="font-size:13px;margin-top:6px">Create a project from Revit using the New Project button</div>' +
-    '</div>';
+    '<div style="text-align:center;padding:60px;grid-column:1/-1;color:var(--text-sec)">' +
+    '<div style="font-size:36px;margin-bottom:12px;opacity:.3">&#128203;</div>' +
+    '<div style="font-family:Rajdhani,sans-serif;font-size:18px;margin-bottom:8px">No projects found</div>' +
+    '<div style="font-size:13px;color:var(--text-ter)">Projects shared with you will appear here.<br>Ask the project creator to share from their Revit dashboard.</div></div>';
 }
 
-// ── OPEN PROJECT ───────────────────────────────────────────────────────
+function openProjectByIndex(i) { openProject(projects[i]); }
+
 function openProject(project) {
-  currentProject = typeof project === 'string' ? JSON.parse(project) : project;
+  currentProject = project;
   buildTopbar();
   showScreen('screen-dashboard');
-  document.getElementById('d-project-name').textContent = currentProject.projectName || 'Project';
-  document.getElementById('d-project-sub').textContent  = [currentProject.clientName, currentProject.discipline].filter(Boolean).join(' · ');
-  document.getElementById('d-sheet-link').href = 'https://docs.google.com/spreadsheets/d/' + currentProject.spreadsheetId;
-  document.getElementById('m-last-sync').textContent = 'Last sync: ' + (currentProject.lastSync || '--');
-  document.getElementById('share-btn').style.display    = isRevitMode ? 'inline-flex' : 'none';
-  var pb = document.getElementById('programme-btn'); if (pb) pb.style.display = 'inline-flex';
-  var cb = document.getElementById('cashflow-btn');  if (cb) cb.style.display = 'inline-flex';
-  var ab = document.getElementById('add-item-btn');  if (ab) ab.style.display = 'inline-block';
-  loadBOQFromSheets(currentProject.spreadsheetId);
+  document.getElementById('d-project-name').textContent = project.projectName||'Project';
+  document.getElementById('d-project-sub').textContent = [project.clientName,project.discipline].filter(Boolean).join(' | ');
+  document.getElementById('d-sheet-link').href = 'https://docs.google.com/spreadsheets/d/'+project.spreadsheetId;
+  if (project.lastSync) document.getElementById('d-last-sync').textContent = 'Last sync: '+project.lastSync;
+  document.getElementById('share-btn').style.display = isRevitMode ? 'inline-flex' : 'none';
+  var pb=document.getElementById('programme-btn');if(pb)pb.style.display='inline-flex';
+  var cb=document.getElementById('cashflow-btn');if(cb)cb.style.display='inline-flex';
+  var ab=document.getElementById('add-item-btn');if(ab)ab.style.display='inline-block';
+  loadBOQFromSheets(project.spreadsheetId);
 }
 
-function buildTopbar() {
-  // Topbar already has static links
-}
-
-function loadRevitProject(params) {
-  currentProject = {
-    spreadsheetId: dec(params['spreadsheetId'] || ''),
-    folderId:      dec(params['folderId']       || ''),
-    projectName:   dec(params['projectName']    || 'Project'),
-    clientName:    dec(params['clientName']     || ''),
-    discipline:    dec(params['discipline']     || ''),
-    currency:      dec(params['currency']       || 'GBP'),
-    contingency:   parseFloat(params['contingency'] || '10'),
-    prelim:        5,
-    budget:        parseFloat(params['budget']       || '0'),
-    budgetRef:     dec(params['budgetRef']      || ''),
-    lastSync:      dec(params['lastSync']       || '')
-  };
-  openProject(currentProject);
-}
-
-// ── BOQ DATA ───────────────────────────────────────────────────────────
 function loadBOQFromSheets(id) {
   setStatus('loading');
-  apiGet(SHEETS_API + '/' + id + '/values/BOQ!A:I', function(err, data) {
-    if (err || !data || !data.values) { setStatus('offline'); showToast('Could not read Sheet.','error'); return; }
+
+  // Read BOQ data
+  apiGet(SHEETS_API+'/'+id+'/values/BOQ!A:I', function(err, data) {
+    if (err||!data||!data.values) {
+      setStatus('offline');
+      showToast('Could not read Sheet. Check permissions.','error');
+      return;
+    }
     parseSheetData(data.values);
 
-    // Read Summary tab for currency/budget
-    apiGet(SHEETS_API + '/' + id + '/values/Cost%20Summary!A1:B30', function(err2, d2) {
-      if (!err2 && d2 && d2.values) parseSummaryConfig(d2.values);
-      setStatus('online');
-      renderDashboard();
-    });
+    // Read Summary tab to get stored config (currency, contingency, prelim)
+    apiGet(SHEETS_API+'/'+id+'/values/Cost%20Summary!A1:B25', function(errS, dataS) {
+      if (!errS && dataS && dataS.values) {
+        parseSummaryConfig(dataS.values);
+      }
 
-    // Read Change Log
-    apiGet(SHEETS_API + '/' + id + '/values/Change%20Log!A:E', function(err3, d3) {
-      if (!err3 && d3 && d3.values) parseChangeLog(d3.values);
+      // Read Change Log
+      apiGet(SHEETS_API+'/'+id+'/values/Change%20Log!A:E', function(err2, data2) {
+        if (!err2&&data2&&data2.values) parseChangeLog(data2.values);
+        renderDashboard();
+        setStatus('online');
+        var n=new Date();
+        document.getElementById('d-last-sync').textContent=
+          'Last sync: '+pad(n.getHours())+':'+pad(n.getMinutes())+':'+pad(n.getSeconds());
+      });
     });
   });
+}
+
+// Read currency/contingency/prelim/budget stored in Summary tab
+function parseSummaryConfig(rows) {
+  if (!rows || !currentProject) return;
+  for (var i = 0; i < rows.length; i++) {
+    var row = rows[i];
+    if (!row || row.length < 2) continue;
+    var key = (row[0] || '').toString().trim().toLowerCase();
+    var val = (row[1] || '').toString().trim();
+    if (key === 'currency' && val) {
+      currentProject.currency = val.toUpperCase();
+    }
+    if (key === 'contingency' && val) {
+      var pct = parseFloat(val.replace('%',''));
+      if (!isNaN(pct)) currentProject.contingency = pct;
+    }
+    if (key === 'prelims' || key === 'preliminary') {
+      var pct2 = parseFloat(val.replace('%',''));
+      if (!isNaN(pct2)) currentProject.prelim = pct2;
+    }
+    if (key === 'budget' && val) {
+      var bud = parseFloat(val.replace(/[^0-9.]/g,''));
+      if (!isNaN(bud) && bud > 0) currentProject.budget = bud;
+    }
+    if (key === 'budget ref' && val) {
+      currentProject.budgetRef = val;
+    }
+  }
+  // Only re-render metric cards, not the whole BOQ table
+  // (renderBOQTable is already called by loadBOQFromSheets)
+  updateMetrics();
 }
 
 function parseSheetData(rows) {
   // Save snapshot for diff comparison BEFORE overwriting
   if (boqItems && boqItems.length && currentProject) {
-    var prevKey     = 'boq_prev_' + currentProject.spreadsheetId;
-    var prevMetaKey = 'boq_meta_' + currentProject.spreadsheetId;
-    var snapshot = {}, prevSub = 0;
+    var prevKey2     = 'boq_prev_' + currentProject.spreadsheetId;
+    var prevMetaKey2 = 'boq_meta_' + currentProject.spreadsheetId;
+    var snapshot2 = {}, prevSub2 = 0;
     for (var pi = 0; pi < boqItems.length; pi++) {
-      var bi = boqItems[pi];
-      if (bi.status === 'deleted') continue;
-      var pk = bi.category + '|' + (bi.description || bi.typeName);
-      snapshot[pk] = bi.total;
-      prevSub += bi.total;
+      var bi2 = boqItems[pi];
+      if (bi2.status === 'deleted') continue;
+      var pk2 = bi2.category + '|' + (bi2.description || bi2.typeName);
+      snapshot2[pk2] = bi2.total; prevSub2 += bi2.total;
     }
-    var p2 = currentProject || {};
-    var prevPrel  = prevSub * ((p2.prelim||5)/100);
-    var prevGrand = prevSub + prevPrel + (prevSub+prevPrel)*((p2.contingency||10)/100);
-    try { sessionStorage.setItem(prevKey, JSON.stringify(snapshot)); } catch(e) {}
-    try { sessionStorage.setItem(prevMetaKey, JSON.stringify({sub:prevSub,grand:prevGrand})); } catch(e) {}
+    var pp = currentProject || {};
+    var pgrand = prevSub2 * (1+(pp.prelim||5)/100) * (1+(pp.contingency||10)/100);
+    try { sessionStorage.setItem(prevKey2, JSON.stringify(snapshot2)); } catch(e) {}
+    try { sessionStorage.setItem(prevMetaKey2, JSON.stringify({sub:prevSub2,grand:pgrand})); } catch(e) {}
   }
   boqItems = [];
-  if (!rows || rows.length < 2) return;
-  for (var i = 1; i < rows.length; i++) {
-    var r = rows[i]; if (!r || r.length < 4) continue;
-    var qty = parseFloat(r[4]) || 0, rate = parseFloat(r[6]) || 0;
-    boqItems.push({
-      itemNumber:  r[0] || '',
-      description: r[1] || '',
-      category:    r[2] || '',
-      typeName:    r[3] || '',
-      quantity:    qty,
-      unit:        r[5] || '',
-      rate:        rate,
-      total:       qty * rate,
-      status:      (r[8] || '').toLowerCase()
-    });
+  if (!rows||rows.length<2) return;
+  for (var i=1;i<rows.length;i++) {
+    var r=rows[i]; if(!r||r.length<4) continue;
+    var qty=parseFloat(r[4])||0, rate=parseFloat(r[6])||0;
+    boqItems.push({ itemNumber:r[0]||'', description:r[1]||'', category:r[2]||'', typeName:r[3]||'', quantity:qty, unit:r[5]||'', rate:rate, total:qty*rate, status:(r[8]||'').toLowerCase() });
   }
-}
-
-function parseSummaryConfig(rows) {
-  if (!rows || !currentProject) return;
-  rows.forEach(function(row) {
-    if (!row || row.length < 2) return;
-    var k = (row[0]||'').toString().trim().toLowerCase();
-    var v = (row[1]||'').toString().trim();
-    if (k === 'currency'                  && v) currentProject.currency    = v.toUpperCase();
-    if (k === 'contingency'               && v) currentProject.contingency = parseFloat(v) || 10;
-    if (k === 'prelims'||k==='preliminary'&& v) currentProject.prelim      = parseFloat(v) || 5;
-    if (k === 'budget'                    && v) currentProject.budget      = parseFloat(v) || 0;
-    if (k === 'budget ref'                && v) currentProject.budgetRef   = v;
-  });
-  // Only update metrics, not the whole table
-  updateMetrics();
 }
 
 function parseChangeLog(rows) {
   changeLogData = [];
-  if (!rows || rows.length < 2) return;
-  for (var i = 1; i < rows.length; i++) {
-    var r = rows[i]; if (!r || !r.length) continue;
+  if (!rows||rows.length<2) return;
+  for (var i=1;i<rows.length;i++) {
+    var r=rows[i]; if(!r||!r.length) continue;
     changeLogData.push({ timestamp:r[0]||'', totalItems:parseInt(r[1])||0, missingCount:parseInt(r[2])||0, deletedCount:parseInt(r[3])||0, estimatedTotal:parseFloat(r[4])||0 });
   }
 }
 
-// ── RENDER ─────────────────────────────────────────────────────────────
 function renderDashboard() {
   renderBOQTable();
   renderSummary();
@@ -661,231 +1176,197 @@ function renderDashboard() {
   renderChangeLog();
   updateMetrics();
   renderRecentlyChanged();
+  matchBOQHeight();
+}
+
+function matchBOQHeight() {
+  // Match BOQ scroll height to sidebar height
+  setTimeout(function() {
+    var sidebar = document.querySelector('.two-col > div:last-child');
+    var boqWrap = document.getElementById('boq-scroll-wrap');
+    if (sidebar && boqWrap) {
+      var h = sidebar.offsetHeight;
+      if (h > 200) boqWrap.style.maxHeight = h + 'px';
+    }
+  }, 100);
 }
 
 function renderBOQTable() {
-  var tbody  = document.getElementById('boq-tbody');
-  var table  = document.getElementById('boq-table');
-  var empty  = document.getElementById('boq-empty');
-  var badge  = document.getElementById('items-badge');
-  var missBadge = document.getElementById('missing-badge');
-  if (!tbody) return;
+  var tbody=document.getElementById('boq-tbody'),table=document.getElementById('boq-table'),empty=document.getElementById('boq-empty');
+  var curr=getCurrencySymbol();
+  if (!boqItems.length){table.style.display='none';empty.style.display='block';document.getElementById('items-badge').textContent='0 items';return;}
+  table.style.display='table';empty.style.display='none';
+  document.getElementById('items-badge').textContent=boqItems.length+' items';
 
-  if (!boqItems.length) { table.style.display='none'; empty.style.display='block'; badge.textContent='-- items'; return; }
+  // Load previous totals from sessionStorage for diff comparison
+  var prevKey='boq_prev_'+(currentProject?currentProject.spreadsheetId:'x');
+  var prevTotals={};
+  try{prevTotals=JSON.parse(sessionStorage.getItem(prevKey)||'{}');}catch(e){}
 
-  // Load prev totals for diff
-  var prevKey = 'boq_prev_' + (currentProject ? currentProject.spreadsheetId : 'x');
-  var prevTotals = {};
-  try { prevTotals = JSON.parse(sessionStorage.getItem(prevKey) || '{}'); } catch(e) {}
+  // NOTE: prevTotals are saved in parseSheetData BEFORE new data loads
+  // Do not overwrite here - that would erase the diff on re-render
 
-  var html = '', missingCount = 0;
-  boqItems.forEach(function(r) {
-    var isDel    = r.status.indexOf('deleted') > -1;
+  var html='';
+  for(var i=0;i<boqItems.length;i++){
+    var r=boqItems[i];
+    var isDel=r.status.indexOf('deleted')>-1||r.status.indexOf('eleted')>-1,isMis=!isDel&&(!r.unit||!r.rate||!r.quantity);
+    var cls=isMis?'row-amber':isDel?'row-red':'';
+
+    // Build specific missing field indicators
     var isCustom = r.status === 'custom';
-    // Only warn about missing Sheet fields (not Revit params)
-    var isMis    = !isDel && !isCustom && (!r.unit || !r.rate || !r.quantity);
-    var cls      = isDel ? 'row-red' : isMis ? 'row-amber' : '';
-    if (isMis) missingCount++;
-
-    // Status pill
-    var pill = '';
-    if (isCustom)     pill = '<span class="status-pill" style="background:rgba(139,92,246,0.15);color:#8b5cf6;border:1px solid rgba(139,92,246,0.3)">&#9998; Custom</span>';
-    else if (isDel)   pill = '<span class="status-pill cb-red">&#215; Deleted</span>';
-    else if (isMis) {
-      var mf = [];
-      if (!r.unit)     mf.push('Unit');
-      if (!r.rate)     mf.push('Rate');
-      if (!r.quantity) mf.push('Qty');
-      pill = '<span class="status-pill cb-amber">&#9888; ' + mf.join(', ') + '</span>';
-    } else             pill = '<span class="status-pill cb-green">&#10003; OK</span>';
-
-    // Diff indicator
-    var itemKey  = r.category + '|' + (r.description || r.typeName);
-    var diffHtml = '<span style="color:var(--text-ter);font-size:11px">--</span>';
-    if (prevTotals.hasOwnProperty(itemKey) && r.total) {
-      var delta = r.total - prevTotals[itemKey];
-      if (Math.abs(delta) > 0.01) {
-        var dCol = delta > 0 ? '#e85555' : '#34c77b';
-        diffHtml = '<span style="color:'+dCol+';font-family:monospace;font-size:11px;white-space:nowrap">' + (delta>0?'&#9650;':'&#9660;') + ' ' + (delta>0?'+':'') + fmtC(Math.abs(delta)) + '</span>';
-      }
-    } else if (r.total && !prevTotals.hasOwnProperty(itemKey)) {
-      diffHtml = '<span style="color:var(--blue);font-family:monospace;font-size:11px;font-weight:600">NEW</span>';
-    }
-
-    // Total display - deleted shows as negative with strikethrough
+    // For deleted items show total as negative with strikethrough
     var totalHtml = isDel
       ? '<span style="color:var(--red);text-decoration:line-through;font-family:monospace">-' + fmtC(r.total) + '</span>'
       : (r.total ? fmtC(r.total) : '--');
+    var pill = '';
+    if (isCustom) {
+      pill = '<span class="status-pill" style="background:rgba(139,92,246,0.15);color:#8b5cf6;border:1px solid rgba(139,92,246,0.3)">&#9998; Custom</span>';
+    } else if (isDel) {
+      pill = '<span class="status-pill cb-red">&#215; Deleted</span>';
+    } else if (isMis) {
+      var missingFields = [];
+      // Only check fields that should be set in the Sheet
+      if (!r.unit  || r.unit.trim()  === '') missingFields.push('Unit');
+      if (!r.rate  || r.rate === 0)          missingFields.push('Rate');
+      if (!r.quantity || r.quantity === 0)   missingFields.push('Qty');
+      if (missingFields.length > 0) {
+        pill = '<span class="status-pill cb-amber" title="Missing: ' + missingFields.join(', ') + '">&#9888; ' + missingFields.join(', ') + '</span>';
+      } else {
+        pill = '<span class="status-pill cb-amber">&#9888; Check Revit</span>';
+      }
+    } else {
+      pill = '<span class="status-pill cb-green">&#10003; OK</span>';
+    }
 
-    html += '<tr class="' + cls + '">' +
-      '<td class="item-no">' + esc(r.itemNumber || '--') + '</td>' +
-      '<td>' + esc(r.description || r.typeName) + '</td>' +
-      '<td style="font-size:11px;color:var(--text-sec)">' + esc(r.category) + '</td>' +
-      '<td style="font-family:monospace;font-size:12px">' + (r.quantity || '--') + '</td>' +
-      '<td style="font-size:11px;color:var(--text-sec)">' + esc(r.unit) + '</td>' +
-      '<td style="font-family:monospace;font-size:12px">' + (r.rate ? fmtC(r.rate) : '--') + '</td>' +
-      '<td class="total-col">' + totalHtml + '</td>' +
-      '<td style="text-align:right">' + diffHtml + '</td>' +
-      '<td>' + pill + '</td>' +
-    '</tr>';
-  });
+    // Diff from last sync
+    var itemKey=r.category+'|'+(r.description||r.typeName);
+    var diffHtml='<span style="color:var(--text-ter);font-size:11px">--</span>';
+    if(prevTotals.hasOwnProperty(itemKey)&&r.total){
+      var delta=r.total-prevTotals[itemKey];
+      if(Math.abs(delta)>0.01){
+        var sign=delta>0?'+':'';
+        var dColor=delta>0?'#e85555':'#34c77b';
+        var dArrow=delta>0?'&#9650;':'&#9660;';
+        diffHtml='<span style="color:'+dColor+';font-family:monospace;font-size:11px;white-space:nowrap">'+dArrow+' '+sign+fmtC(Math.abs(delta))+'</span>';
+      }
+    }else if(r.total&&!prevTotals.hasOwnProperty(itemKey)){
+      diffHtml='<span style="color:var(--blue);font-family:monospace;font-size:11px;font-weight:600">NEW</span>';
+    }
 
-  tbody.innerHTML = html;
-  table.style.display = 'table';
-  empty.style.display = 'none';
-  badge.textContent   = boqItems.length + ' items';
-  missBadge.style.display = missingCount > 0 ? 'inline-block' : 'none';
-  missBadge.textContent   = missingCount + ' missing';
-}
-
-function updateMetrics() {
-  // Exclude deleted items from totals
-  var activeItems = boqItems.filter(function(i){ return i.status !== 'deleted'; });
-  var sub    = activeItems.reduce(function(s,i){ return s+i.total; }, 0);
-  var p      = currentProject || {};
-  var prel   = sub * ((p.prelim||5)/100);
-  var cont   = (sub+prel) * ((p.contingency||10)/100);
-  var grand  = sub + prel + cont;
-  var sym    = getCurrencySymbol();
-
-  // Load prev for diff
-  var prevMetaKey = 'boq_meta_' + (currentProject ? currentProject.spreadsheetId : 'x');
-  var prevMeta = {};
-  try { prevMeta = JSON.parse(sessionStorage.getItem(prevMetaKey) || '{}'); } catch(e) {}
-  // Do NOT save here - only save in parseSheetData before new data loads
-
-  document.getElementById('m-items').textContent = activeItems.length || '--';
-
-  var subDiff   = prevMeta.sub   ? sub   - prevMeta.sub   : null;
-  var grandDiff = prevMeta.grand ? grand - prevMeta.grand : null;
-
-  setMetricVal('m-sub',   sym + fmt(sub),   subDiff,   'm-sub-diff',   'excl. prelims & contingency');
-  setMetricVal('m-grand', sym + fmt(grand), grandDiff, 'm-grand-diff', 'incl. prelims & contingency');
-
-  // Budget card
-  var bud = p.budget || 0;
-  var mbc = document.getElementById('m-budget-card');
-  var mbv = document.getElementById('m-budget');
-  var mbs = document.getElementById('m-budget-sub');
-  if (bud > 0) {
-    var vari = grand - bud;
-    var over = vari > 0;
-    mbv.textContent         = sym + fmt(bud);
-    mbs.textContent         = (over?'▲ ':'▼ ') + sym + fmt(Math.abs(vari)) + (over?' over':' under') + ' budget';
-    mbv.style.color         = 'var(--amber)';
-    mbs.style.color         = over ? 'var(--red)' : 'var(--green)';
-    mbc.style.borderTopColor = over ? 'var(--red)' : 'var(--green)';
-    mbc.querySelector('.m-lbl').textContent = over ? 'OVER BUDGET' : 'UNDER BUDGET';
-  } else {
-    mbv.textContent = '--'; mbs.textContent = 'no budget set';
-    mbv.style.color = 'var(--text-sec)';
+    html+='<tr class="'+cls+'">' +
+      '<td class="item-no">'+esc(r.itemNumber)+'</td>' +
+      '<td class="desc">'+esc(r.description||r.typeName)+'</td>' +
+      '<td>'+esc(r.category)+'</td>' +
+      '<td class="qty">'+r.quantity+'</td>' +
+      '<td>'+esc(r.unit)+'</td>' +
+      '<td style="font-family:monospace">'+(r.rate?curr+r.rate:'--')+'</td>' +
+      '<td class="total-col">'+totalHtml+'</td>' +
+      '<td style="text-align:right">'+diffHtml+'</td>' +
+      '<td>'+pill+'</td></tr>';
   }
-}
-
-function setMetricVal(id, val, diff, subId, defaultSub) {
-  var el  = document.getElementById(id);
-  var sel = document.getElementById(subId);
-  if (el) el.textContent = val;
-  if (sel && diff !== null && Math.abs(diff) > 0.01) {
-    var sign = diff > 0 ? '+' : '';
-    var col  = diff > 0 ? 'var(--red)' : 'var(--green)';
-    sel.innerHTML = '<span style="color:' + col + ';font-size:11px">' + (diff>0?'&#9650;':'&#9660;') + ' ' + sign + fmtC(Math.abs(diff)) + ' from last sync</span>';
-  } else if (sel) {
-    sel.textContent = defaultSub;
-  }
+  tbody.innerHTML=html;
 }
 
 function renderSummary() {
-  var el = document.getElementById('summary-content');
-  if (!el || !currentProject) return;
-  var active = boqItems.filter(function(i){ return i.status !== 'deleted'; });
-  var sub    = active.reduce(function(s,i){ return s+i.total; }, 0);
-  var p      = currentProject;
-  var sym    = getCurrencySymbol();
-  var prel   = sub * ((p.prelim||5)/100);
-  var cont   = (sub+prel) * ((p.contingency||10)/100);
-  var grand  = sub + prel + cont;
-
-  var rows = [
-    ['Contract Sum',              sym + fmt(sub)],
-    ['Preliminaries (' + (p.prelim||5) + '%)',   sym + fmt(prel)],
-    ['Contingency (' + (p.contingency||10) + '%)', sym + fmt(cont)],
-    ['<strong>Grand Total</strong>',  '<strong>' + sym + fmt(grand) + '</strong>']
-  ];
-  el.innerHTML = rows.map(function(r) {
-    return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">' +
-      '<span style="color:var(--text-sec)">' + r[0] + '</span>' +
-      '<span style="font-family:monospace">' + r[1] + '</span></div>';
-  }).join('');
+  var el=document.getElementById('summary-content'), p=currentProject||{};
+  var sub=boqItems.reduce(function(s,i){return s+i.total;},0);
+  if (!sub) { el.innerHTML='<div class="empty" style="padding:20px"><div style="font-size:13px;color:var(--text-ter)">No rate data yet</div></div>'; return; }
+  var prel=sub*((p.prelim||5)/100), cont=(sub+prel)*((p.contingency||10)/100), grand=sub+prel+cont;
+  el.innerHTML=sr('Subtotal',fmtC(sub))+sr('Prelims ('+(p.prelim||5)+'%)',fmtC(prel))+sr('Contingency ('+(p.contingency||10)+'%)',fmtC(cont))+'<div class="sum-row total"><div class="sum-label">GRAND TOTAL</div><div class="sum-value">'+fmtC(grand)+'</div></div>';
+  function sr(l,v){return '<div class="sum-row"><div class="sum-label">'+l+'</div><div class="sum-value">'+v+'</div></div>';}
 }
 
 function renderCategories() {
-  var el = document.getElementById('cat-list');
-  if (!el) return;
-  var active = boqItems.filter(function(i){ return i.status !== 'deleted'; });
-  var cats = {};
-  active.forEach(function(i){ cats[i.category] = (cats[i.category]||0) + i.total; });
-  var total = active.reduce(function(s,i){ return s+i.total; }, 0);
-  var sorted = Object.keys(cats).sort(function(a,b){ return cats[b]-cats[a]; });
-  var sym = getCurrencySymbol();
-  el.innerHTML = sorted.slice(0,8).map(function(c) {
-    var pct = total > 0 ? (cats[c]/total*100) : 0;
-    return '<div class="cat-item">' +
-      '<div class="cat-name">' + esc(c||'Other') + '</div>' +
-      '<div class="cat-bar-wrap"><div class="cat-bar" style="width:' + pct.toFixed(1) + '%"></div></div>' +
-      '<div class="cat-val">' + sym + fmt(cats[c]) + '</div>' +
-    '</div>';
-  }).join('');
+  var el=document.getElementById('category-content'), cats={};
+  for (var i=0;i<boqItems.length;i++){var item=boqItems[i],cat=item.category||'Other';cats[cat]=(cats[cat]||0)+item.total;}
+  var keys=Object.keys(cats); if (!keys.length){el.innerHTML='<div class="empty" style="padding:20px"><div style="font-size:13px;color:var(--text-ter)">No data</div></div>';return;}
+  keys.sort(function(a,b){return cats[b]-cats[a];}); var max=cats[keys[0]]||1, html='';
+  for (var j=0;j<keys.length;j++){var pct=Math.round((cats[keys[j]]/max)*100);html+='<div class="cat-row"><div class="cat-header"><span class="cat-name">'+esc(keys[j])+'</span><span class="cat-val">'+fmtC(cats[keys[j]])+'</span></div><div class="cat-bar-bg"><div class="cat-bar-fill" style="width:'+pct+'%"></div></div></div>';}
+  el.innerHTML=html;
 }
 
 function renderChangeLog() {
-  var el = document.getElementById('change-log');
-  if (!el || !changeLogData.length) return;
-  var sym = getCurrencySymbol();
-  var html = changeLogData.slice().reverse().slice(0,10).map(function(l) {
-    return '<div class="log-item">' +
-      '<div><span style="color:var(--text-sec)">' + l.totalItems + ' items</span>' +
-      (l.deletedCount > 0 ? ' &nbsp;<span style="color:var(--red);font-size:10px">' + l.deletedCount + ' deleted</span>' : '') +
-      (l.missingCount > 0 ? ' &nbsp;<span style="color:var(--amber);font-size:10px">' + l.missingCount + ' missing</span>' : '') +
-      '<br><span style="font-family:monospace;font-size:11px;color:var(--text)">' + sym + fmt(l.estimatedTotal) + '</span></div>' +
-      '<span class="log-time">' + (l.timestamp||'').substring(0,16) + '</span>' +
-    '</div>';
-  }).join('');
-  el.innerHTML = html;
+  var el=document.getElementById('log-content'), badge=document.getElementById('log-badge');
+  badge.textContent=changeLogData.length+' entries';
+  if (!changeLogData.length){el.innerHTML='<div class="empty"><div style="font-size:13px;color:var(--text-ter)">No sync history</div></div>';return;}
+  var recent=changeLogData.slice().reverse().slice(0,10), html='';
+  for (var i=0;i<recent.length;i++){var e=recent[i],dotColor=e.missingCount>0?'var(--amber)':'var(--green)';html+='<div class="log-row"><div class="log-dot" style="background:'+dotColor+'"></div><div style="flex:1"><div class="log-desc">Synced <strong>'+e.totalItems+' items</strong>'+(e.missingCount>0?' &mdash; <span style="color:var(--amber)">'+e.missingCount+' missing</span>':'')+(e.deletedCount>0?' &mdash; <span style="color:var(--red)">'+e.deletedCount+' deleted</span>':'')+'</div><div class="log-time">'+e.timestamp+'</div></div><div style="font-family:Source Code Pro,monospace;font-size:12px;color:var(--text-sec)">'+fmtC(e.estimatedTotal)+'</div></div>';}
+  el.innerHTML=html;
 }
 
-function renderRecentlyChanged() {
-  var el = document.getElementById('recently-changed');
-  if (!el) return;
-  var prevKey    = 'boq_prev_' + (currentProject ? currentProject.spreadsheetId : 'x');
-  var prevTotals = {};
-  try { prevTotals = JSON.parse(sessionStorage.getItem(prevKey) || '{}'); } catch(e) {}
-  var changed = [];
-  boqItems.forEach(function(r) {
-    if (r.status === 'deleted') return;
-    var k = r.category + '|' + (r.description || r.typeName);
-    if (prevTotals.hasOwnProperty(k)) {
-      var delta = r.total - prevTotals[k];
-      if (Math.abs(delta) > 0.01) changed.push({ name: r.description || r.typeName, delta: delta });
+function updateMetrics() {
+  var activeItems=boqItems.filter(function(i){return i.status!=='deleted';});
+  var sub=activeItems.reduce(function(s,i){return s+i.total;},0);
+  var p=currentProject||{};
+  var prel=sub*((p.prelim||5)/100);
+  var cont=(sub+prel)*((p.contingency||10)/100);
+  var grand=sub+prel+cont;
+
+  // Load previous metric totals for comparison (saved in parseSheetData)
+  var prevMetaKey='boq_meta_'+(currentProject?currentProject.spreadsheetId:'x');
+  var prevMeta={};
+  try{prevMeta=JSON.parse(sessionStorage.getItem(prevMetaKey)||'{}');}catch(e){}
+  // Do NOT save here - only save before new data loads to preserve the diff
+
+  document.getElementById('m-items').textContent=activeItems.length||'--';
+
+  // Budget vs actual
+  var budgetEl = document.getElementById('m-budget');
+  var budgetSubEl = document.getElementById('m-budget-sub');
+  var budget = currentProject ? (currentProject.budget || 0) : 0;
+  if (budgetEl) {
+    if (budget > 0) {
+      budgetEl.textContent = fmtC(budget);
+      if (budgetSubEl) {
+        var diff = grand - budget;
+        var over = diff > 0;
+        budgetSubEl.innerHTML = '<span style="color:' + (over?'#e85555':'#34c77b') + '">' +
+          (over ? '&#9650; ' : '&#9660; ') + (over ? '+' : '') + fmtC(Math.abs(diff)) +
+          (over ? ' over budget' : ' under budget') + '</span>';
+      }
+    } else {
+      budgetEl.textContent = 'Not set';
+      if (budgetSubEl) budgetSubEl.textContent = 'Set in project setup';
     }
-  });
-  if (!changed.length) { el.textContent = 'No changes since last sync'; return; }
-  var sym = getCurrencySymbol();
-  el.innerHTML = changed.slice(0,5).map(function(c) {
-    var col  = c.delta > 0 ? 'var(--red)' : 'var(--green)';
-    var sign = c.delta > 0 ? '+' : '';
-    return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px">' +
-      '<span style="color:var(--text-sec)">' + esc(c.name) + '</span>' +
-      '<span style="color:' + col + ';font-family:monospace;font-size:11px">' + sign + sym + fmt(Math.abs(c.delta)) + '</span>' +
-    '</div>';
-  }).join('');
+  }
+
+  // Subtotal
+  document.getElementById('m-subtotal').textContent=sub?fmtC(sub):'--';
+  var subSub=document.getElementById('m-subtotal-sub');
+  if(subSub){
+    if(prevMeta.sub&&Math.abs(sub-prevMeta.sub)>0.01){
+      var sd=sub-prevMeta.sub;
+      subSub.innerHTML='<span style="color:'+(sd>0?'#e85555':'#34c77b')+';font-size:11px">'+(sd>0?'&#9650;':'&#9660;')+' '+(sd>0?'+':'')+fmtC(Math.abs(sd))+' from last</span>';
+    }else{
+      subSub.textContent='Excl. contingency';
+    }
+  }
+
+  // Grand total
+  document.getElementById('m-grand').textContent=grand?fmtC(grand):'--';
+  var grandSub=document.getElementById('m-grand-sub');
+  if(grandSub){
+    if(prevMeta.grand&&Math.abs(grand-prevMeta.grand)>0.01){
+      var gd=grand-prevMeta.grand;
+      grandSub.innerHTML='<span style="color:'+(gd>0?'#e85555':'#34c77b')+';font-size:11px">'+(gd>0?'&#9650;':'&#9660;')+' '+(gd>0?'+':'')+fmtC(Math.abs(gd))+' from last</span>';
+    }else{
+      grandSub.textContent='Incl. contingency';
+    }
+  }
 }
 
-// ── NAVIGATION ─────────────────────────────────────────────────────────
-function goToSelector() {
-  currentProject = null; boqItems = [];
-  showScreen('screen-selector');
-  loadProjects();
+function openCashFlow() {
+  if (!currentProject || !currentProject.spreadsheetId) return;
+  var url = 'https://sun250sw-alt.github.io/BOQConnect/cashflow.html' +
+    '?spreadsheetId=' + encodeURIComponent(currentProject.spreadsheetId) +
+    '&projectName='   + encodeURIComponent(currentProject.projectName || '') +
+    '&currency='      + encodeURIComponent(currentProject.currency || 'GBP') +
+    '&contingency='   + (currentProject.contingency || 10) +
+    '&prelim='        + (currentProject.prelim || 5) +
+    '&budget='        + (currentProject.budget || 0) +
+    '&budgetRef='     + encodeURIComponent(currentProject.budgetRef || '') +
+    (accessToken ? '&token=' + encodeURIComponent(accessToken) : '');
+  window.open(url, '_blank');
 }
 
 function openProgramme() {
@@ -899,287 +1380,54 @@ function openProgramme() {
   window.open(url, '_blank');
 }
 
-function openCashFlow() {
-  if (!currentProject || !currentProject.spreadsheetId) return;
-  var tok = accessToken || sessionStorage.getItem('boq_token') || '';
-  var url = 'https://sun250sw-alt.github.io/BOQConnect/cashflow.html' +
-    '?spreadsheetId=' + encodeURIComponent(currentProject.spreadsheetId) +
-    '&currency='      + encodeURIComponent(currentProject.currency || 'GBP') +
-    '&contingency='   + (currentProject.contingency || 10) +
-    '&prelim='        + (currentProject.prelim || 5) +
-    '&budget='        + (currentProject.budget || 0) +
-    '&budgetRef='     + encodeURIComponent(currentProject.budgetRef || '') +
-    (tok ? '&token=' + encodeURIComponent(tok) : '');
-  window.open(url, '_blank');
+function openShareModal() {
+  var p=currentProject||{};
+  document.getElementById('share-preview-content').innerHTML='<b>'+esc(p.projectName||'--')+'</b><br>Client: '+esc(p.clientName||'--')+'<br>Discipline: '+esc(p.discipline||'--');
+  document.getElementById('share-modal').classList.add('open');
 }
 
-// ── SHARE ──────────────────────────────────────────────────────────────
-function openShareModal() { openModal('modal-share'); }
-
-function confirmShare() {
-  var email = document.getElementById('share-email').value.trim();
-  var role  = document.getElementById('share-role').value;
-  if (!email) { showToast('Enter an email address','error'); return; }
-  if (!currentProject) return;
-  var btn = document.getElementById('share-confirm-btn');
-  btn.disabled = true; btn.textContent = 'Sharing...';
-
-  var tok = accessToken || sessionStorage.getItem('boq_token') || '';
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', 'https://www.googleapis.com/drive/v3/files/' + currentProject.spreadsheetId + '/permissions', true);
-  xhr.setRequestHeader('Authorization', 'Bearer ' + tok);
-  xhr.setRequestHeader('Content-Type', 'application/json');
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState === 4) {
-      btn.disabled = false; btn.textContent = 'Share & Send Email';
-      if (xhr.status === 200) { closeModal('modal-share'); showToast('Project shared with ' + email, 'success'); }
-      else showToast('Share failed: ' + xhr.status, 'error');
-    }
-  };
-  xhr.send(JSON.stringify({ role: role, type: 'user', emailAddress: email }));
+function closeShareModal() {
+  document.getElementById('share-modal').classList.remove('open');
+  document.getElementById('share-email').value='';
+  document.getElementById('share-message').value='';
 }
 
-// ── CUSTOM ITEM ────────────────────────────────────────────────────────
-function openAddItemModal() {
-  calcRows = [];
-  ['ci-itemno','ci-description','ci-category','ci-unit','ci-rate'].forEach(function(id){
-    var el = document.getElementById(id); if(el) el.value='';
+function sendShare() {
+  var email=document.getElementById('share-email').value.trim();
+  if (!email||email.indexOf('@')<0){showToast('Please enter a valid email address','error');return;}
+  var btn=document.getElementById('share-send-btn'); btn.disabled=true; btn.textContent='Sending...';
+  xhrPost(LOCAL_SERVER+'/share-project',{email:email,message:document.getElementById('share-message').value.trim()},function(err,data){
+    btn.disabled=false; btn.textContent='Send Invitation';
+    if (err||(data&&!data.success)){showToast('Could not send. Make sure Revit is open.','error');return;}
+    closeShareModal(); showToast('Invitation sent to '+email,'success');
   });
-  document.getElementById('revit-qty-panel').style.display = 'none';
-  renderCalcRows();
-  addCalcRow('fixed');
-  openModal('modal-custom-item');
 }
 
-function addCalcRow(type) {
-  calcRows.push({ id: Date.now() + Math.random(), type: type, l:'', w:'', h:'', multiplier:'1', label:'', revitKey:'' });
-  renderCalcRows();
-}
-
-function removeCalcRow(id) {
-  calcRows = calcRows.filter(function(r){ return r.id !== id; });
-  renderCalcRows();
-}
-
-function removeCalcRowBtn(el) {
-  removeCalcRow(parseFloat(el.getAttribute('data-id')));
-}
-
-function onCalcInput(el) {
-  var id = parseFloat(el.getAttribute('data-id'));
-  var field = el.getAttribute('data-field');
-  for (var i = 0; i < calcRows.length; i++) {
-    if (calcRows[i].id === id) { calcRows[i][field] = el.value; break; }
-  }
-  updateCalcTotal();
-  renderCalcRows();
-}
-
-function renderCalcRows() {
-  var el = document.getElementById('calc-rows');
-  if (!el) return;
-  var st = 'border-radius:4px;color:var(--text);font-size:12px;padding:5px 6px;font-family:monospace;background:var(--surface);border:1px solid var(--border2)';
-  var html = '';
-  for (var i = 0; i < calcRows.length; i++) {
-    var r = calcRows[i], rid = r.id;
-    html += '<div style="display:flex;align-items:center;gap:6px;padding:7px 12px;border-bottom:1px solid var(--border)">';
-    if (r.type === 'fixed') {
-      html += '<span style="font-size:10px;color:var(--text-ter);width:60px;flex-shrink:0">Number</span>' +
-        '<input type="number" placeholder="0.00" value="' + (r.l||'') + '" data-id="' + rid + '" data-field="l" oninput="onCalcInput(this)" style="flex:1;' + st + '">' +
-        '<span style="font-size:11px;color:var(--blue);font-family:monospace;min-width:60px;text-align:right">' + (parseFloat(r.l)||0).toFixed(2) + '</span>';
-    } else if (r.type === 'lxw') {
-      html += '<span style="font-size:10px;color:var(--text-ter);width:60px;flex-shrink:0">L&times;W</span>' +
-        '<input type="number" placeholder="L" value="' + (r.l||'') + '" data-id="' + rid + '" data-field="l" oninput="onCalcInput(this)" style="width:60px;' + st + '">' +
-        '<span style="color:var(--text-ter)">&times;</span>' +
-        '<input type="number" placeholder="W" value="' + (r.w||'') + '" data-id="' + rid + '" data-field="w" oninput="onCalcInput(this)" style="width:60px;' + st + '">' +
-        '<span style="font-size:11px;color:#8b5cf6;font-family:monospace;min-width:60px;text-align:right">' + ((parseFloat(r.l)||0)*(parseFloat(r.w)||0)).toFixed(2) + '</span>';
-    } else if (r.type === 'lxwxh') {
-      html += '<span style="font-size:10px;color:var(--text-ter);width:60px;flex-shrink:0">L&times;W&times;H</span>' +
-        '<input type="number" placeholder="L" value="' + (r.l||'') + '" data-id="' + rid + '" data-field="l" oninput="onCalcInput(this)" style="width:46px;' + st + '">' +
-        '<span style="color:var(--text-ter)">&times;</span>' +
-        '<input type="number" placeholder="W" value="' + (r.w||'') + '" data-id="' + rid + '" data-field="w" oninput="onCalcInput(this)" style="width:46px;' + st + '">' +
-        '<span style="color:var(--text-ter)">&times;</span>' +
-        '<input type="number" placeholder="H" value="' + (r.h||'') + '" data-id="' + rid + '" data-field="h" oninput="onCalcInput(this)" style="width:46px;' + st + '">' +
-        '<span style="font-size:11px;color:#8b5cf6;font-family:monospace;min-width:60px;text-align:right">' + ((parseFloat(r.l)||0)*(parseFloat(r.w)||0)*(parseFloat(r.h)||1)).toFixed(2) + '</span>';
-    } else if (r.type === 'revit') {
-      html += '<span style="font-size:10px;color:var(--text-ter);width:60px;flex-shrink:0">Revit</span>' +
-        '<span style="flex:1;font-size:12px;color:var(--green);font-family:monospace">' + esc(r.label||'Select from panel') + '</span>' +
-        '<input type="number" placeholder="x1" value="' + (r.multiplier||'1') + '" data-id="' + rid + '" data-field="multiplier" oninput="onCalcInput(this)" style="width:50px;' + st + '">' +
-        '<span style="font-size:11px;color:var(--green);font-family:monospace;min-width:60px;text-align:right">' + ((parseFloat(r.l)||0)*(parseFloat(r.multiplier)||1)).toFixed(2) + '</span>';
-    }
-    html += '<button data-id="' + rid + '" onclick="removeCalcRowBtn(this)" style="color:var(--text-ter);background:none;border:none;cursor:pointer;font-size:16px;padding:0 4px;flex-shrink:0">&times;</button></div>';
-  }
-  el.innerHTML = html;
-  updateCalcTotal();
-}
-
-function calcRowValue(r) {
-  if (r.type === 'fixed')  return parseFloat(r.l) || 0;
-  if (r.type === 'lxw')    return (parseFloat(r.l)||0) * (parseFloat(r.w)||0);
-  if (r.type === 'lxwxh')  return (parseFloat(r.l)||0) * (parseFloat(r.w)||0) * (parseFloat(r.h)||1);
-  if (r.type === 'revit')  return (parseFloat(r.l)||0) * (parseFloat(r.multiplier)||1);
-  return 0;
-}
-
-function updateCalcTotal() {
-  var total = calcRows.reduce(function(s,r){ return s + calcRowValue(r); }, 0);
-  var rate  = parseFloat(document.getElementById('ci-rate').value) || 0;
-  var sym   = getCurrencySymbol();
-  var tEl   = document.getElementById('calc-total-qty');
-  var lEl   = document.getElementById('calc-line-total');
-  if (tEl) tEl.textContent = total.toFixed(2);
-  if (lEl) lEl.textContent = rate > 0 ? sym + (total*rate).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2}) : '--';
-}
-
-function loadRevitQtys() {
-  var panel = document.getElementById('revit-qty-panel');
-  var list  = document.getElementById('revit-qty-list');
-  panel.style.display = 'block';
-  if (!boqItems || !boqItems.length) {
-    list.innerHTML = '<div style="padding:12px;font-size:12px;color:var(--text-ter)">No BOQ items loaded.</div>';
-    return;
-  }
-  revitQtys = boqItems.filter(function(i){ return i.quantity > 0 && i.status !== 'deleted'; });
-  var html = '';
-  for (var i = 0; i < revitQtys.length; i++) {
-    var q = revitQtys[i];
-    html += '<div onclick="insertRevitQty(' + i + ')" style="display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border);cursor:pointer;font-size:12px">' +
-      '<div><div style="color:var(--text)">' + esc(q.description||q.typeName) + '</div>' +
-      '<div style="font-size:10px;color:var(--text-ter)">' + esc(q.category) + '</div></div>' +
-      '<div style="font-family:monospace;color:var(--green);font-size:12px">' + q.quantity + ' ' + esc(q.unit||'') + '</div></div>';
-  }
-  list.innerHTML = html || '<div style="padding:12px;font-size:12px;color:var(--text-ter)">No quantities available.</div>';
-}
-
-function insertRevitQty(idx) {
-  var q = revitQtys[idx];
-  if (!q) return;
-  var existing = calcRows.filter(function(r){ return r.type === 'revit' && !r.l; });
-  if (existing.length > 0) {
-    existing[0].l = q.quantity; existing[0].label = q.description||q.typeName;
-  } else {
-    calcRows.push({ id: Date.now(), type:'revit', label: q.description||q.typeName, l: q.quantity, multiplier:'1', revitKey: q.description||q.typeName });
-  }
-  document.getElementById('revit-qty-panel').style.display = 'none';
-  renderCalcRows();
-}
-
-function saveCustomItem() {
-  var itemNo = document.getElementById('ci-itemno').value.trim();
-  var desc   = document.getElementById('ci-description').value.trim();
-  var cat    = document.getElementById('ci-category').value.trim();
-  var unit   = document.getElementById('ci-unit').value.trim();
-  var rate   = parseFloat(document.getElementById('ci-rate').value) || 0;
-  if (!desc) { showToast('Description is required','error'); return; }
-
-  var qty     = calcRows.reduce(function(s,r){ return s + calcRowValue(r); }, 0);
-  var total   = Math.round(qty * rate * 100) / 100;
-  var btn     = document.getElementById('save-custom-btn');
-  btn.disabled = true; btn.textContent = 'Saving...';
-
-  var tok = accessToken || sessionStorage.getItem('boq_token') || '';
-  var url = SHEETS_API + '/' + currentProject.spreadsheetId +
-    '/values/' + encodeURIComponent('BOQ!A:I') +
-    ':append?valueInputOption=RAW&insertDataOption=INSERT_ROWS';
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', url, true);
-  xhr.setRequestHeader('Authorization', 'Bearer ' + tok);
-  xhr.setRequestHeader('Content-Type', 'application/json');
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState === 4) {
-      btn.disabled = false; btn.textContent = 'Save to Sheet';
-      if (xhr.status === 200) {
-        closeModal('modal-custom-item');
-        showToast('Custom item saved','success');
-        boqItems.push({ itemNumber:itemNo, description:desc, category:cat||'Custom', typeName:'Custom', quantity:qty, unit:unit, rate:rate, total:total, status:'custom' });
-        renderDashboard();
-      } else {
-        showToast('Save failed: ' + xhr.status,'error');
-      }
-    }
+function showScreen(id){var ss=document.querySelectorAll('.screen');for(var i=0;i<ss.length;i++)ss[i].classList.remove('active');document.getElementById(id).classList.add('active');window.scrollTo(0,0);}
+function setStatus(type){var dot=document.getElementById('status-dot'),lbl=document.getElementById('status-text');if(!dot)return;dot.className='status-dot '+(type!=='online'?type:'');if(lbl)lbl.textContent=type==='online'?'Live':type==='loading'?'Loading...':'Offline';}
+function getUrlParams(){var r={},pairs=window.location.search.substring(1).split('&');for(var i=0;i<pairs.length;i++){var p=pairs[i].split('=');if(p[0])r[p[0]]=p[1]||'';}return r;}
+function getCurrencySymbol(){
+  var syms = {
+    'GBP': String.fromCharCode(163),
+    'USD': '$',
+    'EUR': String.fromCharCode(8364),
+    'AED': 'AED ',
+    'SGD': 'S$',
+    'LKR': 'Rs ',
+    'AUD': 'A$'
   };
-  xhr.send(JSON.stringify({ values: [[itemNo, desc, cat||'Custom', 'Custom', qty.toFixed(2), unit, rate.toFixed(2), total.toFixed(2), 'Custom']] }));
-}
-
-// ── HELPERS ────────────────────────────────────────────────────────────
-function getCurrencySymbol() {
-  var syms = {GBP:'\u00A3',USD:'$',EUR:'\u20AC',AED:'AED ',SGD:'S$',LKR:'Rs ',AUD:'A$',CAD:'C$'};
-  return syms[(currentProject && currentProject.currency) ? currentProject.currency.toUpperCase() : 'GBP'] || ((currentProject && currentProject.currency) ? currentProject.currency + ' ' : '\u00A3');
-}
-
-function getSymbol(code) {
-  var syms = {GBP:'\u00A3',USD:'$',EUR:'\u20AC',AED:'AED ',SGD:'S$',LKR:'Rs ',AUD:'A$',CAD:'C$'};
-  return syms[(code||'GBP').toUpperCase()] || (code + ' ');
-}
-
-function fmtC(v) { return getCurrencySymbol() + Math.round(Math.abs(v)).toLocaleString(); }
-function fmt(v)  { return Math.round(Math.abs(v)).toLocaleString(); }
-function esc(s)  { if(!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function dec(v)  { try{return decodeURIComponent(v);}catch(e){return v||'';} }
-function getUrlParams() { var r={},p=window.location.search.substring(1).split('&');p.forEach(function(x){var s=x.split('=');if(s[0])r[s[0]]=s[1]||'';});return r; }
-
-function setStatus(s) {
-  var dot = document.getElementById('status-dot');
-  var txt = document.getElementById('status-text');
-  if (!dot || !txt) return;
-  if (s === 'loading') { dot.className='status-dot sd-amber'; txt.textContent='Syncing...'; }
-  else if (s === 'online') { dot.className='status-dot sd-green'; txt.textContent='Live'; }
-  else { dot.className='status-dot sd-red'; txt.textContent='Offline'; }
-}
-
-function showError(msg) {
-  var el = document.getElementById('signin-error');
-  if (el) { el.textContent = msg; el.style.display = 'block'; }
-}
-
-function showToast(msg, type) {
-  var t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show ' + (type||'');
-  setTimeout(function(){ t.className = 'toast'; }, 3000);
-}
-
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
-  var el = document.getElementById(id);
-  if (el) el.classList.add('active');
-}
-
-function openModal(id)  { var el=document.getElementById(id); if(el) el.classList.add('open'); }
-function closeModal(id) { var el=document.getElementById(id); if(el) el.classList.remove('open'); }
-
-document.addEventListener('click', function(e) {
-  if (e.target.classList.contains('modal-overlay')) e.target.classList.remove('open');
-});
-
-function signOut() {
-  accessToken = null;
-  sessionStorage.removeItem('boq_token');
-  currentProject = null; boqItems = [];
-  if (window.google && google.accounts && google.accounts.oauth2) {
-    google.accounts.oauth2.revoke(accessToken || '', function(){});
+  var code = 'GBP';
+  if (currentProject && currentProject.currency) {
+    code = currentProject.currency.toString().trim().toUpperCase();
   }
-  showScreen('screen-signin');
-  document.getElementById('sign-out-btn').style.display = 'none';
-  document.getElementById('status-indicator').style.display = 'none';
+  return syms.hasOwnProperty(code) ? syms[code] : (code + ' ');
 }
-
-function apiGet(url, cb) {
-  if (!accessToken) { cb(new Error('No token')); return; }
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', url, true);
-  xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
-  xhr.timeout = 10000;
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState === 4) {
-      if (xhr.status === 200) { try { cb(null, JSON.parse(xhr.responseText)); } catch(e) { cb(e); } }
-      else cb(new Error('HTTP ' + xhr.status));
-    }
-  };
-  xhr.onerror   = function() { cb(new Error('Network error')); };
-  xhr.ontimeout = function() { cb(new Error('Timeout')); };
-  xhr.send();
-}
+function fmtC(val){if(!val&&val!==0)return '--';var c=getCurrencySymbol();return c+Number(val).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function esc(s){if(!s)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function pad(n){return n<10?'0'+n:''+n;}
+function showToast(msg,type){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+(type||'');setTimeout(function(){t.className='toast';},3500);}
+function apiGet(url,cb){if(!accessToken){cb(new Error('Not signed in'));return;}var xhr=new XMLHttpRequest();xhr.open('GET',url,true);xhr.setRequestHeader('Authorization','Bearer '+accessToken);xhr.timeout=10000;xhr.onreadystatechange=function(){if(xhr.readyState===4){if(xhr.status===200){try{cb(null,JSON.parse(xhr.responseText));}catch(e){cb(e);}}else if(xhr.status===401){signOut();showToast('Session expired. Please sign in again.','error');}else{cb(new Error('HTTP '+xhr.status));}}};xhr.onerror=function(){cb(new Error('Network error'));};xhr.ontimeout=function(){cb(new Error('Timeout'));};xhr.send();}
+function xhrPost(url,data,cb){var xhr=new XMLHttpRequest();xhr.open('POST',url,true);xhr.setRequestHeader('Content-Type','application/json');xhr.timeout=15000;xhr.onreadystatechange=function(){if(xhr.readyState===4){if(xhr.status===200){try{cb(null,JSON.parse(xhr.responseText));}catch(e){cb(e);}}else{cb(new Error('HTTP '+xhr.status));}}};xhr.onerror=function(){cb(new Error('Connection failed'));};xhr.ontimeout=function(){cb(new Error('Timeout'));};xhr.send(JSON.stringify(data));}
 </script>
 </body>
 </html>
