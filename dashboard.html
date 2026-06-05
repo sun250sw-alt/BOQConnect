@@ -197,7 +197,11 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
       <div class="card">
         <div class="card-head">
           <div class="card-title">Bill of Quantities</div>
-          <div style="display:flex;gap:6px"><span class="cbadge cb-blue" id="items-badge">-- items</span></div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <span class="cbadge cb-amber" id="missing-badge" style="display:none">0 missing</span>
+            <span class="cbadge cb-blue" id="items-badge">-- items</span>
+            <button id="add-item-btn" onclick="openAddItemModal()" style="display:none;background:rgba(52,199,123,0.12);border:1px solid rgba(52,199,123,0.3);color:#34c77b;border-radius:4px;padding:3px 10px;font-size:11px;cursor:pointer;font-family:monospace">+ Custom Item</button>
+          </div>
         </div>
         <div style="overflow-x:auto;overflow-y:auto" id="boq-scroll-wrap">
           <div class="empty" id="boq-empty"><div style="font-size:28px;margin-bottom:10px">&#128203;</div><div style="font-family:'Rajdhani',sans-serif;font-size:15px;color:var(--text-sec);margin-bottom:4px">No BOQ data yet</div><div style="font-size:13px">Push to BOQ from Revit to populate</div></div>
@@ -1197,6 +1201,8 @@ function renderBOQTable() {
   if (!boqItems.length){table.style.display='none';empty.style.display='block';document.getElementById('items-badge').textContent='0 items';return;}
   table.style.display='table';empty.style.display='none';
   document.getElementById('items-badge').textContent=boqItems.length+' items';
+  var mb2=document.getElementById('missing-badge');
+  if(mb2){mb2.style.display=missingCount>0?'inline-block':'none';mb2.textContent=missingCount+' missing';}
 
   // Load previous totals from sessionStorage for diff comparison
   var prevKey='boq_prev_'+(currentProject?currentProject.spreadsheetId:'x');
@@ -1209,7 +1215,7 @@ function renderBOQTable() {
   var html='';
   for(var i=0;i<boqItems.length;i++){
     var r=boqItems[i];
-    var isDel=r.status.indexOf('deleted')>-1||r.status.indexOf('eleted')>-1,isMis=!isDel&&(!r.unit||!r.rate||!r.quantity);
+    var isDel=r.status.indexOf('deleted')>-1||r.status.indexOf('eleted')>-1,isMis=!isDel&&!isCustom&&(!r.itemNumber||!r.unit||!r.rate||!r.quantity);
     var cls=isMis?'row-amber':isDel?'row-red':'';
 
     // Build specific missing field indicators
@@ -1225,7 +1231,8 @@ function renderBOQTable() {
       pill = '<span class="status-pill cb-red">&#215; Deleted</span>';
     } else if (isMis) {
       var missingFields = [];
-      // Only check fields that should be set in the Sheet
+      // Check fields that should be set in the Sheet
+      if (!r.itemNumber || r.itemNumber === '--' || r.itemNumber.trim() === '') missingFields.push('Item No');
       if (!r.unit  || r.unit.trim()  === '') missingFields.push('Unit');
       if (!r.rate  || r.rate === 0)          missingFields.push('Rate');
       if (!r.quantity || r.quantity === 0)   missingFields.push('Qty');
