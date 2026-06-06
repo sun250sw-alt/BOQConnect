@@ -98,7 +98,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
     <div class="no-data">
       <div class="no-data-icon">&#128197;</div>
       <div style="font-family:'Rajdhani',sans-serif;font-size:18px;color:var(--text-sec);margin-bottom:8px">No programme dates set</div>
-      <div style="font-size:13px;margin-bottom:16px">Cash flow requires programme dates. Set start dates and durations in the Programme view first.</div>
+      <div id="no-data-msg" style="font-size:13px;margin-bottom:16px">Cash flow requires programme dates. Set start dates and durations in the Programme view first.</div>
       <a class="btn btn-primary" id="prog-link" href="programme.html">Go to Programme &#8594;</a>
     </div>
   </div>
@@ -255,133 +255,67 @@ window.onload = function() {
 };
 
 // ── LOAD DATA FROM SHEETS ─────────────────────────────────────────────
+// Reads pre-calculated Cash Flow tab written by SyncCashFlowTabAsync
 function loadData() {
   if (!spreadsheetId || !accessToken) {
-    // Try LocalServer
-    xhrGet(LOCAL_SERVER + '/boq-data', function(err, data) {
-      if (err || !data) { showNoData(); return; }
-      loadFromLocalServer();
-    });
+    showNoData();
     return;
   }
 
-  // Read BOQ and Programme tabs in parallel
-  var boqDone = false, progDone = false;
-  var boqRows = [], progRows = [];
-
-  apiGet(SHEETS_API + '/' + spreadsheetId + '/values/BOQ!A:H', function(err, data) {
-    if (!err && data && data.values) boqRows = data.values;
-    boqDone = true;
-    if (boqDone && progDone) buildCashFlow(boqRows, progRows);
-  });
-
-  apiGet(SHEETS_API + '/' + spreadsheetId + '/values/Programme!A:J', function(err, data) {
-    if (!err && data && data.values) progRows = data.values;
-    progDone = true;
-    if (boqDone && progDone) buildCashFlow(boqRows, progRows);
-  });
-
-  // Also read summary for currency/budget
+  // Read Summary tab first for currency/budget config
   apiGet(SHEETS_API + '/' + spreadsheetId + '/values/Cost%20Summary!A1:B30', function(err, data) {
-    if (err || !data || !data.values) return;
-    data.values.forEach(function(row) {
-      if (!row || row.length < 2) return;
-      var k = (row[0] || '').toLowerCase().trim();
-      var v = (row[1] || '').toString().trim();
-      if (k === 'currency')    projectConfig.currency    = v.toUpperCase();
-      if (k === 'contingency') projectConfig.contingency = parseFloat(v) || 10;
-      if (k === 'prelims')     projectConfig.prelim      = parseFloat(v) || 5;
-      if (k === 'budget')      projectConfig.budget      = parseFloat(v) || 0;
-      if (k === 'budget ref')  projectConfig.budgetRef   = v;
-    });
-  });
-}
-
-function loadFromLocalServer() {
-  var boqDone = false, progDone = false;
-  var boqItems = [], progItems = [];
-
-  xhrGet(LOCAL_SERVER + '/boq-data', function(err, data) {
-    if (!err && data && data.items) boqItems = data.items;
-    boqDone = true;
-    if (boqDone && progDone) buildFromObjects(boqItems, progItems);
-  });
-
-  xhrGet(LOCAL_SERVER + '/programme-data', function(err, data) {
-    if (!err && data && data.items) progItems = data.items;
-    progDone = true;
-    if (boqDone && progDone) buildFromObjects(boqItems, progItems);
-  });
-}
-
-// ── BUILD CASH FLOW FROM SHEET ROWS ──────────────────────────────────
-function buildCashFlow(boqRows, progRows) {
-  // Parse BOQ: itemNumber=A, description=B, category=C, typeName=D, qty=E, unit=F, rate=G, total=H
-  var boqMap = {};
-  for (var i = 1; i < boqRows.length; i++) {
-    var r = boqRows[i];
-    if (!r || r.length < 8) continue;
-    var itemNo = (r[0] || '').trim();
-    if (!itemNo) continue;
-    boqMap[itemNo] = { total: parseFloat(r[7]) || 0, description: r[1] || '', category: r[2] || '' };
-  }
-
-  // Parse Programme: itemId=A, desc=B, cat=C, startDate=D, duration=E, endDate=F, pct=G, preds=H, workDays=I, notes=J
-  var progItems = [];
-  for (var j = 1; j < progRows.length; j++) {
-    var pr = progRows[j];
-    if (!pr || pr.length < 5) continue;
-    var itemId    = (pr[0] || '').trim();
-    var startDate = (pr[3] || '').trim();
-    var duration  = parseInt(pr[4]) || 0;
-    if (!itemId || !startDate || !duration) continue;
-
-    var boq = boqMap[itemId];
-    if (!boq || !boq.total) continue;
-
-    progItems.push({
-      itemId:    itemId,
-      desc:      pr[1] || boq.description,
-      category:  pr[2] || boq.category,
-      startDate: startDate,
-      duration:  duration,
-      total:     boq.total
-    });
-  }
-
-  if (progItems.length === 0) { showNoData(); return; }
-  buildFromObjects(progItems, null);
-}
-
-function buildFromObjects(items, progItems) {
-  var workItems = progItems || items;
-
-  // Filter to items with dates AND total
-  var valid = workItems.filter(function(i) {
-    return (i.startDate || i.start) && (i.duration || i.dur) && i.total;
-  });
-
-  // If no items have dates yet, show all BOQ items with a message
-  if (valid.length === 0) {
-    // Try using BOQ items directly if they have totals
-    var boqValid = items.filter(function(i){ return i.total > 0; });
-    if (boqValid.length > 0) {
-      showNoData('Programme dates not set. Set dates in the Programme view to generate cash flow.');
-    } else {
-      showNoData();
+    if (!err && data && data.values) {
+      data.values.forEach(function(row) {
+        if (!row || row.length < 2) return;
+        var k = (row[0] || '').toLowerCase().trim();
+        var v = (row[1] || '').toString().trim();
+        if (k === 'currency')    projectConfig.currency    = v.toUpperCase();
+        if (k === 'contingency') projectConfig.contingency = parseFloat(v) || 10;
+        if (k === 'prelims')     projectConfig.prelim      = parseFloat(v) || 5;
+        if (k === 'budget')      projectConfig.budget      = parseFloat(v) || 0;
+        if (k === 'budget ref')  projectConfig.budgetRef   = v;
+      });
     }
-    return;
-  }
 
-  window._cfItems = valid; // cache for profile switching
-  flowData = computeFlow(valid, currentProfile);
-  document.getElementById('loading').style.display    = 'none';
-  document.getElementById('no-data').style.display    = 'none';
-  document.getElementById('dashboard').style.display  = 'block';
+    // Read pre-calculated Cash Flow tab
+    // Columns: A=Month, B=Monthly Spend, C=Cumulative, D=Budget(Cum), E=Variance, F=Forecast, G=Notes
+    apiGet(SHEETS_API + '/' + spreadsheetId + '/values/Cash%20Flow!A:G', function(err2, data2) {
+      document.getElementById('loading').style.display = 'none';
 
-  updateMetrics();
-  renderAll();
+      if (err2 || !data2 || !data2.values || data2.values.length < 2) {
+        showNoData('No cash flow data. Run Push to BOQ from Revit with programme dates set.');
+        return;
+      }
+
+      var rows = data2.values;
+      flowData = [];
+      for (var i = 1; i < rows.length; i++) {
+        var r = rows[i];
+        if (!r || !r[0]) continue;
+        flowData.push({
+          month:     r[0] || '',
+          spend:     parseFloat(r[1]) || 0,
+          cum:       parseFloat(r[2]) || 0,
+          budget:    r[3] ? parseFloat(r[3]) : null,
+          variance:  r[4] ? parseFloat(r[4]) : null,
+          forecast:  parseFloat(r[5]) || 0,
+          notes:     r[6] || ''
+        });
+      }
+
+      if (!flowData.length) {
+        showNoData('Cash Flow tab is empty. Run Push to BOQ from Revit with programme dates set.');
+        return;
+      }
+
+      window._cfItems = flowData; // for profile switching reference
+      document.getElementById('dashboard').style.display = 'block';
+      updateMetrics();
+      renderAll();
+    });
+  });
 }
+
 
 // ── COMPUTE MONTHLY FLOW ──────────────────────────────────────────────
 function computeFlow(items, profile) {
@@ -596,12 +530,10 @@ function setProfile(p) {
   currentProfile = p;
   document.querySelectorAll('.pb').forEach(function(b){b.classList.remove('active');});
   event.target.classList.add('active');
-  // Recompute flow with new profile using existing items
-  if (window._cfItems && window._cfItems.length) {
-    flowData = computeFlow(window._cfItems, p);
-    updateMetrics();
-    renderAll();
-  }
+  // Data comes from Sheet - just re-render with same data
+  // Profile buttons are kept for visual consistency but Sheet data is authoritative
+  updateMetrics();
+  renderAll();
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────
