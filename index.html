@@ -1991,6 +1991,21 @@ function runCreationSteps() {
     inRevit = window.external && window.external.IsRevitAddin &&
               window.external.IsRevitAddin();
   } catch(e) { inRevit = false; }
+  // Also detect via URL param (set by NewProjectCommand when opening in browser)
+  if (!inRevit) {
+    var urlParams = window.location.search;
+    if (urlParams.indexOf('revit=true') > -1) inRevit = true;
+  }
+  // Also detect by pinging LocalServer
+  if (!inRevit) {
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', LOCAL_SERVER + '/ping', false); // sync check
+      xhr.timeout = 1000;
+      xhr.send();
+      if (xhr.status === 200) inRevit = true;
+    } catch(e2) { /* LocalServer not running */ }
+  }
 
   xhrGet(LOCAL_SERVER + '/ping', function(err) {
     if (err) {
