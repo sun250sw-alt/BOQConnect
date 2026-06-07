@@ -1753,23 +1753,28 @@ function doSignIn() {
     if (googleBtn) googleBtn.style.display = 'none';
     if (statusEl) statusEl.textContent   = '';
   } else {
-    // No email - show message
+    // No email yet
     var statusEl2 = document.getElementById('signin-status');
     var googleBtn2 = document.querySelector('.google-btn');
-    if (statusEl2) {
-      statusEl2.innerHTML =
-        '<div style="color:var(--revit-amber);padding:12px 14px;' +
-        'background:var(--revit-amber-dim);border:1px solid rgba(245,166,35,.3);' +
-        'border-radius:6px;margin-top:12px;font-size:13px;line-height:1.6">' +
-        '&#9888; <strong>Opened without Revit connection.</strong><br>' +
-        'For full functionality, open this wizard from the ' +
-        '<strong>BOQ Connect</strong> ribbon in Revit 2026. ' +
-        'You can still browse the wizard but project creation ' +
-        'requires Revit to be running.' +
-        '</div>';
+    if (inRevit) {
+      // Connected to Revit - just show Google sign-in, no warning
+      if (statusEl2) statusEl2.innerHTML = '';
+      if (googleBtn2) googleBtn2.style.display = 'flex';
+    } else {
+      // Not connected to Revit - show warning
+      if (statusEl2) {
+        statusEl2.innerHTML =
+          '<div style="color:var(--revit-amber);padding:12px 14px;' +
+          'background:var(--revit-amber-dim);border:1px solid rgba(245,166,35,.3);' +
+          'border-radius:6px;margin-top:12px;font-size:13px;line-height:1.6">' +
+          '&#9888; <strong>Opened without Revit connection.</strong><br>' +
+          'For full functionality, open this wizard from the ' +
+          '<strong>BOQ Connect</strong> ribbon in Revit 2026.' +
+          '</div>';
+      }
+      if (googleBtn2) googleBtn2.style.display = 'none';
     }
-    if (googleBtn2) googleBtn2.style.display = 'none';
-  }
+}
 }
 
 // -- URL PARAMS --------------------------------------------------------
