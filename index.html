@@ -1822,6 +1822,7 @@ function doSignIn() {
       if (statusEl2) statusEl2.innerHTML = '<div style="color:var(--text-sec);font-size:13px;margin-top:8px">Checking connection...</div>';
       xhrGet(LOCAL_SERVER + '/creator-info', function(err, data) {
         var foundEmail = (!err && data) ? (data.email || data.creatorEmail || '') : '';
+        if (statusEl2) statusEl2.innerHTML += '<br><small style="font-family:monospace;color:#666">Debug: err=' + (err?err.message:'none') + ' email=' + (data&&(data.email||data.creatorEmail)||'empty') + ' inRevit=' + inRevit + '</small>';
         if (foundEmail && foundEmail.length > 3) {
           // Already authenticated - show signed-in state
           state.user = { email: foundEmail };
