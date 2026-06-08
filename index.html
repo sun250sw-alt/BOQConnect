@@ -1716,11 +1716,21 @@ function acceptTerms() {
 function handleGoogleBtnClick() {
   // If we know we're connected to Revit, use LocalServer auth
   if (inRevit) {
-    triggerRevitAuth();
-  } else {
-    // Not connected to Revit - shouldn't be clickable but handle gracefully
-    doSignIn();
-  }
+      // Connected to Revit but no email in URL
+      // This means OAuth failed in NewProjectCommand
+      // Show a clear message
+      if (statusEl2) {
+        statusEl2.innerHTML =
+          '<div style="color:var(--red);padding:12px 14px;' +
+          'background:rgba(232,85,85,0.1);border:1px solid rgba(232,85,85,0.3);' +
+          'border-radius:6px;margin-top:12px;font-size:13px;line-height:1.6">' +
+          '&#9888; <strong>Sign-in failed.</strong><br>' +
+          'Please close this tab, go back to Revit and click ' +
+          '<strong>New Project</strong> again.' +
+          '</div>';
+      }
+      if (googleBtn2) googleBtn2.style.display = 'none';
+    } else {
 }
 
 function triggerRevitAuth() {
@@ -2245,6 +2255,7 @@ window.onload = function() {
     })(overlays[i]);
   }
 };
+}
 </script>
 </body>
 </html>
