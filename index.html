@@ -1757,9 +1757,25 @@ function doSignIn() {
     var statusEl2 = document.getElementById('signin-status');
     var googleBtn2 = document.querySelector('.google-btn');
     if (inRevit) {
-      // Connected to Revit - just show Google sign-in, no warning
-      if (statusEl2) statusEl2.innerHTML = '';
-      if (googleBtn2) googleBtn2.style.display = 'flex';
+      // Connected to Revit - get email from LocalServer /creator-info
+      if (statusEl2) statusEl2.innerHTML = '<div style="color:var(--text-sec);font-size:13px;margin-top:8px">Connecting to Revit...</div>';
+      xhrGet(LOCAL_SERVER + '/creator-info', function(err, data) {
+        if (!err && data && data.email) {
+          // Got email from LocalServer - auto advance
+          state.user = { email: data.email };
+          goTo('screen-project');
+        } else {
+          // LocalServer connected but no email - trigger auth
+          if (statusEl2) statusEl2.innerHTML = '';
+          if (googleBtn2) {
+            googleBtn2.style.display = 'flex';
+            googleBtn2.onclick = function() {
+              // Redirect to LocalServer auth endpoint which opens Google login
+              window.location.href = LOCAL_SERVER + '/auth';
+            };
+          }
+        }
+      });
     } else {
       // Not connected to Revit - show warning
       if (statusEl2) {
