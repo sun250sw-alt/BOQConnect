@@ -1724,54 +1724,47 @@ function handleGoogleBtnClick() {
 }
 
 function triggerRevitAuth() {
-  // Open LocalServer auth in a small popup window
-  // Browser allows http://localhost popups even from https pages
-  var popup = window.open(
-    LOCAL_SERVER + '/auth',
-    'BOQConnect_Auth',
-    'width=500,height=600,scrollbars=yes,resizable=yes'
-  );
+  var statusEl = document.getElementById('signin-status');
+  var googleBtn = document.querySelector('.google-btn');
 
-  if (!popup) {
-    // Popup blocked - try xhrGet to /creator-info to get cached email
-    xhrGet(LOCAL_SERVER + '/creator-info', function(err, data) {
-      if (!err && data && data.email) {
-        state.user = { email: data.email };
-        goTo('screen-project');
-      } else {
-        var s = document.getElementById('signin-status');
-        if (s) s.innerHTML = '<div style="color:var(--red);font-size:13px;margin-top:8px">' +
-          'Popup blocked. Please allow popups for this site and try again.</div>';
-      }
-    });
-    return;
-  }
+  // Step 1: Tell LocalServer to start OAuth (async, returns immediately)
+  // LocalServer opens browser window on Revit side for Google login
+  xhrGet(LOCAL_SERVER + '/auth-start', function(err) {
+    // Step 2: Show waiting message
+    if (statusEl) statusEl.innerHTML =
+      '<div style="color:var(--text-sec);font-size:13px;margin-top:8px">' +
+      '&#9654; Google sign-in opened &mdash; sign in then come back here...' +
+      '</div>';
+    if (googleBtn) googleBtn.style.display = 'none';
 
-  // Poll for email - LocalServer /auth will trigger OAuth then
-  // wizard polls /creator-info until email appears
-  var pollInterval = setInterval(function() {
-    xhrGet(LOCAL_SERVER + '/creator-info', function(err, data) {
-      if (!err && data && data.email && data.email.length > 0) {
-        clearInterval(pollInterval);
-        try { popup.close(); } catch(e2) {}
-        state.user = { email: data.email };
-        // Show signed in state
-        var panel    = document.getElementById('signed-in-panel');
-        var emailEl  = document.getElementById('signed-in-email');
-        var nextBtn  = document.getElementById('btn-signin-next');
-        var googleB  = document.querySelector('.google-btn');
-        var statusEl = document.getElementById('signin-status');
-        if (panel)   panel.style.display   = 'block';
-        if (emailEl) emailEl.textContent   = data.email;
-        if (nextBtn) nextBtn.style.display = 'flex';
-        if (googleB) googleB.style.display = 'none';
-        if (statusEl) statusEl.innerHTML   = '';
-      }
-    });
-  }, 1500);
-
-  // Stop polling after 2 minutes
-  setTimeout(function() { clearInterval(pollInterval); }, 120000);
+    // Step 3: Poll /creator-info every 2 seconds waiting for email
+    var attempts = 0;
+    var poll = setInterval(function() {
+      attempts++;
+      xhrGet(LOCAL_SERVER + '/creator-info', function(err2, data) {
+        var email = (!err2 && data) ? (data.email || data.creatorEmail || '') : '';
+        if (email && email.length > 3) {
+          clearInterval(poll);
+          state.user = { email: email };
+          var panel   = document.getElementById('signed-in-panel');
+          var emailEl = document.getElementById('signed-in-email');
+          var nextBtn = document.getElementById('btn-signin-next');
+          if (panel)   panel.style.display   = 'block';
+          if (emailEl) emailEl.textContent   = email;
+          if (nextBtn) nextBtn.style.display = 'flex';
+          if (googleBtn) googleBtn.style.display = 'none';
+          if (statusEl) statusEl.innerHTML = '';
+        } else if (attempts >= 60) {
+          // Timeout after 2 minutes
+          clearInterval(poll);
+          if (googleBtn) googleBtn.style.display = 'flex';
+          if (statusEl) statusEl.innerHTML =
+            '<div style="color:var(--red);font-size:13px;margin-top:8px">' +
+            'Sign-in timed out. Please try again.</div>';
+        }
+      });
+    }, 2000);
+  });
 }
 
 function doSignIn() {
