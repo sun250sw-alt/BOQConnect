@@ -1808,21 +1808,29 @@ function doSignIn() {
     var statusEl2 = document.getElementById('signin-status');
     var googleBtn2 = document.querySelector('.google-btn');
     if (inRevit) {
-      // Connected to Revit - get email from LocalServer /creator-info
-      if (statusEl2) statusEl2.innerHTML = '<div style="color:var(--text-sec);font-size:13px;margin-top:8px">Connecting to Revit...</div>';
+      // Connected to Revit - check if already authenticated
+      if (statusEl2) statusEl2.innerHTML = '<div style="color:var(--text-sec);font-size:13px;margin-top:8px">Checking Revit connection...</div>';
       xhrGet(LOCAL_SERVER + '/creator-info', function(err, data) {
-        if (!err && data && data.email) {
-          // Got email from LocalServer - auto advance
-          state.user = { email: data.email };
-          goTo('screen-project');
+        // Check both "email" and "creatorEmail" fields
+        var foundEmail = (!err && data) ? (data.email || data.creatorEmail || '') : '';
+        if (foundEmail && foundEmail.length > 3) {
+          // Already authenticated - auto advance with email
+          state.user = { email: foundEmail };
+          var panel   = document.getElementById('signed-in-panel');
+          var emailEl = document.getElementById('signed-in-email');
+          var nextBtn = document.getElementById('btn-signin-next');
+          var gBtn    = document.querySelector('.google-btn');
+          if (panel)   panel.style.display   = 'block';
+          if (emailEl) emailEl.textContent   = foundEmail;
+          if (nextBtn) nextBtn.style.display = 'flex';
+          if (gBtn)    gBtn.style.display    = 'none';
+          if (statusEl2) statusEl2.innerHTML = '';
         } else {
-          // LocalServer connected but no email - trigger auth
+          // Not authenticated yet - show Google button
           if (statusEl2) statusEl2.innerHTML = '';
           if (googleBtn2) {
             googleBtn2.style.display = 'flex';
-            googleBtn2.onclick = function() {
-              triggerRevitAuth();
-            };
+            googleBtn2.onclick = function() { triggerRevitAuth(); };
           }
         }
       });
