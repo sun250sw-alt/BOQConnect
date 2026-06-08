@@ -1713,6 +1713,57 @@ function acceptTerms() {
 }
 
 // -- SIGN IN -----------------------------------------------------------
+function triggerRevitAuth() {
+  // Open LocalServer auth in a small popup window
+  // Browser allows http://localhost popups even from https pages
+  var popup = window.open(
+    LOCAL_SERVER + '/auth',
+    'BOQConnect_Auth',
+    'width=500,height=600,scrollbars=yes,resizable=yes'
+  );
+
+  if (!popup) {
+    // Popup blocked - try xhrGet to /creator-info to get cached email
+    xhrGet(LOCAL_SERVER + '/creator-info', function(err, data) {
+      if (!err && data && data.email) {
+        state.user = { email: data.email };
+        goTo('screen-project');
+      } else {
+        var s = document.getElementById('signin-status');
+        if (s) s.innerHTML = '<div style="color:var(--red);font-size:13px;margin-top:8px">' +
+          'Popup blocked. Please allow popups for this site and try again.</div>';
+      }
+    });
+    return;
+  }
+
+  // Poll for email - LocalServer /auth will trigger OAuth then
+  // wizard polls /creator-info until email appears
+  var pollInterval = setInterval(function() {
+    xhrGet(LOCAL_SERVER + '/creator-info', function(err, data) {
+      if (!err && data && data.email && data.email.length > 0) {
+        clearInterval(pollInterval);
+        try { popup.close(); } catch(e2) {}
+        state.user = { email: data.email };
+        // Show signed in state
+        var panel    = document.getElementById('signed-in-panel');
+        var emailEl  = document.getElementById('signed-in-email');
+        var nextBtn  = document.getElementById('btn-signin-next');
+        var googleB  = document.querySelector('.google-btn');
+        var statusEl = document.getElementById('signin-status');
+        if (panel)   panel.style.display   = 'block';
+        if (emailEl) emailEl.textContent   = data.email;
+        if (nextBtn) nextBtn.style.display = 'flex';
+        if (googleB) googleB.style.display = 'none';
+        if (statusEl) statusEl.innerHTML   = '';
+      }
+    });
+  }, 1500);
+
+  // Stop polling after 2 minutes
+  setTimeout(function() { clearInterval(pollInterval); }, 120000);
+}
+
 function doSignIn() {
   var params   = getUrlParams();
   var emailRaw = params['email'];
@@ -1770,8 +1821,7 @@ function doSignIn() {
           if (googleBtn2) {
             googleBtn2.style.display = 'flex';
             googleBtn2.onclick = function() {
-              // Redirect to LocalServer auth endpoint which opens Google login
-              window.location.href = LOCAL_SERVER + '/auth';
+              triggerRevitAuth();
             };
           }
         }
