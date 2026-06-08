@@ -1163,7 +1163,7 @@ body::before {
       </div>
 
       <div style="text-align:center;padding:24px 0">
-        <button class="google-btn" onclick="doSignIn()">
+        <button class="google-btn" onclick="handleGoogleBtnClick()">
           <svg class="google-logo" viewBox="0 0 24 24">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -1713,6 +1713,16 @@ function acceptTerms() {
 }
 
 // -- SIGN IN -----------------------------------------------------------
+function handleGoogleBtnClick() {
+  // If we know we're connected to Revit, use LocalServer auth
+  if (inRevit) {
+    triggerRevitAuth();
+  } else {
+    // Not connected to Revit - shouldn't be clickable but handle gracefully
+    doSignIn();
+  }
+}
+
 function triggerRevitAuth() {
   // Open LocalServer auth in a small popup window
   // Browser allows http://localhost popups even from https pages
@@ -1808,13 +1818,12 @@ function doSignIn() {
     var statusEl2 = document.getElementById('signin-status');
     var googleBtn2 = document.querySelector('.google-btn');
     if (inRevit) {
-      // Connected to Revit - check if already authenticated
-      if (statusEl2) statusEl2.innerHTML = '<div style="color:var(--text-sec);font-size:13px;margin-top:8px">Checking Revit connection...</div>';
+      // Connected to Revit - check if already authenticated via LocalServer
+      if (statusEl2) statusEl2.innerHTML = '<div style="color:var(--text-sec);font-size:13px;margin-top:8px">Checking connection...</div>';
       xhrGet(LOCAL_SERVER + '/creator-info', function(err, data) {
-        // Check both "email" and "creatorEmail" fields
         var foundEmail = (!err && data) ? (data.email || data.creatorEmail || '') : '';
         if (foundEmail && foundEmail.length > 3) {
-          // Already authenticated - auto advance with email
+          // Already authenticated - show signed-in state
           state.user = { email: foundEmail };
           var panel   = document.getElementById('signed-in-panel');
           var emailEl = document.getElementById('signed-in-email');
@@ -1826,12 +1835,9 @@ function doSignIn() {
           if (gBtn)    gBtn.style.display    = 'none';
           if (statusEl2) statusEl2.innerHTML = '';
         } else {
-          // Not authenticated yet - show Google button
+          // Not authenticated yet - show Google button (will call triggerRevitAuth)
           if (statusEl2) statusEl2.innerHTML = '';
-          if (googleBtn2) {
-            googleBtn2.style.display = 'flex';
-            googleBtn2.onclick = function() { triggerRevitAuth(); };
-          }
+          if (googleBtn2) googleBtn2.style.display = 'flex';
         }
       });
     } else {
