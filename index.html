@@ -1816,19 +1816,22 @@ function doSignIn() {
     if (nextBtn)  nextBtn.style.display  = 'flex';
     if (googleBtn) googleBtn.style.display = 'none';
     if (statusEl) statusEl.textContent   = '';
+    // Auto-advance to project details when email came from Revit
+    if (inRevit) {
+      setTimeout(function() { goTo('screen-project'); }, 300);
+    }
   } else {
     // No email yet
     var statusEl2 = document.getElementById('signin-status');
     var googleBtn2 = document.querySelector('.google-btn');
     if (inRevit) {
-      // Connected to Revit - check if already authenticated via LocalServer
-      if (statusEl2) statusEl2.innerHTML = '<div style="color:var(--text-sec);font-size:13px;margin-top:8px">Checking connection...</div>';
-      xhrGet(LOCAL_SERVER + '/creator-info', function(err, data) {
-        var foundEmail = (!err && data) ? (data.email || data.creatorEmail || '') : '';
-        if (statusEl2) statusEl2.innerHTML += '<br><small style="font-family:monospace;color:#666">Debug: err=' + (err?err.message:'none') + ' email=' + (data&&(data.email||data.creatorEmail)||'empty') + ' inRevit=' + inRevit + '</small>';
+      // Check session from LocalServer /session
+      if (statusEl2) statusEl2.innerHTML = '<div style="color:var(--text-sec);font-size:13px;margin-top:6px">Checking session...</div>';
+      xhrGet(LOCAL_SERVER + '/session', function(err, data) {
+        var foundEmail = (!err && data && data.hasSession) ? (data.email||'') : '';
         if (foundEmail && foundEmail.length > 3) {
-          // Already authenticated - show signed-in state
-          state.user = { email: foundEmail };
+          state.user        = { email: foundEmail };
+          state.accessToken = (data && data.accessToken) || '';
           var panel   = document.getElementById('signed-in-panel');
           var emailEl = document.getElementById('signed-in-email');
           var nextBtn = document.getElementById('btn-signin-next');
@@ -1838,8 +1841,8 @@ function doSignIn() {
           if (nextBtn) nextBtn.style.display = 'flex';
           if (gBtn)    gBtn.style.display    = 'none';
           if (statusEl2) statusEl2.innerHTML = '';
+          setTimeout(function() { goTo('screen-project'); }, 300);
         } else {
-          // Not authenticated yet - show Google button (will call triggerRevitAuth)
           if (statusEl2) statusEl2.innerHTML = '';
           if (googleBtn2) googleBtn2.style.display = 'flex';
         }
@@ -2242,9 +2245,31 @@ function closeModal(id) {
 window.onload = function() {
   initCatGrid();
 
-  // Always start on welcome screen
-  // doSignIn() is called when user clicks Get Started -> accepts terms -> reaches sign-in screen
-  // URL params are read at that point
+  // Check if opened from Revit (revit=true param)
+  var params0 = getUrlParams();
+  if (params0['revit'] === 'true') {
+    inRevit = true;
+    // Try to load session from LocalServer
+    xhrGet(LOCAL_SERVER + '/session', function(err, data) {
+      if (!err && data && data.hasSession && data.email) {
+        // Session found - pre-fill and skip to project screen
+        state.user        = { email: data.email };
+        state.accessToken = data.accessToken || '';
+        // Pre-fill form fields if project exists
+        if (data.projectName) {
+          var fn = document.getElementById('f-pname');
+          if (fn) fn.value = data.projectName;
+        }
+        if (data.clientName) {
+          var fc = document.getElementById('f-client');
+          if (fc) fc.value = data.clientName;
+        }
+        // Skip straight to project details
+        setTimeout(function() { goTo('screen-project'); }, 100);
+      }
+      // else: no session, show welcome screen normally
+    });
+  }
 
   var overlays = document.querySelectorAll('.modal-overlay');
   for (var i = 0; i < overlays.length; i++) {
