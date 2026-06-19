@@ -398,59 +398,54 @@ var isRevitMode = false;
 window.onload = function() {
   var params = getUrlParams();
 
-  // Check if opened from Revit with project data in URL
-  if (params['spreadsheetId']) {
-    isRevitMode = true;
-    currentProject = {
-      spreadsheetId: dec(params['spreadsheetId']),
-      folderId:      dec(params['folderId'] || ''),
-      projectName:   dec(params['projectName'] || 'Project'),
-      clientName:    dec(params['clientName'] || ''),
-      discipline:    dec(params['discipline'] || ''),
-      currency:      dec(params['currency'] || 'GBP'),
-      contingency:   parseFloat(params['contingency'] || '10'),
-      prelim:        parseFloat(params['prelim'] || '5'),
-      projectId:     dec(params['projectId'] || ''),
-      lastSync:      dec(params['lastSync'] || ''),
-      budget:        parseFloat(params['budget'] || '0'),
-      budgetRef:     dec(params['budgetRef'] || '')
-    };
+  // Try LocalServer /session first (when Revit is running)
+  xhrGet(LOCAL_SERVER + '/session', function(err, data) {
+    if (!err && data && data.hasSession && data.email) {
+      // Session found from Revit
+      isRevitMode = params['revit'] === 'true';
+      accessToken = data.accessToken || '';
+      if (accessToken) sessionStorage.setItem('boq_token', accessToken);
+      user = { name: data.email, email: data.email, picture: '' };
+      sessionStorage.setItem('boq_user', JSON.stringify(user));
+      buildTopbar();
 
-    // Use access token from URL if provided by Revit addin
-    // This skips the Google sign-in entirely
-    var urlToken = params['token'] ? dec(params['token']) : '';
-    if (urlToken) {
-      accessToken = urlToken;
-      // Store in session so it persists on page interactions
-      sessionStorage.setItem('boq_token', urlToken);
-
-      // Set a minimal user object from Revit context
-      // Fetch real user info in background
-      user = { name: 'Revit User', email: '', picture: '' };
-
-      // Try to get real user info with the token
-      fetchUserInfo(function() {
-        sessionStorage.setItem('boq_user', JSON.stringify(user));
-        buildTopbar();
+      if (data.spreadsheetId) {
+        currentProject = {
+          spreadsheetId: data.spreadsheetId,
+          folderId:      data.folderId    || '',
+          projectName:   data.projectName || 'Project',
+          clientName:    data.clientName  || '',
+          discipline:    data.discipline  || '',
+          currency:      data.currency    || 'GBP',
+          contingency:   data.contingency || 10,
+          prelim:        data.prelim      || 5,
+          budget:        data.budget      || 0,
+          budgetRef:     data.budgetRef   || '',
+          lastSync:      data.lastSync    || ''
+        };
         openProject(currentProject);
-      });
+      } else {
+        showSelector();
+      }
       return;
     }
-  }
 
-  // Check for stored session token
-  var tok = sessionStorage.getItem('boq_token');
-  var usr = sessionStorage.getItem('boq_user');
-  if (tok && usr) {
-    accessToken = tok;
-    user = JSON.parse(usr);
-    buildTopbar();
-    if (isRevitMode && currentProject) { openProject(currentProject); }
-    else { showSelector(); }
-  } else {
+    // No LocalServer session - check sessionStorage
+    var tok = sessionStorage.getItem('boq_token');
+    var usr = sessionStorage.getItem('boq_user');
+    if (tok && usr) {
+      accessToken = tok;
+      user = JSON.parse(usr);
+      buildTopbar();
+      if (isRevitMode && currentProject) { openProject(currentProject); }
+      else { showSelector(); }
+      return;
+    }
+
+    // No session - show sign-in
     showScreen('screen-signin');
     buildTopbar();
-  }
+  });
 };
 
 function dec(v) { try { return decodeURIComponent(v); } catch(e) { return v||''; } }
@@ -1198,69 +1193,66 @@ function matchBOQHeight() {
 function renderBOQTable() {
   var tbody=document.getElementById('boq-tbody'),table=document.getElementById('boq-table'),empty=document.getElementById('boq-empty');
   var curr=getCurrencySymbol();
-  if (!boqItems.length){table.style.display='none';empty.style.display='block';document.getElementById('items-badge').textContent='0 items';return;}
-  table.style.display='table';empty.style.display='none';
-  document.getElementById('items-badge').textContent=boqItems.length+' items';
-  var mb2=document.getElementById('missing-badge');
-  if(mb2){mb2.style.display=missingCount>0?'inline-block':'none';mb2.textContent=missingCount+' missing';}
+  if (!boqItems.length){
+    table.style.display='none';empty.style.display='block';
+    document.getElementById('items-badge').textContent='0 items';
+    return;
+  }
+  table.style.display='table'; empty.style.display='none';
 
-  // Load previous totals from sessionStorage for diff comparison
+  // Load previous totals for diff
   var prevKey='boq_prev_'+(currentProject?currentProject.spreadsheetId:'x');
   var prevTotals={};
   try{prevTotals=JSON.parse(sessionStorage.getItem(prevKey)||'{}');}catch(e){}
 
-  // NOTE: prevTotals are saved in parseSheetData BEFORE new data loads
-  // Do not overwrite here - that would erase the diff on re-render
-
-  var html='';
+  var html='', missingCount=0;
   for(var i=0;i<boqItems.length;i++){
     var r=boqItems[i];
-    var isDel=r.status.indexOf('deleted')>-1||r.status.indexOf('eleted')>-1,isMis=!isDel&&!isCustom&&(!r.itemNumber||!r.unit||!r.rate||!r.quantity);
-    var cls=isMis?'row-amber':isDel?'row-red':'';
-
-    // Build specific missing field indicators
+    // Declare isCustom and isDel FIRST before using them
     var isCustom = r.status === 'custom';
-    // For deleted items show total as negative with strikethrough
+    var isDel    = r.status.indexOf('deleted')>-1 || r.status.indexOf('eleted')>-1;
+    var isMis    = !isDel && !isCustom && (!r.itemNumber || !r.unit || !r.rate || !r.quantity);
+    var cls      = isDel ? 'row-red' : isMis ? 'row-amber' : '';
+    if (isMis) missingCount++;
+
+    // Total cell - deleted shows negative strikethrough
     var totalHtml = isDel
       ? '<span style="color:var(--red);text-decoration:line-through;font-family:monospace">-' + fmtC(r.total) + '</span>'
       : (r.total ? fmtC(r.total) : '--');
+
+    // Status pill
     var pill = '';
     if (isCustom) {
       pill = '<span class="status-pill" style="background:rgba(139,92,246,0.15);color:#8b5cf6;border:1px solid rgba(139,92,246,0.3)">&#9998; Custom</span>';
     } else if (isDel) {
       pill = '<span class="status-pill cb-red">&#215; Deleted</span>';
     } else if (isMis) {
-      var missingFields = [];
-      // Check fields that should be set in the Sheet
-      if (!r.itemNumber || r.itemNumber === '--' || r.itemNumber.trim() === '') missingFields.push('Item No');
-      if (!r.unit  || r.unit.trim()  === '') missingFields.push('Unit');
-      if (!r.rate  || r.rate === 0)          missingFields.push('Rate');
-      if (!r.quantity || r.quantity === 0)   missingFields.push('Qty');
-      if (missingFields.length > 0) {
-        pill = '<span class="status-pill cb-amber" title="Missing: ' + missingFields.join(', ') + '">&#9888; ' + missingFields.join(', ') + '</span>';
-      } else {
-        pill = '<span class="status-pill cb-amber">&#9888; Check Revit</span>';
-      }
+      var mf = [];
+      if (!r.itemNumber || r.itemNumber.trim()==='' || r.itemNumber==='--') mf.push('Item No');
+      if (!r.unit       || r.unit.trim()==='')        mf.push('Unit');
+      if (!r.rate       || r.rate===0)                mf.push('Rate');
+      if (!r.quantity   || r.quantity===0)            mf.push('Qty');
+      pill = mf.length
+        ? '<span class="status-pill cb-amber" title="Missing: '+mf.join(', ')+'">&#9888; '+mf.join(', ')+'</span>'
+        : '<span class="status-pill cb-amber">&#9888; Check Sheet</span>';
     } else {
       pill = '<span class="status-pill cb-green">&#10003; OK</span>';
     }
 
-    // Diff from last sync
-    var itemKey=r.category+'|'+(r.description||r.typeName);
-    var diffHtml='<span style="color:var(--text-ter);font-size:11px">--</span>';
-    if(prevTotals.hasOwnProperty(itemKey)&&r.total){
-      var delta=r.total-prevTotals[itemKey];
-      if(Math.abs(delta)>0.01){
-        var sign=delta>0?'+':'';
-        var dColor=delta>0?'#e85555':'#34c77b';
-        var dArrow=delta>0?'&#9650;':'&#9660;';
-        diffHtml='<span style="color:'+dColor+';font-family:monospace;font-size:11px;white-space:nowrap">'+dArrow+' '+sign+fmtC(Math.abs(delta))+'</span>';
+    // Diff indicator
+    var itemKey  = r.category+'|'+(r.description||r.typeName);
+    var diffHtml = '<span style="color:var(--text-ter);font-size:11px">--</span>';
+    if (prevTotals.hasOwnProperty(itemKey) && r.total) {
+      var delta = r.total - prevTotals[itemKey];
+      if (Math.abs(delta) > 0.01) {
+        var dCol = delta>0?'#e85555':'#34c77b';
+        diffHtml = '<span style="color:'+dCol+';font-family:monospace;font-size:11px;white-space:nowrap">'+(delta>0?'&#9650;':'&#9660;')+' '+(delta>0?'+':'')+fmtC(Math.abs(delta))+'</span>';
       }
-    }else if(r.total&&!prevTotals.hasOwnProperty(itemKey)){
-      diffHtml='<span style="color:var(--blue);font-family:monospace;font-size:11px;font-weight:600">NEW</span>';
+    } else if (r.total && !prevTotals.hasOwnProperty(itemKey)) {
+      diffHtml = '<span style="color:var(--blue);font-family:monospace;font-size:11px;font-weight:600">NEW</span>';
     }
 
-    html+='<tr class="'+cls+'">' +
+    html += '<tr class="'+cls+'">' +
       '<td class="item-no">'+esc(r.itemNumber)+'</td>' +
       '<td class="desc">'+esc(r.description||r.typeName)+'</td>' +
       '<td>'+esc(r.category)+'</td>' +
@@ -1271,7 +1263,12 @@ function renderBOQTable() {
       '<td style="text-align:right">'+diffHtml+'</td>' +
       '<td>'+pill+'</td></tr>';
   }
-  tbody.innerHTML=html;
+  tbody.innerHTML = html;
+
+  // Update badges AFTER loop so missingCount is correct
+  document.getElementById('items-badge').textContent = boqItems.length+' items';
+  var mb = document.getElementById('missing-badge');
+  if (mb) { mb.style.display=missingCount>0?'inline-block':'none'; mb.textContent=missingCount+' missing'; }
 }
 
 function renderSummary() {
