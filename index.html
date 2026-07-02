@@ -1639,6 +1639,7 @@ var CATEGORIES = [
 
 var STEPS = ['Project','Parameters','Drive & Sheets','Review'];
 var LOCAL_SERVER = 'http://localhost:5000';
+var inRevit     = (window.location.search.indexOf("revit=true") > -1);
 
 // -- NAVIGATION --------------------------------------------------------
 function goTo(screenId) {
@@ -2246,29 +2247,17 @@ function closeModal(id) {
 window.onload = function() {
   initCatGrid();
 
-  // Check if opened from Revit (revit=true param)
-  var params0 = getUrlParams();
-  if (params0['revit'] === 'true') {
-    inRevit = true;
-    // Try to load session from LocalServer
+  // inRevit is already set globally from URL param
+  if (inRevit) {
+    // Try to load session from LocalServer on startup
     xhrGet(LOCAL_SERVER + '/session', function(err, data) {
       if (!err && data && data.hasSession && data.email) {
-        // Session found - pre-fill and skip to project screen
         state.user        = { email: data.email };
         state.accessToken = data.accessToken || '';
-        // Pre-fill form fields if project exists
-        if (data.projectName) {
-          var fn = document.getElementById('f-pname');
-          if (fn) fn.value = data.projectName;
-        }
-        if (data.clientName) {
-          var fc = document.getElementById('f-client');
-          if (fc) fc.value = data.clientName;
-        }
-        // Skip straight to project details
+        // Skip straight to project details screen
         setTimeout(function() { goTo('screen-project'); }, 100);
       }
-      // else: no session, show welcome screen normally
+      // else: no session yet, show welcome screen normally
     });
   }
 
