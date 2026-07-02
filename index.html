@@ -1829,6 +1829,7 @@ function doSignIn() {
       if (statusEl2) statusEl2.innerHTML = '<div style="color:var(--text-sec);font-size:13px;margin-top:6px">Checking session...</div>';
       xhrGet(LOCAL_SERVER + '/session', function(err, data) {
         var foundEmail = (!err && data && data.hasSession) ? (data.email||'') : '';
+        if (statusEl2) statusEl2.innerHTML = '<small style="font-family:monospace;color:#888;font-size:10px">session: ' + (err ? 'ERR:'+err.message : JSON.stringify({has:data&&data.hasSession,email:data&&data.email,tok:(data&&data.accessToken)?'yes':'no'})) + '</small>';
         if (foundEmail && foundEmail.length > 3) {
           state.user        = { email: foundEmail };
           state.accessToken = (data && data.accessToken) || '';
